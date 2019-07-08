@@ -90,6 +90,7 @@ $ pytohn neoreg.py -k <you_password> -u <server_url> -H 'Authorization: cm9vdDpp
 
 * 更多关于性能和稳定性的参数设置参考 -h 帮助信息
 ```ruby
+# 生成服务端脚本
 $ python neoreg.py generate -h
     usage: neoreg.py [-h] -k KEY [-o DIR] [-f FILE] [--read-buff Bytes]
 
@@ -102,6 +103,7 @@ $ python neoreg.py generate -h
       -f FILE, --file FILE  Camouflage html page file
       --read-buff Bytes     Remote read buffer.(default: 513)
 
+# 连接服务端
 $ python neoreg.py -h
     usage: neoreg.py [-h] -u URI -k KEY [-l IP] [-p PORT] [-s] [-H LINE] [-c LINE]
                      [-x LINE] [--read-buff Bytes] [--read-interval MS]
