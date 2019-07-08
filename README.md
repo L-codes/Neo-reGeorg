@@ -12,8 +12,8 @@ Neo-reGeorg
 
 ## Features
 
-* GET 请求响应可定制化 (如伪装的404页面)
 * 传输内容经过变形base64加密，伪装成base64编码
+* GET 请求响应可定制化 (如伪装的404页面)
 * HTTP Headers 的指令随机生成，避免特征检测
 * HTTP Headers 可定制化
 * 兼容python2 / python3
