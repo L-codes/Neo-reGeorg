@@ -136,6 +136,17 @@ $ python neoreg.py -h
 
 
 
+## TODO
+
+ * 解决 tennel.js 无法持续 TCP 连接问题
+
+ * HTTP body 隐写
+
+ * 传输 Target 隐写
+
+   
+
+
 ## License
 
 GPL 3.0
