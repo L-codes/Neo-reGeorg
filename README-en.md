@@ -3,23 +3,22 @@ Neo-reGeorg
 
 [简体中文](README.md)　｜　[English](README-en.md)
 
-**Neo-reGeorg** 是一个旨在积极重构 [reGeorg](https://github.com/sensepost/reGeorg) 的项目，目的是：
+**Neo-reGeorg** is a project designed to actively restructure [reGeorg](https://github.com/sensepost/reGeorg) with the aim of:
 
-* 提高 tunnel 连接安全性
-* 提高可用性，避免特征检测
-* 提高传输内容保密性
-* 解决 reGeorg 现存在的问题，修复部分小BUG
+* Improve tunnel connection security
+* Improve usability and avoid feature detection
+* Improve the confidentiality of transmission content
+* Solve the existing problems of reGeorg and fix some small bugs
 
 
 
 ## Features
 
-* 传输内容经过变形base64加密，伪装成base64编码
-* GET 请求响应可定制化 (如伪装的404页面)
-* HTTP Headers 的指令随机生成，避免特征检测
-* HTTP Headers 可定制化
-* 兼容python2 / python3
-
+* Transfer content through out-of-order base64 encryption
+* GET request response can be customized (such as masquerading 404 pages)
+* HTTP Headers instructions are randomly generated to avoid feature detection
+* HTTP Headers can be customized
+* Compatible with python2 / python3
 
 
 Version
@@ -41,7 +40,7 @@ Basic Usage
 --------------
 
 * **Step 1.**
-设置密码生成 tunnel.(aspx|ashx|jsp|php) 并上传到WEB服务器
+Set the password to generate tunnel server.(aspx|ashx|jsp|php) and upload it to the web server.
 ```ruby
 $ python neoreg.py generate -k password
 
@@ -57,7 +56,7 @@ $ python neoreg.py generate -k password
 ```
 
 * **Step 2.**
-使用 neoreg.py 连接WEB服务器，在本地建立 socks 代理
+Use `neoreg.py` to connect to the web server and create a socks proxy locally.
 ```ruby
 $ python3 neoreg.py -k password -u http://xx/tunnel.php
 +------------------------------------------------------------------------+
@@ -66,7 +65,7 @@ $ python3 neoreg.py -k password -u http://xx/tunnel.php
 +------------------------------------------------------------------------+
 ```
 
-   注意，如果你的工具，如NMap不支持socks代理，请使用 [proxychains](https://github.com/rofl0r/proxychains-ng) 
+   Note that if your tool, such as `nmap` does not support socks proxy, please use [proxychains](https://github.com/rofl0r/proxychains-ng) 
 
 
 
@@ -74,25 +73,25 @@ $ python3 neoreg.py -k password -u http://xx/tunnel.php
 Advanced Usage
 --------------
 
-1. 支持生成的服务端，默认 GET 请求响应指定的页面内容 (如伪装的404页面)
+1. Support for generated tunnel server-side, the default GET request responds to the specified page content (eg camouflaged 404 page)
 ```ruby
 $ python neoreg.py generate -k <you_password> --file 404.html
 $ pytohn neoreg.py -k <you_password> -u <server_url> --skip
 ```
 
-2. 如服务端WEB，需要设置代理才能访问
+2. For example, the server WEB needs to set the proxy to access
 ```ruby
 $ pytohn neoreg.py -k <you_password> -u <server_url> --proxy socks5://10.1.1.1:8080
 ```
 
-3. 如需Authorization认证和定制的Header或Cookie
+3. To set `Authorization`, there are also custom `Header` or `Cookie` content.
 ```ruby
 $ pytohn neoreg.py -k <you_password> -u <server_url> -H 'Authorization: cm9vdDppcyB0d2VsdmU=' --cookie "key=value"
 ```
 
-* 更多关于性能和稳定性的参数设置参考 -h 帮助信息
+* For more information on performance and stability parameters, refer to -h help information
 ```ruby
-# 生成服务端脚本
+# Generate server-side scripts
 $ python neoreg.py generate -h
     usage: neoreg.py [-h] -k KEY [-o DIR] [-f FILE] [--read-buff Bytes]
 
@@ -105,7 +104,7 @@ $ python neoreg.py generate -h
       -f FILE, --file FILE  Camouflage html page file
       --read-buff Bytes     Remote read buffer.(default: 513)
 
-# 连接服务端
+# Connection server
 $ python neoreg.py -h
     usage: neoreg.py [-h] -u URI -k KEY [-l IP] [-p PORT] [-s] [-H LINE] [-c LINE]
                      [-x LINE] [--read-buff Bytes] [--read-interval MS]
@@ -140,14 +139,13 @@ $ python neoreg.py -h
 
 ## TODO
 
- * 解决 tennel.js 无法持续 TCP 连接问题
+* Solving tennel.js cannot continue TCP connection problems
 
- * HTTP body 隐写
+* HTTP body steganography
 
- * 传输 Target 隐写
+* Transfer Target field steganography
 
- * 混淆/免杀/压缩 server 端
-
+* Confuse/Anti-Virus/Compress server-side scripts
    
 
 
