@@ -154,3 +154,8 @@ $ python neoreg.py -h
 ## License
 
 GPL 3.0
+
+## Change log
+
+v1.1.0
+    - Added jspx support
