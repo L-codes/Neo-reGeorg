@@ -148,7 +148,7 @@ $ python neoreg.py -h
 
  * 传输 Target 隐写
 
- * 混淆/免杀/压缩 server 端
+ * ~~混淆/免杀/压缩 server 端~~ 应模块化，独立工具实现
 
    
 

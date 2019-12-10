@@ -147,7 +147,7 @@ $ python neoreg.py -h
 
 * Transfer Target field steganography
 
-* Confuse/Anti-Virus/Compress server-side scripts
+* ~~Confuse/Anti-Virus/Compress server-side scripts~~ Should be modular, standalone tool
    
 
 
