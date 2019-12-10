@@ -25,7 +25,7 @@ Neo-reGeorg
 Version
 ----
 
-1.0.0
+1.1.0
 
 
 
@@ -41,7 +41,7 @@ Basic Usage
 --------------
 
 * **Step 1.**
-设置密码生成 tunnel.(aspx|ashx|jsp|php) 并上传到WEB服务器
+设置密码生成 tunnel.(aspx|ashx|jsp|jspx|php) 并上传到WEB服务器
 ```ruby
 $ python neoreg.py generate -k password
 
@@ -52,7 +52,9 @@ $ python neoreg.py generate -k password
        => neoreg_server/tunnel.ashx
        => neoreg_server/tunnel.aspx
        => neoreg_server/tunnel.tomcat.5.jsp
+       => neoreg_server/tunnel.tomcat.5.jspx
        => neoreg_server/tunnel.jsp
+       => neoreg_server/tunnel.jspx
 
 ```
 
