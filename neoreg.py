@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 __author__  = 'L'
-__version__ = '1.1.0'
+__version__ = '1.2.0'
 
 import sys
 import os
@@ -514,7 +514,7 @@ if __name__ == '__main__':
         parser.add_argument("--read-buff", metavar="Bytes", help="Remote read buffer.(default: 513)", type=int, default=513)
         args = parser.parse_args()
     else:
-        parser = argparse.ArgumentParser(description='Socks server for Neoreg HTTP(s) tunneller')
+        parser = argparse.ArgumentParser(description="Socks server for Neoreg HTTP(s) tunneller. DEBUG MODE: -k (debug_all|debug_base64|debug_headers_key|debug_headers_values)")
         parser.add_argument("-u", "--url", metavar="URI", required=True, help="The url containing the tunnel script")
         parser.add_argument("-k", "--key", metavar="KEY", required=True, help="Specify connection key")
         parser.add_argument("-l", "--listen-on", metavar="IP", help="The default listening address.(default: 127.0.0.1)", default="127.0.0.1")
@@ -532,9 +532,12 @@ if __name__ == '__main__':
     rand = Rand(args.key)
 
     BASE64CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
-    M_BASE64CHARS = list(BASE64CHARS)
-    rand.base64_chars(M_BASE64CHARS)
-    M_BASE64CHARS = ''.join(M_BASE64CHARS)
+    if args.key in ['debug_all', 'debug_base64']:
+        M_BASE64CHARS = BASE64CHARS
+    else:
+        M_BASE64CHARS = list(BASE64CHARS)
+        rand.base64_chars(M_BASE64CHARS)
+        M_BASE64CHARS = ''.join(M_BASE64CHARS)
 
     if ispython3:
         maketrans = str.maketrans
@@ -548,16 +551,23 @@ if __name__ == '__main__':
 
     K = {}
     for name in ["X-STATUS", "X-ERROR", "X-CMD", "X-TARGET"]:
-        K[name] = rand.header_key()
+        if args.key in ['debug_all', 'debug_headers_key']:
+            K[name] = name
+        else:
+            K[name] = rand.header_key()
 
     V = {}
     rV = {}
     for name in ["FAIL", "Failed creating socket", "Failed connecting to target", "OK", "Failed writing socket",
             "CONNECT", "DISCONNECT", "READ", "FORWARD", "Failed reading from socket", "No more running, close now",
             "POST request read filed"]:
-        value = rand.header_value()
-        V[name] = value
-        rV[value] = name
+        if args.key in ['debug_all', 'debug_headers_value']:
+            V[name] = name
+            rV[name] = name
+        else:
+            value = rand.header_value()
+            V[name] = value
+            rV[value] = name
 
     if 'url' in args:
         # neoreg connect
