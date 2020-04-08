@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 __author__  = 'L'
-__version__ = '1.2.0'
+__version__ = '1.3.0'
 
 import sys
 import os
@@ -175,8 +175,6 @@ class session(Thread):
         self.conn = requests.Session()
         self.conn.proxies = PROXY
         self.conn.verify = False
-        for key, value in ADD_COOKIE.items():
-            self.conn.cookies.set(key, value)
         self.conn.headers['Accept-Encoding'] = 'deflate'
         self.conn.headers['User-Agent'] = USERAGENT
         self.connect_closed = False
@@ -286,9 +284,19 @@ class session(Thread):
         target_data = ("%s|%d" % (target, port)).encode()
         headers = {K["X-CMD"]: V["CONNECT"], K["X-TARGET"]: self.encode(target_data)}
         headers.update(HEADERS)
+        if INIT_COOKIE:
+            headers['Cookie'] = INIT_COOKIE
         self.target = target
         self.port = port
         response = self.conn.post(self.connectURL, headers=headers)
+
+        if INIT_COOKIE:
+            res_cookies = response.cookies.keys()
+            for item in INIT_COOKIE.split(';'):
+                key, value = item.strip().split('=')
+                if key not in res_cookies:
+                    self.conn.cookies.set(key, value)
+
         rep_headers = response.headers
         if response.status_code == 200:
             if K['X-STATUS'] in rep_headers:
@@ -420,6 +428,8 @@ def askGeorg(connectURL):
     log.info("Checking if Georg is ready")
     headers = {'User-Agent': USERAGENT}
     headers.update(HEADERS)
+    if INIT_COOKIE:
+        headers['Cookie'] = INIT_COOKIE
     response = requests.get(connectURL, headers=headers, proxies=PROXY, verify=False)
     if response.status_code == 200:
         if BASICCHECKSTRING == response.content.strip():
@@ -521,7 +531,7 @@ if __name__ == '__main__':
         parser.add_argument("-p", "--listen-port", metavar="PORT", help="The default listening port.(default: 1080)", type=int, default=1080)
         parser.add_argument("-s", "--skip", help="Skip usability testing", action='store_true')
         parser.add_argument("-H", "--header", metavar="LINE", help="Pass custom header LINE to server", action='append', default=[])
-        parser.add_argument("-c", "--cookie", metavar="LINE", help="Custom cookies to server", action='append', default=[])
+        parser.add_argument("-c", "--cookie", metavar="LINE", help="Custom init cookies")
         parser.add_argument("-x", "--proxy", metavar="LINE", help="proto://host[:port]  Use proxy on given port", default=None)
         parser.add_argument("--read-buff", metavar="Bytes", help="Local read buffer, max data to be sent per POST.(default: 1024)", type=int, default=READBUFSIZE)
         parser.add_argument("--read-interval", metavar="MS", help="Read data interval in milliseconds.(default: 100)", type=int, default=READINTERVAL)
@@ -592,15 +602,7 @@ if __name__ == '__main__':
                 log.info("Error parameter: -H %s" % header)
                 exit()
 
-        ADD_COOKIE = {}
-        for cookie in args.cookie:
-            if cookie.count('=') == 1:
-                key, value = cookie.split('=', 1)
-                ADD_COOKIE[key.strip()] = value.strip()
-            else:
-                log.info("Error parameter: -c %s" % cookie)
-                exit()
-
+        INIT_COOKIE = args.cookie
         PROXY = { 'http': args.proxy, 'https': args.proxy } if args.proxy else None
 
         print("  Starting socks server [%s:%d], tunnel at [%s]" % (args.listen_on, args.listen_port, args.url))
