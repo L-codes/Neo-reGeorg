@@ -114,6 +114,7 @@ $ python neoreg.py -h
                      [--max-threads N] [-v]
 
     Socks server for Neoreg HTTP(s) tunneller
+    DEBUG MODE: -k (debug_all|debug_base64|debug_headers_key|debug_headers_values)
 
     optional arguments:
       -h, --help            show this help message and exit

@@ -24,7 +24,7 @@ Neo-reGeorg
 Version
 ----
 
-1.1.0
+1.3.0
 
 
 
@@ -88,7 +88,7 @@ $ pytohn neoreg.py -k <you_password> -u <server_url> --proxy socks5://10.1.1.1:8
 
 3. To set `Authorization`, there are also custom `Header` or `Cookie` content.
 ```ruby
-$ pytohn neoreg.py -k <you_password> -u <server_url> -H 'Authorization: cm9vdDppcyB0d2VsdmU=' --cookie "key=value"
+$ pytohn neoreg.py -k <you_password> -u <server_url> -H 'Authorization: cm9vdDppcyB0d2VsdmU=' --cookie "key=value;key2=value2"
 ```
 
 * For more information on performance and stability parameters, refer to -h help information
@@ -113,6 +113,7 @@ $ python neoreg.py -h
                      [--max-threads N] [-v]
 
     Socks server for Neoreg HTTP(s) tunneller
+    DEBUG MODE: -k (debug_all|debug_base64|debug_headers_key|debug_headers_values)
 
     optional arguments:
       -h, --help            show this help message and exit
@@ -126,7 +127,7 @@ $ python neoreg.py -h
       -H LINE, --header LINE
                             Pass custom header LINE to server
       -c LINE, --cookie LINE
-                            Custom cookies to server
+                            Custom init cookies
       -x LINE, --proxy LINE
                             proto://host[:port] Use proxy on given port
       --read-buff Bytes     Local read buffer, max data to be sent per
@@ -159,3 +160,9 @@ GPL 3.0
 
 v1.1.0
     - Added jspx support
+
+v1.2.0
+    - Added -k debug_all (or debug_base64|debug_headers_key|debug_headers_values), Easy to debug
+
+v1.3.0
+    - Fixed --cookie JSESSIONID conflict, unavailable in load balancing environment
