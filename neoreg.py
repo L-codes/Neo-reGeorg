@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 __author__  = 'L'
-__version__ = '1.3.0'
+__version__ = '1.3.1'
 
 import sys
 import os
@@ -40,7 +40,7 @@ REFUSED           = b"\x05"
 #UNASSIGNED       = b"\x09"
 
 # Globals
-READBUFSIZE  = 1024
+READBUFSIZE  = 4096
 MAXTHERADS   = 1000
 READINTERVAL = 100
 
@@ -533,7 +533,7 @@ if __name__ == '__main__':
         parser.add_argument("-H", "--header", metavar="LINE", help="Pass custom header LINE to server", action='append', default=[])
         parser.add_argument("-c", "--cookie", metavar="LINE", help="Custom init cookies")
         parser.add_argument("-x", "--proxy", metavar="LINE", help="proto://host[:port]  Use proxy on given port", default=None)
-        parser.add_argument("--read-buff", metavar="Bytes", help="Local read buffer, max data to be sent per POST.(default: 1024)", type=int, default=READBUFSIZE)
+        parser.add_argument("--read-buff", metavar="Bytes", help="Local read buffer, max data to be sent per POST.(default: 4096)", type=int, default=READBUFSIZE)
         parser.add_argument("--read-interval", metavar="MS", help="Read data interval in milliseconds.(default: 100)", type=int, default=READINTERVAL)
         parser.add_argument("--max-threads", metavar="N", help="Proxy max threads.(default: 1000)", type=int, default=MAXTHERADS)
         parser.add_argument("-v", help="Increase verbosity level (use -vv or more for greater effect)", action='count', default=0)
