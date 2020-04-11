@@ -79,17 +79,17 @@ Advanced Usage
 1. 支持生成的服务端，默认 GET 请求响应指定的页面内容 (如伪装的404页面)
 ```ruby
 $ python neoreg.py generate -k <you_password> --file 404.html
-$ pytohn neoreg.py -k <you_password> -u <server_url> --skip
+$ python neoreg.py -k <you_password> -u <server_url> --skip
 ```
 
 2. 如服务端WEB，需要设置代理才能访问
 ```ruby
-$ pytohn neoreg.py -k <you_password> -u <server_url> --proxy socks5://10.1.1.1:8080
+$ python neoreg.py -k <you_password> -u <server_url> --proxy socks5://10.1.1.1:8080
 ```
 
 3. 如需Authorization认证和定制的Header或Cookie
 ```ruby
-$ pytohn neoreg.py -k <you_password> -u <server_url> -H 'Authorization: cm9vdDppcyB0d2VsdmU=' --cookie "key=value;key2=value2"
+$ python neoreg.py -k <you_password> -u <server_url> -H 'Authorization: cm9vdDppcyB0d2VsdmU=' --cookie "key=value;key2=value2"
 ```
 
 * 更多关于性能和稳定性的参数设置参考 -h 帮助信息

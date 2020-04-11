@@ -78,17 +78,17 @@ Advanced Usage
 1. Support for generated tunnel server-side, the default GET request responds to the specified page content (eg camouflaged 404 page)
 ```ruby
 $ python neoreg.py generate -k <you_password> --file 404.html
-$ pytohn neoreg.py -k <you_password> -u <server_url> --skip
+$ python neoreg.py -k <you_password> -u <server_url> --skip
 ```
 
 2. For example, the server WEB needs to set the proxy to access
 ```ruby
-$ pytohn neoreg.py -k <you_password> -u <server_url> --proxy socks5://10.1.1.1:8080
+$ python neoreg.py -k <you_password> -u <server_url> --proxy socks5://10.1.1.1:8080
 ```
 
 3. To set `Authorization`, there are also custom `Header` or `Cookie` content.
 ```ruby
-$ pytohn neoreg.py -k <you_password> -u <server_url> -H 'Authorization: cm9vdDppcyB0d2VsdmU=' --cookie "key=value;key2=value2"
+$ python neoreg.py -k <you_password> -u <server_url> -H 'Authorization: cm9vdDppcyB0d2VsdmU=' --cookie "key=value;key2=value2"
 ```
 
 * For more information on performance and stability parameters, refer to -h help information
