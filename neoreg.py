@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 __author__  = 'L'
-__version__ = '1.3.2'
+__version__ = '1.3.3'
 
 import sys
 import os
@@ -269,20 +269,26 @@ class session(Thread):
                 message = rV[message]
             log.error(str_format.format(repr(message)))
 
-    def encode(self, data):
+    def encode_target(self, data):
         data = base64.b64encode(data)
         if ispython3:
             data = data.decode()
         return data.translate(EncodeMap)
 
-    def decode(self, data):
+    def encode_body(self, data):
+        data = base64.b64encode(data)
+        if ispython3:
+            data = data.decode()
+        return data.translate(EncodeMap)
+
+    def decode_body(self, data):
         if ispython3:
             data = data.decode()
         return base64.b64decode(data.translate(DecodeMap))
 
     def setupRemoteSession(self, target, port):
         target_data = ("%s|%d" % (target, port)).encode()
-        headers = {K["X-CMD"]: V["CONNECT"], K["X-TARGET"]: self.encode(target_data)}
+        headers = {K["X-CMD"]: V["CONNECT"], K["X-TARGET"]: self.encode_target(target_data)}
         headers.update(HEADERS)
         if INIT_COOKIE:
             headers['Cookie'] = INIT_COOKIE
@@ -309,10 +315,10 @@ class session(Thread):
                 log.info("[%s:%d] HTTP [200]: cookie [%s]" % (self.target, self.port, cookie))
                 return cookie
             else:
-                self.error_log('{}', rep_headers)
+                self.error_log('[CONNECT] ERROR: {}', rep_headers)
         else:
-            self.error_log("[%s:%d] HTTP [%d]: [{}]" % (self.target, self.port, response.status_code), rep_headers)
-            log.error("[%s:%d] RemoteError: %s" % (self.target, self.port, response.text))
+            self.error_log("[CONNECT] [%s:%d] HTTP [%d]: [{}]" % (self.target, self.port, response.status_code), rep_headers)
+            log.error("[CONNECT] [%s:%d] RemoteError: %s" % (self.target, self.port, response.text))
 
     def closeRemoteSession(self):
         if not self.connect_closed:
@@ -327,9 +333,9 @@ class session(Thread):
             response = self.conn.post(self.connectURL, headers=headers)
             if not self.connect_closed and response.status_code == 200:
                 if hasattr(self, 'target'):
-                    log.info("[%s:%d] Connection Terminated" % (self.target, self.port))
+                    log.info("[DISCONNECT] [%s:%d] Connection Terminated" % (self.target, self.port))
                 else:
-                    log.error("Can't find target")
+                    log.error("[DISCONNECT] Can't find target")
             self.conn.close()
             self.connect_closed = True
 
@@ -350,7 +356,7 @@ class session(Thread):
                             if len(data) == 0:
                                 sleep(READINTERVAL)
                                 continue
-                            data = self.decode(data)
+                            data = self.decode_body(data)
                             # data = data[:-3]
                             # Yes I know this is horrible, but its a quick fix to issues with tomcat 5.x
                             # bugs that have been reported, will find a propper fix laters
@@ -358,11 +364,11 @@ class session(Thread):
                                 if rep_headers["server"].find("Apache-Coyote/1.1") > 0:
                                     data = data[:-1]
                         else:
-                            msg = "[%s:%d] HTTP [%d]: Status: [%s]: Message [{}] Shutting down" % (self.target, self.port, response.status_code, rV[status])
+                            msg = "[READ] [%s:%d] HTTP [%d]: Status: [%s]: Message [{}] Shutting down" % (self.target, self.port, response.status_code, rV[status])
                             self.error_log(msg, rep_headers)
                             break
                     else:
-                        log.error("[%s:%d] HTTP [%d]: Shutting down" % (self.target, self.port, response.status_code))
+                        log.error("[READ] [%s:%d] HTTP [%d]: Shutting down" % (self.target, self.port, response.status_code))
                         break
                     transferLog.info("[%s:%d] <<<< [%d]" % (self.target, self.port, len(data)))
                     self.pSocket.send(data)
@@ -383,17 +389,17 @@ class session(Thread):
                     data = self.pSocket.recv(READBUFSIZE)
                     if not data:
                         break
-                    data = self.encode(data)
+                    data = self.encode_body(data)
                     response = self.conn.post(self.connectURL, headers=headers, data=data)
                     rep_headers = response.headers
                     if response.status_code == 200:
                         status = rep_headers[K["X-STATUS"]]
                         if status != V["OK"]:
-                            msg = "[%s:%d] HTTP [%d]: Status: [%s]: Message [{}] Shutting down" % (self.target, self.port, response.status_code, rV[status])
+                            msg = "[FORWARD] [%s:%d] HTTP [%d]: Status: [%s]: Message [{}] Shutting down" % (self.target, self.port, response.status_code, rV[status])
                             self.error_log(msg, rep_headers)
                             break
                     else:
-                        log.error("[%s:%d] HTTP [%d]: Shutting down" % (self.target, self.port, response.status_code))
+                        log.error("[FORWARD] [%s:%d] HTTP [%d]: Shutting down" % (self.target, self.port, response.status_code))
                         break
                     transferLog.info("[%s:%d] >>>> [%d]" % (self.target, self.port, len(data)))
                 except timeout:
@@ -416,12 +422,13 @@ class session(Thread):
                 r.join()
                 w.join()
         except SocksCmdNotImplemented as si:
-            log.error(si)
+            log.error('[SocksCmdNotImplemented] {}'.format(si))
         except SocksProtocolNotImplemented as spi:
-            log.error(spi)
+            log.error('[SocksProtocolNotImplemented] {}'.format(spi))
         except Exception as e:
-            log.error(e)
+            log.error('[RUN] {}'.format(e))
             self.closeRemoteSession()
+            raise
 
 
 def askGeorg(connectURL):
@@ -431,10 +438,11 @@ def askGeorg(connectURL):
     if INIT_COOKIE:
         headers['Cookie'] = INIT_COOKIE
     response = requests.get(connectURL, headers=headers, proxies=PROXY, verify=False)
-    if response.status_code == 200:
-        if BASICCHECKSTRING == response.content.strip():
-            log.info("Georg says, 'All seems fine'")
-            return True
+    if response.status_code == 200 and BASICCHECKSTRING == response.content.strip():
+        log.info("Georg says, 'All seems fine'")
+        return True
+    else:
+        log.error("Georg is not ready, please check url. rep: [{}] {}".format(response.status_code, response.reason))
 
 
 def choice_useragent():
@@ -611,7 +619,6 @@ if __name__ == '__main__':
             servSock_start = False
             if not args.skip:
                 if not askGeorg(args.url):
-                    log.error("Georg is not ready, please check url")
                     exit()
 
             READBUFSIZE  = min(args.read_buff, 2600)
