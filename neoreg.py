@@ -222,7 +222,7 @@ class session(Thread):
                 return True
             else:
                 sock.sendall(VER + REFUSED + b"\x00" + b"\x01" + serverIp + targetPort)
-                raise RemoteConnectionFailed("[%s:%d] Remote failed" % (target, targetPortNum))
+                raise RemoteConnectionFailed("[%s:%d] [NOT Cookie Response] Remote failed" % (target, targetPortNum))
 
         raise SocksCmdNotImplemented("Socks5 - Unknown CMD")
 
