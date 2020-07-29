@@ -437,7 +437,7 @@ def askGeorg(connectURL):
     headers.update(HEADERS)
     if INIT_COOKIE:
         headers['Cookie'] = INIT_COOKIE
-    response = requests.get(connectURL, headers=headers, proxies=PROXY, verify=False)
+    response = requests.get(connectURL, headers=headers, proxies=PROXY, verify=False, timeout=5)
     if response.status_code == 200 and BASICCHECKSTRING == response.content.strip():
         log.info("Georg says, 'All seems fine'")
         return True
