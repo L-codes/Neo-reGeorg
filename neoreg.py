@@ -136,11 +136,11 @@ class Rand:
         random.seed(n)
 
     def header_key(self):
-        str_len = random.getrandbits(4) + 2 # len 2 to 18
+        str_len = random.getrandbits(4) + 2 # len 2 to 17
         return ''.join([ self.k_clist[random.getrandbits(10) % self.k_clen] for _ in range(str_len) ]).capitalize()
 
     def header_value(self):
-        str_len = random.getrandbits(6) + 2 # len 2 to 66
+        str_len = random.getrandbits(6) + 2 # len 2 to 65
         return ''.join([ self.v_clist[random.getrandbits(10) % self.v_clen] for _ in range(str_len) ])
 
     def base64_chars(self, charslist):
