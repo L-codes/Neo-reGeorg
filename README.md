@@ -143,7 +143,7 @@ $ python neoreg.py -h
 
 ## TODO
 
- * 解决 tennel.js 无法持续 TCP 连接问题
+ * 解决 tunnel.js 无法持续 TCP 连接问题
 
  * HTTP body 隐写
 
