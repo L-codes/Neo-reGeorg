@@ -18,14 +18,15 @@ Neo-reGeorg
 * GET 请求响应可定制化 (如伪装的404页面)
 * HTTP Headers 的指令随机生成，避免特征检测
 * HTTP Headers 可定制化
-* 兼容python2 / python3
+* 兼容 python2 / python3
+* jsp(x) 兼容各 jdk 版本平台
 
 
 
 Version
 ----
 
-1.3.0
+1.4.0
 
 
 
@@ -51,8 +52,6 @@ $ python neoreg.py generate -k password
        => neoreg_server/tunnel.php
        => neoreg_server/tunnel.ashx
        => neoreg_server/tunnel.aspx
-       => neoreg_server/tunnel.tomcat.5.jsp
-       => neoreg_server/tunnel.tomcat.5.jspx
        => neoreg_server/tunnel.jsp
        => neoreg_server/tunnel.jspx
 
@@ -165,7 +164,12 @@ v1.1.0
     - 新增 jspx 的支持
 
 v1.2.0
-    - 新增 -k debug_all (or debug_base64|debug_headers_key|debug_headers_values) 时，关闭随机混淆，方便调试
+    - 新增 `-k debug_all (or debug_base64|debug_headers_key|debug_headers_values)` 时，关闭随机混淆，方便调试
 
 v1.3.0
-    - 修复 --cookie  JSESSIONID 冲突，负载均衡环境，服务端找不到 session 无法使用问题
+    - 修复 `--cookie  JSESSIONID` 冲突，负载均衡环境，服务端找不到 session 无法使用问题
+
+v1.4.0
+    - jsp(x) 不依赖内置 `base64` 方法，兼容 jdk9 及以上版本
+    - jsp(x) 移除 `trimDirectiveWhitespaces="true"` 兼容小于 jdk8 版本
+    - tunnel.tomcat.5.jsp(x) 已移除

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 __author__  = 'L'
-__version__ = '1.3.3'
+__version__ = '1.4.0'
 
 import sys
 import os
@@ -665,6 +665,14 @@ if __name__ == '__main__':
         keyfile = os.path.join(outdir, 'key.txt')
         file_write(keyfile, args.key)
 
+        M_BASE64ARRAY = []
+        for i in range(128):
+            if chr(i) in BASE64CHARS:
+                num = M_BASE64CHARS.index(chr(i))
+                M_BASE64ARRAY.append(num)
+            else:
+                M_BASE64ARRAY.append(-1)
+
         script_dir = os.path.join(ROOT, 'scripts')
         print("    [+] Create neoreg server files:")
         for filename in os.listdir(script_dir):
@@ -680,6 +688,9 @@ if __name__ == '__main__':
                 text = re.sub(r"Georg says, 'All seems fine'", http_get_content, text)
 
                 text = re.sub(r"BASE64 CHARSLIST", M_BASE64CHARS, text)
+
+                # only jsp
+                text = re.sub(r"BASE64 ARRAYLIST", ','.join(map(str, M_BASE64ARRAY)), text)
 
                 text = re.sub(r"\b513\b", str(MAXREADBUFF), text)
 
