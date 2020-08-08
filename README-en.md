@@ -141,7 +141,7 @@ $ python neoreg.py -h
 
 ## TODO
 
-* Solving tennel.js cannot continue TCP connection problems
+* Solving tunnel.js cannot continue TCP connection problems
 
 * HTTP body steganography
 
