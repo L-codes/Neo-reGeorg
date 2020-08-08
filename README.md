@@ -160,16 +160,16 @@ GPL 3.0
 
 ## Change log
 
-v1.1.0
-    - 新增 jspx 的支持
+### v1.1.0
+    新增 jspx 的支持
 
-v1.2.0
-    - 新增 `-k debug_all (or debug_base64|debug_headers_key|debug_headers_values)` 时，关闭随机混淆，方便调试
+### v1.2.0
+    新增 `-k debug_all (or debug_base64|debug_headers_key|debug_headers_values)` 时，关闭随机混淆，方便调试
 
-v1.3.0
-    - 修复 `--cookie  JSESSIONID` 冲突，负载均衡环境，服务端找不到 session 无法使用问题
+### v1.3.0
+    修复 `--cookie  JSESSIONID` 冲突，负载均衡环境，服务端找不到 session 无法使用问题
 
-v1.4.0
-    - jsp(x) 不依赖内置 `base64` 方法，兼容 jdk9 及以上版本
-    - jsp(x) 移除 `trimDirectiveWhitespaces="true"` 兼容小于 jdk8 版本
-    - tunnel.tomcat.5.jsp(x) 已移除
+### v1.4.0
+    jsp(x) 不依赖内置 `base64` 方法，兼容 jdk9 及以上版本
+    jsp(x) 移除 `trimDirectiveWhitespaces="true"` 兼容小于 jdk8 版本
+    tunnel.tomcat.5.jsp(x) 已移除

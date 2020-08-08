@@ -157,16 +157,16 @@ GPL 3.0
 
 ## Change log
 
-v1.1.0
-    - Added jspx support
+### v1.1.0
+    Added jspx support
 
-v1.2.0
-    - Added `-k debug_all (or debug_base64|debug_headers_key|debug_headers_values)`, Easy to debug
+### v1.2.0
+    Added `-k debug_all (or debug_base64|debug_headers_key|debug_headers_values)`, Easy to debug
 
-v1.3.0
-    - Fixed `--cookie JSESSIONID` conflict, unavailable in load balancing environment
+### v1.3.0
+    Fixed `--cookie JSESSIONID` conflict, unavailable in load balancing environment
 
-v1.4.0
-    - jsp(x) does not rely on the built-in `base64` method, compatible with jdk9 and above
-    - jsp(x) remove `trimDirectiveWhitespaces="true"` to be compatible with versions less than jdk8
-    - tunnel.tomcat.5.jsp(x) has been removed
+### v1.4.0
+    jsp(x) does not rely on the built-in `base64` method, compatible with jdk9 and above
+    jsp(x) remove `trimDirectiveWhitespaces="true"` to be compatible with versions less than jdk8
+    tunnel.tomcat.5.jsp(x) has been removed
