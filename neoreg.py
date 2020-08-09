@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 __author__  = 'L'
-__version__ = '1.4.0'
+__version__ = '2.0.0'
 
 import sys
 import os
@@ -14,6 +14,7 @@ import hashlib
 import logging
 import argparse
 import requests
+import uuid
 from time import sleep
 from socket import *
 from itertools import chain
@@ -168,16 +169,19 @@ class Rand:
 
 
 class session(Thread):
-    def __init__(self, pSocket, connectURL):
+    def __init__(self, conn, pSocket, connectURL):
         Thread.__init__(self)
         self.pSocket = pSocket
         self.connectURL = connectURL
-        self.conn = requests.Session()
-        self.conn.proxies = PROXY
-        self.conn.verify = False
-        self.conn.headers['Accept-Encoding'] = 'deflate'
-        self.conn.headers['User-Agent'] = USERAGENT
+        self.conn = conn
         self.connect_closed = False
+
+    def session_mark(self):
+        mark = base64.b64encode(uuid.uuid4().bytes)[0:-2]
+        if ispython3:
+            mark = mark.decode()
+        mark = mark.replace('+', ' ').replace('/', '_')
+        return mark
 
     def parseSocks5(self, sock):
         log.debug("SocksVersion5 detected")
@@ -216,13 +220,13 @@ class session(Thread):
             raise SocksCmdNotImplemented("Socks5 - UDP not implemented")
         elif cmd == b"\x01": # CONNECT
             serverIp = inet_aton(target)
-            self.cookie = self.setupRemoteSession(target, targetPortNum)
-            if self.cookie:
+            mark = self.setupRemoteSession(target, targetPortNum)
+            if mark:
                 sock.sendall(VER + SUCCESS + b"\x00" + b"\x01" + serverIp + targetPort)
                 return True
             else:
                 sock.sendall(VER + REFUSED + b"\x00" + b"\x01" + serverIp + targetPort)
-                raise RemoteConnectionFailed("[%s:%d] [NOT Cookie Response] Remote failed" % (target, targetPortNum))
+                raise RemoteConnectionFailed("[%s:%d] [Abnormal Response] Remote failed" % (target, targetPortNum))
 
         raise SocksCmdNotImplemented("Socks5 - Unknown CMD")
 
@@ -245,8 +249,8 @@ class session(Thread):
             else:
                 target = inet_ntoa(serverIp)
 
-            self.cookie = self.setupRemoteSession(target, targetPortNum)
-            if self.cookie:
+            mark = self.setupRemoteSession(target, targetPortNum)
+            if mark:
                 sock.sendall(b"\x00" + b"\x5a" + serverIp + targetPort)
                 return True
             else:
@@ -287,21 +291,14 @@ class session(Thread):
         return base64.b64decode(data.translate(DecodeMap))
 
     def setupRemoteSession(self, target, port):
+        self.mark = self.session_mark()
         target_data = ("%s|%d" % (target, port)).encode()
-        headers = {K["X-CMD"]: V["CONNECT"], K["X-TARGET"]: self.encode_target(target_data)}
+        headers = {K["X-CMD"]: self.mark+V["CONNECT"], K["X-TARGET"]: self.encode_target(target_data)}
         headers.update(HEADERS)
-        if INIT_COOKIE:
-            headers['Cookie'] = INIT_COOKIE
         self.target = target
         self.port = port
-        response = self.conn.post(self.connectURL, headers=headers)
+        response = self.conn.get(self.connectURL, headers=headers)
 
-        if INIT_COOKIE:
-            res_cookies = response.cookies.keys()
-            for item in INIT_COOKIE.split(';'):
-                key, value = item.strip().split('=')
-                if key not in res_cookies:
-                    self.conn.cookies.set(key, value)
 
         rep_headers = response.headers
         if response.status_code == 200:
@@ -310,10 +307,9 @@ class session(Thread):
             else:
                 log.critical('Bad KEY or non-neoreg server')
                 return False
-            if status == V["OK"] and 'set-cookie' in rep_headers:
-                cookie = rep_headers["set-cookie"]
-                log.info("[%s:%d] HTTP [200]: cookie [%s]" % (self.target, self.port, cookie))
-                return cookie
+            if status == V["OK"]:
+                log.info("[%s:%d] HTTP [200]: mark [%s]" % (self.target, self.port, self.mark))
+                return self.mark
             else:
                 self.error_log('[CONNECT] ERROR: {}', rep_headers)
         else:
@@ -328,26 +324,25 @@ class session(Thread):
             except:
                 log.debug("Localsocket already closed")
 
-            headers = {K["X-CMD"]: V["DISCONNECT"]}
+            headers = {K["X-CMD"]: self.mark+V["DISCONNECT"]}
             headers.update(HEADERS)
-            response = self.conn.post(self.connectURL, headers=headers)
+            response = self.conn.get(self.connectURL, headers=headers)
             if not self.connect_closed and response.status_code == 200:
                 if hasattr(self, 'target'):
                     log.info("[DISCONNECT] [%s:%d] Connection Terminated" % (self.target, self.port))
                 else:
                     log.error("[DISCONNECT] Can't find target")
-            self.conn.close()
             self.connect_closed = True
 
     def reader(self):
         try:
-            headers = {K["X-CMD"]: V["READ"]}
+            headers = {K["X-CMD"]: self.mark+V["READ"]}
             headers.update(HEADERS)
             while True:
                 try:
                     if self.connect_closed or not self.pSocket:
                         break
-                    response = self.conn.post(self.connectURL, headers=headers)
+                    response = self.conn.get(self.connectURL, headers=headers)
                     rep_headers = response.headers
                     if response.status_code == 200:
                         status = rep_headers[K["X-STATUS"]]
@@ -357,12 +352,6 @@ class session(Thread):
                                 sleep(READINTERVAL)
                                 continue
                             data = self.decode_body(data)
-                            # data = data[:-3]
-                            # Yes I know this is horrible, but its a quick fix to issues with tomcat 5.x
-                            # bugs that have been reported, will find a propper fix laters
-                            if 'server' in rep_headers:
-                                if rep_headers["server"].find("Apache-Coyote/1.1") > 0:
-                                    data = data[:-1]
                         else:
                             msg = "[READ] [%s:%d] HTTP [%d]: Status: [%s]: Message [{}] Shutting down" % (self.target, self.port, response.status_code, rV[status])
                             self.error_log(msg, rep_headers)
@@ -381,7 +370,7 @@ class session(Thread):
 
     def writer(self):
         try:
-            headers = {K["X-CMD"]: V["FORWARD"], "Content-Type": "application/octet-stream"}
+            headers = {K["X-CMD"]: self.mark+V["FORWARD"], "Content-Type": "application/octet-stream"}
             headers.update(HEADERS)
             while True:
                 try:
@@ -431,18 +420,19 @@ class session(Thread):
             raise
 
 
-def askGeorg(connectURL):
+def askGeorg(conn, connectURL):
     log.info("Checking if Georg is ready")
-    headers = {'User-Agent': USERAGENT}
-    headers.update(HEADERS)
+    headers = {}
     if INIT_COOKIE:
         headers['Cookie'] = INIT_COOKIE
-    response = requests.get(connectURL, headers=headers, proxies=PROXY, verify=False, timeout=5)
+    response = conn.get(connectURL, headers=headers, timeout=5)
     if response.status_code == 200 and BASICCHECKSTRING == response.content.strip():
         log.info("Georg says, 'All seems fine'")
         return True
     else:
         log.error("Georg is not ready, please check url. rep: [{}] {}".format(response.status_code, response.reason))
+        if not args.skip:
+            exit()
 
 
 def choice_useragent():
@@ -616,10 +606,14 @@ if __name__ == '__main__':
         print("  Starting socks server [%s:%d], tunnel at [%s]" % (args.listen_on, args.listen_port, args.url))
         print(separation)
         try:
+            conn = requests.Session()
+            conn.proxies = PROXY
+            conn.verify = False
+            conn.headers['Accept-Encoding'] = 'deflate'
+            conn.headers['User-Agent'] = USERAGENT
+
             servSock_start = False
-            if not args.skip:
-                if not askGeorg(args.url):
-                    exit()
+            askGeorg(conn, args.url)
 
             READBUFSIZE  = min(args.read_buff, 2600)
             MAXTHERADS   = args.max_threads
@@ -635,12 +629,13 @@ if __name__ == '__main__':
                 log.critical(e)
                 exit()
 
+
             while True:
                 try:
                     sock, addr_info = servSock.accept()
                     sock.settimeout(SOCKTIMEOUT)
                     log.debug("Incomming connection")
-                    session(sock, args.url).start()
+                    session(conn, sock, args.url).start()
                 except KeyboardInterrupt as ex:
                     break
                 except Exception as e:
