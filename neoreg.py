@@ -169,12 +169,15 @@ class Rand:
 
 
 class session(Thread):
-    def __init__(self, conn, pSocket, connectURL):
+    def __init__(self, conn, pSocket, connectURLs):
         Thread.__init__(self)
         self.pSocket = pSocket
-        self.connectURL = connectURL
+        self.connectURLs = connectURLs
         self.conn = conn
         self.connect_closed = False
+
+    def url_sample(self):
+        return random.choice(self.connectURLs)
 
     def session_mark(self):
         mark = base64.b64encode(uuid.uuid4().bytes)[0:-2]
@@ -297,7 +300,7 @@ class session(Thread):
         headers.update(HEADERS)
         self.target = target
         self.port = port
-        response = self.conn.get(self.connectURL, headers=headers)
+        response = self.conn.get(self.url_sample(), headers=headers)
 
 
         rep_headers = response.headers
@@ -326,7 +329,7 @@ class session(Thread):
 
             headers = {K["X-CMD"]: self.mark+V["DISCONNECT"]}
             headers.update(HEADERS)
-            response = self.conn.get(self.connectURL, headers=headers)
+            response = self.conn.get(self.url_sample(), headers=headers)
             if not self.connect_closed and response.status_code == 200:
                 if hasattr(self, 'target'):
                     log.info("[DISCONNECT] [%s:%d] Connection Terminated" % (self.target, self.port))
@@ -342,7 +345,7 @@ class session(Thread):
                 try:
                     if self.connect_closed or not self.pSocket:
                         break
-                    response = self.conn.get(self.connectURL, headers=headers)
+                    response = self.conn.get(self.url_sample(), headers=headers)
                     rep_headers = response.headers
                     if response.status_code == 200:
                         status = rep_headers[K["X-STATUS"]]
@@ -379,7 +382,7 @@ class session(Thread):
                     if not data:
                         break
                     data = self.encode_body(data)
-                    response = self.conn.post(self.connectURL, headers=headers, data=data)
+                    response = self.conn.post(self.url_sample(), headers=headers, data=data)
                     rep_headers = response.headers
                     if response.status_code == 200:
                         status = rep_headers[K["X-STATUS"]]
@@ -523,7 +526,7 @@ if __name__ == '__main__':
         args = parser.parse_args()
     else:
         parser = argparse.ArgumentParser(description="Socks server for Neoreg HTTP(s) tunneller. DEBUG MODE: -k (debug_all|debug_base64|debug_headers_key|debug_headers_values)")
-        parser.add_argument("-u", "--url", metavar="URI", required=True, help="The url containing the tunnel script")
+        parser.add_argument("-u", "--url", metavar="URI", required=True, help="The url containing the tunnel script", action='append')
         parser.add_argument("-k", "--key", metavar="KEY", required=True, help="Specify connection key")
         parser.add_argument("-l", "--listen-on", metavar="IP", help="The default listening address.(default: 127.0.0.1)", default="127.0.0.1")
         parser.add_argument("-p", "--listen-port", metavar="PORT", help="The default listening port.(default: 1080)", type=int, default=1080)
@@ -603,7 +606,13 @@ if __name__ == '__main__':
         INIT_COOKIE = args.cookie
         PROXY = { 'http': args.proxy, 'https': args.proxy } if args.proxy else None
 
-        print("  Starting socks server [%s:%d], tunnel at [%s]" % (args.listen_on, args.listen_port, args.url))
+        urls = args.url
+
+        print("  Starting socks server [%s:%d]" % (args.listen_on, args.listen_port) )
+        print("  Tunnel at:")
+        for url in urls:
+            print("    "+url)
+
         print(separation)
         try:
             conn = requests.Session()
@@ -613,7 +622,8 @@ if __name__ == '__main__':
             conn.headers['User-Agent'] = USERAGENT
 
             servSock_start = False
-            askGeorg(conn, args.url)
+            # only check first
+            askGeorg(conn, urls[0])
 
             READBUFSIZE  = min(args.read_buff, 2600)
             MAXTHERADS   = args.max_threads
@@ -635,7 +645,7 @@ if __name__ == '__main__':
                     sock, addr_info = servSock.accept()
                     sock.settimeout(SOCKTIMEOUT)
                     log.debug("Incomming connection")
-                    session(conn, sock, args.url).start()
+                    session(conn, sock, urls).start()
                 except KeyboardInterrupt as ex:
                     break
                 except Exception as e:
