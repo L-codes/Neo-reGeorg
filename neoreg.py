@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 __author__  = 'L'
-__version__ = '1.4.0'
+__version__ = '1.5.0'
 
 import sys
 import os
@@ -294,7 +294,15 @@ class session(Thread):
             headers['Cookie'] = INIT_COOKIE
         self.target = target
         self.port = port
-        response = self.conn.post(self.connectURL, headers=headers)
+
+        if '.php' in  self.connectURL:
+            response = self.conn.post(self.connectURL, headers={K['X-CMD'] : K['X-ERROR'], K['X-TARGET']: self.encode_target(target_data)})
+            try:
+                self.conn.post(self.connectURL, headers=headers, timeout=0.5)
+            except:
+                pass
+        else:
+            self.conn.post(self.connectURL, headers=headers)
 
         if INIT_COOKIE:
             res_cookies = response.cookies.keys()
