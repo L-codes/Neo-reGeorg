@@ -302,7 +302,7 @@ class session(Thread):
             except:
                 pass
         else:
-            self.conn.post(self.connectURL, headers=headers)
+            response = self.conn.post(self.connectURL, headers=headers)
 
         if INIT_COOKIE:
             res_cookies = response.cookies.keys()
