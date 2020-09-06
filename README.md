@@ -26,7 +26,7 @@ Neo-reGeorg
 Version
 ----
 
-1.4.0
+1.5.0
 
 
 
@@ -47,7 +47,6 @@ Basic Usage
 $ python neoreg.py generate -k password
 
     [+] Create neoreg server files:
-       => neoreg_server/tunnel.nosocket.php
        => neoreg_server/tunnel.js
        => neoreg_server/tunnel.php
        => neoreg_server/tunnel.ashx
@@ -173,3 +172,11 @@ GPL 3.0
     jsp(x) 不依赖内置 `base64` 方法，兼容 jdk9 及以上版本
     jsp(x) 移除 `trimDirectiveWhitespaces="true"` 兼容小于 jdk8 版本
     tunnel.tomcat.5.jsp(x) 已移除
+
+### v1.5.0
+    修复 php >= 7.1 版本，无法正常使用的问题
+    修复 php 环境高占用 CPU 的问题  (特别感谢 @junmoxiao 提供的支持)
+    tunnel.nosocket.php 替换 tunnel.php
+
+
+## **V2.0正在开发阶段，解决更多的使用场景问题，有什么建议欢迎提交 [ISSUE](https://github.com/L-codes/Neo-reGeorg/issues)**

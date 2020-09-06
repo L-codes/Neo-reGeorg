@@ -25,7 +25,7 @@ Neo-reGeorg
 Version
 ----
 
-1.4.0
+1.5.0
 
 
 
@@ -46,7 +46,6 @@ Set the password to generate tunnel server.(aspx|ashx|jsp|jspx|php) and upload i
 $ python neoreg.py generate -k password
 
     [+] Create neoreg server files:
-       => neoreg_server/tunnel.nosocket.php
        => neoreg_server/tunnel.js
        => neoreg_server/tunnel.php
        => neoreg_server/tunnel.ashx
@@ -170,3 +169,10 @@ GPL 3.0
     jsp(x) does not rely on the built-in `base64` method, compatible with jdk9 and above
     jsp(x) remove `trimDirectiveWhitespaces="true"` to be compatible with versions less than jdk8
     tunnel.tomcat.5.jsp(x) has been removed
+
+### v1.5.0
+    Fix the problem that php >= 7.1 version cannot be used normally
+    Fix the problem of high CPU usage in php environment (special thanks to @junmoxiao for the support)
+    tunnel.nosocket.php replace tunnel.php
+
+## **V2.0 is in the development stage to solve more usage scenarios. Any suggestions are welcome to submit [ISSUE](https://github.com/L-codes/Neo-reGeorg/issues)**
