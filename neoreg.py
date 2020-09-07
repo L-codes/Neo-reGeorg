@@ -426,6 +426,7 @@ class session(Thread):
 def askGeorg(conn, connectURL):
     log.info("Checking if Georg is ready")
     headers = {}
+    headers.update(HEADERS)
     if INIT_COOKIE:
         headers['Cookie'] = INIT_COOKIE
     response = conn.get(connectURL, headers=headers, timeout=5)
