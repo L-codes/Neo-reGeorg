@@ -15,21 +15,15 @@
 				socketChannel.configureBlocking(false);
 				session.setAttribute(mark, socketChannel);
 				response.setHeader("X-STATUS", "OK");
-			} catch (UnknownHostException e) {
-				System.out.println(e.getMessage());
-				response.setHeader("X-ERROR", e.getMessage());
-				response.setHeader("X-STATUS", "FAIL");
-			} catch (IOException e) {
-				System.out.println(e.getMessage());
-				response.setHeader("X-ERROR", e.getMessage());
+			} catch (Exception e) {
+				response.setHeader("X-ERROR", "Failed connecting to target");
 				response.setHeader("X-STATUS", "FAIL");
 			}
 		} else if (cmd.compareTo("DISCONNECT") == 0) {
 			SocketChannel socketChannel = (SocketChannel)session.getAttribute(mark);
 			try{
 				socketChannel.socket().close();
-			} catch (Exception ex) {
-				System.out.println(ex.getMessage());
+			} catch (Exception e) {
 			}
             session.removeAttribute(mark);
 		} else if (cmd.compareTo("READ") == 0){
@@ -52,8 +46,6 @@
 				so.close();
 				
 			} catch (Exception e) {
-				System.out.println(e.getMessage());
-				response.setHeader("X-ERROR", e.getMessage());
 				response.setHeader("X-STATUS", "FAIL");
 			}
 			
@@ -77,8 +69,7 @@
 				response.setHeader("X-STATUS", "OK");
 				
 			} catch (Exception e) {
-				System.out.println(e.getMessage());
-				response.setHeader("X-ERROR", e.getMessage());
+				response.setHeader("X-ERROR", "POST request read filed");
 				response.setHeader("X-STATUS", "FAIL");
 				socketChannel.socket().close();
 			}

@@ -184,7 +184,7 @@ class session(Thread):
         if ispython3:
             mark = mark.decode()
         mark = mark.replace('+', ' ').replace('/', '_')
-        mark = re.sub('^ ', 'L', mark) # Invalid return character or leading space in header
+        mark = re.sub('^ | $', 'L', mark) # Invalid return character or leading space in header
         return mark
 
     def parseSocks5(self, sock):
