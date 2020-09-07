@@ -184,6 +184,7 @@ class session(Thread):
         if ispython3:
             mark = mark.decode()
         mark = mark.replace('+', ' ').replace('/', '_')
+        mark = re.sub('^ ', 'L', mark) # Invalid return character or leading space in header
         return mark
 
     def parseSocks5(self, sock):
@@ -300,7 +301,15 @@ class session(Thread):
         headers.update(HEADERS)
         self.target = target
         self.port = port
-        response = self.conn.get(self.url_sample(), headers=headers)
+
+        if '.php' in self.connectURLs[0]:
+            try:
+                response = self.conn.get(self.url_sample(), headers=headers, timeout=0.5)
+            except:
+                log.info("[%s:%d] HTTP [200]: mark [%s]" % (self.target, self.port, self.mark))
+                return self.mark
+        else:
+            response = self.conn.get(self.url_sample(), headers=headers)
 
 
         rep_headers = response.headers
@@ -434,8 +443,10 @@ def askGeorg(conn, connectURL):
         log.info("Georg says, 'All seems fine'")
         return True
     else:
-        log.error("Georg is not ready, please check url. rep: [{}] {}".format(response.status_code, response.reason))
-        if not args.skip:
+        if args.skip:
+            log.debug("Ignore detecting that Georg is ready")
+        else:
+            log.error("Georg is not ready, please check url. rep: [{}] {}".format(response.status_code, response.reason))
             exit()
 
 
