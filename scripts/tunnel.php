@@ -3,6 +3,8 @@ ini_set("allow_url_fopen", true);
 ini_set("allow_url_include", true);
 error_reporting(E_ERROR | E_PARSE);
 
+@http_response_code(HTTPCODE);
+
 if( !function_exists('apache_request_headers') ) {
     function apache_request_headers() {
         $arh = array();

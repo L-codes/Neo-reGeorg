@@ -313,20 +313,16 @@ class session(Thread):
 
 
         rep_headers = response.headers
-        if response.status_code == 200:
-            if K['X-STATUS'] in rep_headers:
-                status = rep_headers[K["X-STATUS"]]
-            else:
-                log.critical('Bad KEY or non-neoreg server')
-                return False
+        if K['X-STATUS'] in rep_headers:
+            status = rep_headers[K["X-STATUS"]]
             if status == V["OK"]:
-                log.info("[%s:%d] HTTP [200]: mark [%s]" % (self.target, self.port, self.mark))
+                log.info("[%s:%d] Session mark [%s]" % (self.target, self.port, self.mark))
                 return self.mark
             else:
-                self.error_log('[CONNECT] ERROR: {}', rep_headers)
+                self.error_log('[CONNECT] [%s:%d] ERROR: {}' % (self.target, self.port), rep_headers)
         else:
-            self.error_log("[CONNECT] [%s:%d] HTTP [%d]: [{}]" % (self.target, self.port, response.status_code), rep_headers)
-            log.error("[CONNECT] [%s:%d] RemoteError: %s" % (self.target, self.port, response.text))
+            log.critical('Bad KEY or non-neoreg server')
+            return False
 
     def closeRemoteSession(self):
         if not self.connect_closed:
@@ -334,12 +330,12 @@ class session(Thread):
                 self.pSocket.close()
                 log.debug("[%s:%d] Closing localsocket" % (self.target, self.port))
             except:
-                log.debug("Localsocket already closed")
+                log.debug("[%s:%d] Localsocket already closed" % (self.target, self.port))
 
             headers = {K["X-CMD"]: self.mark+V["DISCONNECT"]}
             headers.update(HEADERS)
             response = self.conn.get(self.url_sample(), headers=headers)
-            if not self.connect_closed and response.status_code == 200:
+            if not self.connect_closed:
                 if hasattr(self, 'target'):
                     log.info("[DISCONNECT] [%s:%d] Connection Terminated" % (self.target, self.port))
                 else:
@@ -356,7 +352,7 @@ class session(Thread):
                         break
                     response = self.conn.get(self.url_sample(), headers=headers)
                     rep_headers = response.headers
-                    if response.status_code == 200:
+                    if K['X-STATUS'] in rep_headers:
                         status = rep_headers[K["X-STATUS"]]
                         if status == V["OK"]:
                             data = response.content
@@ -393,7 +389,7 @@ class session(Thread):
                     data = self.encode_body(data)
                     response = self.conn.post(self.url_sample(), headers=headers, data=data)
                     rep_headers = response.headers
-                    if response.status_code == 200:
+                    if K['X-STATUS'] in rep_headers:
                         status = rep_headers[K["X-STATUS"]]
                         if status != V["OK"]:
                             msg = "[FORWARD] [%s:%d] HTTP [%d]: Status: [%s]: Message [{}] Shutting down" % (self.target, self.port, response.status_code, rV[status])
@@ -439,7 +435,7 @@ def askGeorg(conn, connectURL):
     if INIT_COOKIE:
         headers['Cookie'] = INIT_COOKIE
     response = conn.get(connectURL, headers=headers, timeout=5)
-    if response.status_code == 200 and BASICCHECKSTRING == response.content.strip():
+    if BASICCHECKSTRING == response.content.strip():
         log.info("Georg says, 'All seems fine'")
         return True
     else:
@@ -534,7 +530,8 @@ if __name__ == '__main__':
         parser.add_argument("-k", "--key", metavar="KEY", required=True, help="Specify connection key.")
         parser.add_argument("-o", "--outdir", metavar="DIR", help="Output directory.", default='neoreg_server')
         parser.add_argument("-f", "--file", metavar="FILE", help="Camouflage html page file")
-        parser.add_argument("--read-buff", metavar="Bytes", help="Remote read buffer.(default: 513)", type=int, default=513)
+        parser.add_argument("-c", "--httpcode", metavar="CODE", help="Specify HTTP response code. (default: 200)", type=int, default=200)
+        parser.add_argument("--read-buff", metavar="Bytes", help="Remote read buffer. (default: 513)", type=int, default=513)
         args = parser.parse_args()
     else:
         parser = argparse.ArgumentParser(description="Socks server for Neoreg HTTP(s) tunneller. DEBUG MODE: -k (debug_all|debug_base64|debug_headers_key|debug_headers_values)")
@@ -713,6 +710,9 @@ if __name__ == '__main__':
 
                 for k, v in chain(K.items(), V.items()):
                     text = re.sub(r'\b%s\b' % k, v, text)
+
+                text = re.sub(r"\bHTTPCODE\b", str(args.httpcode), text)
+
                 file_write(outfile, text)
                 print("       => %s/%s" % (outdir, os.path.basename(outfile)))
         print('')

