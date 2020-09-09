@@ -378,7 +378,7 @@ class session(Thread):
 
     def writer(self):
         try:
-            headers = {K["X-CMD"]: self.mark+V["FORWARD"], "Content-Type": "application/octet-stream"}
+            headers = {K["X-CMD"]: self.mark+V["FORWARD"]}
             headers.update(HEADERS)
             while True:
                 try:
@@ -434,7 +434,11 @@ def askGeorg(conn, connectURL):
     headers.update(HEADERS)
     if INIT_COOKIE:
         headers['Cookie'] = INIT_COOKIE
-    response = conn.get(connectURL, headers=headers, timeout=5)
+    try:
+        response = conn.get(connectURL, headers=headers, timeout=5)
+    except:
+        log.error("Georg is not ready, please check url.")
+        exit()
     if BASICCHECKSTRING == response.content.strip():
         log.info("Georg says, 'All seems fine'")
         return True
