@@ -407,7 +407,6 @@ class session(Thread):
         except Exception as e:
             log.error('[RUN] {}'.format(e))
             self.closeRemoteSession()
-            raise
 
 
 def askGeorg(conn, connectURL):
