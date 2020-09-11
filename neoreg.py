@@ -513,7 +513,7 @@ if __name__ == '__main__':
         del sys.argv[1] 
         parser = argparse.ArgumentParser(description='Generate neoreg webshell')
         parser.add_argument("-k", "--key", metavar="KEY", required=True, help="Specify connection key.")
-        parser.add_argument("-o", "--outdir", metavar="DIR", help="Output directory.", default='neoreg_server')
+        parser.add_argument("-o", "--outdir", metavar="DIR", help="Output directory.", default='neoreg_servers')
         parser.add_argument("-f", "--file", metavar="FILE", help="Camouflage html page file")
         parser.add_argument("-c", "--httpcode", metavar="CODE", help="Specify HTTP response code. (default: 200)", type=int, default=200)
         parser.add_argument("--read-buff", metavar="Bytes", help="Remote read buffer. (default: 513)", type=int, default=513)
@@ -676,7 +676,7 @@ if __name__ == '__main__':
             else:
                 M_BASE64ARRAY.append(-1)
 
-        script_dir = os.path.join(ROOT, 'scripts')
+        script_dir = os.path.join(ROOT, 'templates')
         print("    [+] Create neoreg server files:")
         for filename in os.listdir(script_dir):
             outfile = os.path.join(outdir, filename)
