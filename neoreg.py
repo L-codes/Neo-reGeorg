@@ -214,6 +214,8 @@ class session(Thread):
                 except:
                     log.error("DNS resolution failed(%s)" % target.decode())
                     return False
+            else:
+                target = target.decode()
         elif atyp == b"\x04":    # IPv6
             target = sock.recv(16)
             targetPort = sock.recv(2)
@@ -536,8 +538,6 @@ if __name__ == '__main__':
 
     rand = Rand(args.key)
 
-    LOCALDNS = args.local_dns
-
     BASE64CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
     if args.key in ['debug_all', 'debug_base64']:
         M_BASE64CHARS = BASE64CHARS
@@ -580,6 +580,9 @@ if __name__ == '__main__':
         # neoreg connect
         if args.v > 2:
             args.v = 2
+
+        LOCALDNS = args.local_dns
+
         LEVELNAME, LEVELLOG = LEVEL[args.v]
         log.setLevel(LEVELLOG)
         transferLog.setLevel(LEVELLOG)
