@@ -32,7 +32,13 @@ public class GenericHandler1 : IHttpHandler, System.Web.SessionState.IRequiresSe
                         String[] target_ary = target_str.Split('|');
                         String target = target_ary[0];
                         int port = int.Parse(target_ary[1]);
-                        IPAddress ip = IPAddress.Parse(target);
+                        IPAddress ip;
+                        try {
+                            ip = IPAddress.Parse(target);
+                        } catch (Exception ex) {
+                            IPHostEntry host = Dns.GetHostByName(target);
+                            ip = host.AddressList[0];
+                        }
                         System.Net.IPEndPoint remoteEP = new IPEndPoint(ip, port);
                         Socket sender = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
                         sender.Connect(remoteEP);

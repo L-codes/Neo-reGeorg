@@ -206,11 +206,12 @@ class session(Thread):
             targetLen = ord(sock.recv(1)) # hostname length (1 byte)
             target = sock.recv(targetLen)
             targetPort = sock.recv(2)
-            try:
-                target = gethostbyname(target)
-            except:
-                log.error("DNS resolution failed(%s)" % target.decode())
-                return False
+            if LOCALDNS:
+                try:
+                    target = gethostbyname(target)
+                except:
+                    log.error("DNS resolution failed(%s)" % target.decode())
+                    return False
         elif atyp == b"\x04":    # IPv6
             target = sock.recv(16)
             targetPort = sock.recv(2)
@@ -223,7 +224,11 @@ class session(Thread):
         elif cmd == b"\x03": # UDP
             raise SocksCmdNotImplemented("Socks5 - UDP not implemented")
         elif cmd == b"\x01": # CONNECT
-            serverIp = inet_aton(target)
+            try:
+                serverIp = inet_aton(target)
+            except:
+                # Forged temporary address 127.0.0.1
+                serverIp = inet_aton('127.0.0.1')
             mark = self.setupRemoteSession(target, targetPortNum)
             if mark:
                 sock.sendall(VER + SUCCESS + b"\x00" + b"\x01" + serverIp + targetPort)
@@ -547,6 +552,7 @@ if __name__ == '__main__':
         parser.add_argument("-H", "--header", metavar="LINE", help="Pass custom header LINE to server", action='append', default=[])
         parser.add_argument("-c", "--cookie", metavar="LINE", help="Custom init cookies")
         parser.add_argument("-x", "--proxy", metavar="LINE", help="proto://host[:port]  Use proxy on given port", default=None)
+        parser.add_argument("--local-dns", help="Local read buffer, max data to be sent per POST.(default: 2048 max: 2600)", action='store_true')
         parser.add_argument("--read-buff", metavar="Bytes", help="Local read buffer, max data to be sent per POST.(default: 2048 max: 2600)", type=int, default=READBUFSIZE)
         parser.add_argument("--read-interval", metavar="MS", help="Read data interval in milliseconds.(default: 100)", type=int, default=READINTERVAL)
         parser.add_argument("--max-threads", metavar="N", help="Proxy max threads.(default: 1000)", type=int, default=MAXTHERADS)
@@ -554,6 +560,8 @@ if __name__ == '__main__':
         args = parser.parse_args()
 
     rand = Rand(args.key)
+
+    LOCALDNS = args.local_dns
 
     BASE64CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
     if args.key in ['debug_all', 'debug_base64']:
