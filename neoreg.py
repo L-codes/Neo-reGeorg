@@ -427,7 +427,7 @@ def askGeorg(conn, connectURL):
         if args.skip:
             log.debug("Ignore detecting that Georg is ready")
         else:
-            log.error("Georg is not ready, please check url. rep: [{}] {}".format(response.status_code, response.reason))
+            log.error("Georg is not ready, please check URL and KEY. rep: [{}] {}".format(response.status_code, response.reason))
             exit()
 
 
