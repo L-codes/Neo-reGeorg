@@ -126,6 +126,8 @@ class SocksProtocolNotImplemented(Exception):
 class RemoteConnectionFailed(Exception):
     pass
 
+class DoesNotSupportTheProtocol(Exception):
+    pass
 
 class Rand:
     def __init__(self, key):
@@ -239,41 +241,12 @@ class session(Thread):
 
         raise SocksCmdNotImplemented("Socks5 - Unknown CMD")
 
-    def parseSocks4(self, sock):
-        log.debug("SocksVersion4 detected")
-        cmd = sock.recv(1)
-        if cmd == b"\x01":  # CONNECT
-            targetPort = sock.recv(2)
-            targetPortNum = struct.unpack('>H', targetPort)[0]
-            serverIp = sock.recv(4)
-            username = sock.recv(1)
-            if serverIp == b'\x00\x00\x00\x01':
-                serverIp = sock.recv(254)[:-1]  # max length hostname
-                try:
-                    target = gethostbyname(serverIp)
-                except:
-                    log.error("DNS resolution failed(%s)" % target.decode())
-                    return False
-                serverIp = inet_aton(target)
-            else:
-                target = inet_ntoa(serverIp)
-
-            mark = self.setupRemoteSession(target, targetPortNum)
-            if mark:
-                sock.sendall(b"\x00" + b"\x5a" + serverIp + targetPort)
-                return True
-            else:
-                sock.sendall(b"\x00" + b"\x91" + serverIp + targetPort)
-                raise RemoteConnectionFailed("Remote connection failed")
-        else:
-            raise SocksProtocolNotImplemented("Socks4 - Command [%d] Not implemented" % ord(cmd))
-
     def handleSocks(self, sock):
         ver = sock.recv(1)
         if ver == b"\x05":
             return self.parseSocks5(sock)
-        elif ver == b"\x04":
-            return self.parseSocks4(sock)
+        else:
+            raise DoesNotSupportTheProtocol("Only support Socks5 protocol")
 
     def error_log(self, str_format, headers):
         if K['X-ERROR'] in headers:
@@ -335,11 +308,13 @@ class session(Thread):
                 self.pSocket.close()
                 log.debug("[%s:%d] Closing localsocket" % (self.target, self.port))
             except:
-                log.debug("[%s:%d] Localsocket already closed" % (self.target, self.port))
+                if hasattr(self, 'target'):
+                    log.debug("[%s:%d] Localsocket already closed" % (self.target, self.port))
 
-            headers = {K["X-CMD"]: self.mark+V["DISCONNECT"]}
-            headers.update(HEADERS)
-            response = self.conn.get(self.url_sample(), headers=headers)
+            if hasattr(self, 'mark'):
+                headers = {K["X-CMD"]: self.mark+V["DISCONNECT"]}
+                headers.update(HEADERS)
+                response = self.conn.get(self.url_sample(), headers=headers)
             if not self.connect_closed:
                 if hasattr(self, 'target'):
                     log.info("[DISCONNECT] [%s:%d] Connection Terminated" % (self.target, self.port))
