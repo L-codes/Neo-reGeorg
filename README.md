@@ -10,8 +10,6 @@ Neo-reGeorg
 * 提高传输内容保密性
 * 解决 reGeorg 现存在的问题，修复部分小BUG
 
-
-
 ## Features
 
 * 传输内容经过变形base64加密，伪装成base64编码
@@ -179,4 +177,15 @@ GPL 3.0
     tunnel.nosocket.php 替换 tunnel.php
 
 
-## **V2.0正在开发阶段，解决更多的使用场景问题，有什么建议欢迎提交 [ISSUE](https://github.com/L-codes/Neo-reGeorg/issues)**
+### **V2.0 已经进入测试阶段，解决更多的使用场景问题，有什么建议欢迎提交 [ISSUE](https://github.com/L-codes/Neo-reGeorg/issues)**
+    实现单 Session 多 TCP 会话，解决部分负载均衡环境仅支持单 Session HTTP 通讯导致的无法使用
+    支持同服务器多 URL 的请求路径，避免单路径访问频率过高
+    支持自定义服务端的 HTTP 响应码
+    修改了部分指令为 GET , 更接近正常请求
+    去除空行与去除部分特征
+    支持服务端的 DNS 解析，并默认使用 (使用本地 DNS 解析用 `--local-dns`)
+    优化了错误信息输出
+    修改了目录名称 scripts/ => templates/ 和 neoreg_server/ => neoreg_servers/
+    移除 socks4 的支持
+    移除 javascript tunnel 支持
+
