@@ -1,7 +1,7 @@
 Neo-reGeorg
 =========
 
-[简体中文](README.md)　｜　[English](README-zh.md)
+[简体中文](README.md)　｜　[English](README-en.md)
 
 **Neo-reGeorg** 是一个旨在积极重构 [reGeorg](https://github.com/sensepost/reGeorg) 的项目，目的是：
 
@@ -31,9 +31,7 @@ Features
 Version
 ----
 
-2.0.0
-
-[版本修改日志](CHANGELOG.md)
+2.0.0 - [版本修改日志](CHANGELOG.md)
 
 
 
