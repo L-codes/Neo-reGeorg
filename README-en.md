@@ -103,51 +103,50 @@ $ python neoreg.py -k <you_password> -u <url_1> -u <url_2> -u <url_3> ...
 ```ruby
 # Generate server-side scripts
 $ python neoreg.py generate -h
-	usage: neoreg.py [-h] -k KEY [-o DIR] [-f FILE] [-c CODE] [--read-buff Bytes]
+    usage: neoreg.py [-h] -k KEY [-o DIR] [-f FILE] [-c CODE] [--read-buff Bytes]
 
-	Generate neoreg webshell
+    Generate neoreg webshell
 
-	optional arguments:
-	  -h, --help            show this help message and exit
-	  -k KEY, --key KEY     Specify connection key.
-	  -o DIR, --outdir DIR  Output directory.
-	  -f FILE, --file FILE  Camouflage html page file
-	  -c CODE, --httpcode CODE
-							Specify HTTP response code. (default: 200)
-	  --read-buff Bytes     Remote read buffer. (default: 513)
+    optional arguments:
+      -h, --help            show this help message and exit
+      -k KEY, --key KEY     Specify connection key.
+      -o DIR, --outdir DIR  Output directory.
+      -f FILE, --file FILE  Camouflage html page file
+      -c CODE, --httpcode CODE
+                            Specify HTTP response code. (default: 200)
+      --read-buff Bytes     Remote read buffer. (default: 513)
 
 # Connection server
 $ python neoreg.py -h
-	usage: neoreg.py [-h] -u URI -k KEY [-l IP] [-p PORT] [-s] [-H LINE] [-c LINE]
-					 [-x LINE] [--local-dns] [--read-buff Bytes]
-					 [--read-interval MS] [--max-threads N] [-v]
+    usage: neoreg.py [-h] -u URI -k KEY [-l IP] [-p PORT] [-s] [-H LINE] [-c LINE]
+                     [-x LINE] [--local-dns] [--read-buff Bytes]
+                     [--read-interval MS] [--max-threads N] [-v]
 
-	Socks server for Neoreg HTTP(s) tunneller. DEBUG MODE: -k
-	(debug_all|debug_base64|debug_headers_key|debug_headers_values)
+    Socks server for Neoreg HTTP(s) tunneller. DEBUG MODE: -k
+    (debug_all|debug_base64|debug_headers_key|debug_headers_values)
 
-	optional arguments:
-	  -h, --help            show this help message and exit
-	  -u URI, --url URI     The url containing the tunnel script
-	  -k KEY, --key KEY     Specify connection key
-	  -l IP, --listen-on IP
-							The default listening address.(default: 127.0.0.1)
-	  -p PORT, --listen-port PORT
-							The default listening port.(default: 1080)
-	  -s, --skip            Skip usability testing
-	  -H LINE, --header LINE
-							Pass custom header LINE to server
-	  -c LINE, --cookie LINE
-							Custom init cookies
-	  -x LINE, --proxy LINE
-							proto://host[:port] Use proxy on given port
-	  --local-dns           Local read buffer, max data to be sent per
-							POST.(default: 2048 max: 2600)
-	  --read-buff Bytes     Local read buffer, max data to be sent per
-							POST.(default: 2048 max: 2600)
-	  --read-interval MS    Read data interval in milliseconds.(default: 100)
-	  --max-threads N       Proxy max threads.(default: 1000)
-	  -v                    Increase verbosity level (use -vv or more for greater
-							effect)
+    optional arguments:
+      -h, --help            show this help message and exit
+      -u URI, --url URI     The url containing the tunnel script
+      -k KEY, --key KEY     Specify connection key
+      -l IP, --listen-on IP
+                            The default listening address.(default: 127.0.0.1)
+      -p PORT, --listen-port PORT
+                            The default listening port.(default: 1080)
+      -s, --skip            Skip usability testing
+      -H LINE, --header LINE
+                            Pass custom header LINE to server
+      -c LINE, --cookie LINE
+                            Custom init cookies
+      -x LINE, --proxy LINE
+                            proto://host[:port] Use proxy on given port
+      --local-dns           Local read buffer, max data to be sent per
+                            POST.(default: 2048 max: 2600)
+      --read-buff Bytes     Local read buffer, max data to be sent per
+                            POST.(default: 2048 max: 2600)
+      --read-interval MS    Read data interval in milliseconds.(default: 100)
+      --max-threads N       Proxy max threads.(default: 1000)
+      -v                    Increase verbosity level (use -vv or more for greater effect)
 ```
 
 
