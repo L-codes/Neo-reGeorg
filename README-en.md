@@ -12,6 +12,12 @@ Neo-reGeorg
 
 
 
+Version
+----
+
+2.0.0 - [Change Log](CHANGELOG.md)
+
+
 Features
 ----
 
@@ -25,12 +31,6 @@ Features
 * Compatible with python2 / python3
 * High compatibility of the server environment
 * Refer to [pivotnacci](https://github.com/blackarrowsec/pivotnacci) to implement a single `SESSION` to create multiple TCP connections to deal with some load balancing scenarios
-
-
-Version
-----
-
-2.0.0 - [Change Log](CHANGELOG.md)
 
 
 Dependencies

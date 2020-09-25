@@ -12,6 +12,13 @@ Neo-reGeorg
 
 
 
+Version
+----
+
+2.0.0 - [版本修改日志](CHANGELOG.md)
+
+
+
 Features
 ----
 
@@ -25,13 +32,6 @@ Features
 * 兼容 python2 / python3
 * 服务端环境的高兼容性
 * 参考 [pivotnacci](https://github.com/blackarrowsec/pivotnacci) 实现单 Session 创建多 TCP 连接，应对部分负载均衡场景
-
-
-
-Version
-----
-
-2.0.0 - [版本修改日志](CHANGELOG.md)
 
 
 
