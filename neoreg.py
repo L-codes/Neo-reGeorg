@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 __author__  = 'L'
-__version__ = '2.0.0'
+__version__ = '2.0.1'
 
 import sys
 import os
@@ -191,7 +191,8 @@ class session(Thread):
 
     def parseSocks5(self, sock):
         log.debug("SocksVersion5 detected")
-        nmethods, methods = (sock.recv(1), sock.recv(1))
+        nmethods = sock.recv(1)
+        methods = sock.recv(ord(nmethods))
         sock.sendall(VER + METHOD)
         ver = sock.recv(1)
         if ver == b"\x02":                # this is a hack for proxychains
