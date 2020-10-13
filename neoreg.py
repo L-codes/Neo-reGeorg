@@ -599,7 +599,7 @@ if __name__ == '__main__':
                 key, value = header.split(':', 1)
                 HEADERS[key.strip()] = value.strip()
             else:
-                log.info("Error parameter: -H %s" % header)
+                print("\nError parameter: -H %s" % header)
                 exit()
 
         INIT_COOKIE = args.cookie
