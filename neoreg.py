@@ -595,7 +595,7 @@ if __name__ == '__main__':
 
         HEADERS = {}
         for header in args.header:
-            if header.count(':') == 1:
+            if ':' in header:
                 key, value = header.split(':', 1)
                 HEADERS[key.strip()] = value.strip()
             else:
