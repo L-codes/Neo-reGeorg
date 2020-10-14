@@ -427,8 +427,15 @@ def askGeorg(conn, connectURL):
     else:
         if args.skip:
             log.debug("Ignore detecting that Georg is ready")
+
         else:
-            log.error("Georg is not ready, please check URL and KEY. rep: [{}] {}".format(response.status_code, response.reason))
+            if K['X-ERROR'] in response.headers:
+                message = response.headers[K["X-ERROR"]]
+                if message in rV:
+                    message = rV[message]
+                log.error("Georg is not ready. Error message: %s" % message)
+            else:
+                log.error("Georg is not ready, please check URL and KEY. rep: [{}] {}".format(response.status_code, response.reason))
             exit()
 
 
@@ -528,6 +535,7 @@ if __name__ == '__main__':
         parser.add_argument("-s", "--skip", help="Skip usability testing", action='store_true')
         parser.add_argument("-H", "--header", metavar="LINE", help="Pass custom header LINE to server", action='append', default=[])
         parser.add_argument("-c", "--cookie", metavar="LINE", help="Custom init cookies")
+        parser.add_argument("-r", "--redirect-url", metavar="URL", help="Intranet forwarding the designated server (only jsp(x))")
         parser.add_argument("-x", "--proxy", metavar="LINE", help="proto://host[:port]  Use proxy on given port", default=None)
         parser.add_argument("--local-dns", help="Local read buffer, max data to be sent per POST.(default: 2048 max: 2600)", action='store_true')
         parser.add_argument("--read-buff", metavar="Bytes", help="Local read buffer, max data to be sent per POST.(default: 2048 max: 2600)", type=int, default=READBUFSIZE)
@@ -557,7 +565,7 @@ if __name__ == '__main__':
     BASICCHECKSTRING = ('<!-- ' + rand.header_value() + ' -->').encode()
 
     K = {}
-    for name in ["X-STATUS", "X-ERROR", "X-CMD", "X-TARGET"]:
+    for name in ["X-STATUS", "X-ERROR", "X-CMD", "X-TARGET", "X-REDIRECTURL"]:
         if args.key in ['debug_all', 'debug_headers_key']:
             K[name] = name
         else:
@@ -567,7 +575,7 @@ if __name__ == '__main__':
     rV = {}
     for name in ["FAIL", "Failed creating socket", "Failed connecting to target", "OK", "Failed writing socket",
             "CONNECT", "DISCONNECT", "READ", "FORWARD", "Failed reading from socket", "No more running, close now",
-            "POST request read filed"]:
+            "POST request read filed", "Intranet forwarding failed"]:
         if args.key in ['debug_all', 'debug_headers_value']:
             V[name] = name
             rV[name] = name
@@ -594,6 +602,12 @@ if __name__ == '__main__':
         USERAGENT = choice_useragent()
 
         HEADERS = {}
+        if args.redirect_url:
+            data = base64.b64encode(args.redirect_url.encode())
+            if ispython3:
+                data = data.decode()
+            HEADERS[K['X-REDIRECTURL']] = data.translate(EncodeMap)
+
         for header in args.header:
             if ':' in header:
                 key, value = header.split(':', 1)
@@ -611,6 +625,9 @@ if __name__ == '__main__':
         print("  Tunnel at:")
         for url in urls:
             print("    "+url)
+
+        if args.redirect_url:
+            print("  Redirect to:\n    "+ args.redirect_url)
 
         print(separation)
         try:
