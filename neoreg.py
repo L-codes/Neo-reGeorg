@@ -171,15 +171,24 @@ class Rand:
 
 
 class session(Thread):
-    def __init__(self, conn, pSocket, connectURLs):
+    def __init__(self, conn, pSocket, connectURLs, redirectURLs):
         Thread.__init__(self)
         self.pSocket = pSocket
         self.connectURLs = connectURLs
+        self.redirectURLs = redirectURLs
         self.conn = conn
         self.connect_closed = False
 
     def url_sample(self):
         return random.choice(self.connectURLs)
+
+    def redirect_url_sample(self):
+        return random.choice(self.redirectURLs)
+
+    def headerupdate(self, headers):
+        headers.update(HEADERS)
+        if self.redirectURLs:
+            headers[K['X-REDIRECTURL']] = self.redirect_url_sample()
 
     def session_mark(self):
         mark = base64.b64encode(uuid.uuid4().bytes)[0:-2]
@@ -279,7 +288,7 @@ class session(Thread):
         self.mark = self.session_mark()
         target_data = ("%s|%d" % (target, port)).encode()
         headers = {K["X-CMD"]: self.mark+V["CONNECT"], K["X-TARGET"]: self.encode_target(target_data)}
-        headers.update(HEADERS)
+        self.headerupdate(headers)
         self.target = target
         self.port = port
 
@@ -316,7 +325,7 @@ class session(Thread):
 
             if hasattr(self, 'mark'):
                 headers = {K["X-CMD"]: self.mark+V["DISCONNECT"]}
-                headers.update(HEADERS)
+                self.headerupdate(headers)
                 response = self.conn.get(self.url_sample(), headers=headers)
             if not self.connect_closed:
                 if hasattr(self, 'target'):
@@ -328,7 +337,7 @@ class session(Thread):
     def reader(self):
         try:
             headers = {K["X-CMD"]: self.mark+V["READ"]}
-            headers.update(HEADERS)
+            self.headerupdate(headers)
             while True:
                 try:
                     if self.connect_closed or not self.pSocket:
@@ -362,7 +371,7 @@ class session(Thread):
     def writer(self):
         try:
             headers = {K["X-CMD"]: self.mark+V["FORWARD"]}
-            headers.update(HEADERS)
+            self.headerupdate(headers)
             while True:
                 try:
                     self.pSocket.settimeout(1)
@@ -410,14 +419,20 @@ class session(Thread):
             self.closeRemoteSession()
 
 
-def askGeorg(conn, connectURL):
+def askGeorg(conn, connectURLs, redirectURLs):
+    # only check first
     log.info("Checking if Georg is ready")
     headers = {}
     headers.update(HEADERS)
+
+    if redirectURLs:
+        headers[K['X-REDIRECTURL']] = redirectURLs[0]
+
     if INIT_COOKIE:
         headers['Cookie'] = INIT_COOKIE
+
     try:
-        response = conn.get(connectURL, headers=headers, timeout=5)
+        response = conn.get(connectURLs[0], headers=headers, timeout=5)
     except:
         log.error("Georg is not ready, please check url.")
         exit()
@@ -529,13 +544,13 @@ if __name__ == '__main__':
     else:
         parser = argparse.ArgumentParser(description="Socks server for Neoreg HTTP(s) tunneller. DEBUG MODE: -k (debug_all|debug_base64|debug_headers_key|debug_headers_values)")
         parser.add_argument("-u", "--url", metavar="URI", required=True, help="The url containing the tunnel script", action='append')
+        parser.add_argument("-r", "--redirect-url", metavar="URL", help="Intranet forwarding the designated server (only jsp(x))", action='append')
         parser.add_argument("-k", "--key", metavar="KEY", required=True, help="Specify connection key")
         parser.add_argument("-l", "--listen-on", metavar="IP", help="The default listening address.(default: 127.0.0.1)", default="127.0.0.1")
         parser.add_argument("-p", "--listen-port", metavar="PORT", help="The default listening port.(default: 1080)", type=int, default=1080)
         parser.add_argument("-s", "--skip", help="Skip usability testing", action='store_true')
         parser.add_argument("-H", "--header", metavar="LINE", help="Pass custom header LINE to server", action='append', default=[])
         parser.add_argument("-c", "--cookie", metavar="LINE", help="Custom init cookies")
-        parser.add_argument("-r", "--redirect-url", metavar="URL", help="Intranet forwarding the designated server (only jsp(x))")
         parser.add_argument("-x", "--proxy", metavar="LINE", help="proto://host[:port]  Use proxy on given port", default=None)
         parser.add_argument("--local-dns", help="Local read buffer, max data to be sent per POST.(default: 2048 max: 2600)", action='store_true')
         parser.add_argument("--read-buff", metavar="Bytes", help="Local read buffer, max data to be sent per POST.(default: 2048 max: 2600)", type=int, default=READBUFSIZE)
@@ -601,12 +616,16 @@ if __name__ == '__main__':
 
         USERAGENT = choice_useragent()
 
+        urls = args.url
+        redirect_urls = []
+
         HEADERS = {}
         if args.redirect_url:
-            data = base64.b64encode(args.redirect_url.encode())
-            if ispython3:
-                data = data.decode()
-            HEADERS[K['X-REDIRECTURL']] = data.translate(EncodeMap)
+            for url in args.redirect_url:
+                data = base64.b64encode(url.encode())
+                if ispython3:
+                    data = data.decode()
+                redirect_urls.append( data.translate(EncodeMap) )
 
         for header in args.header:
             if ':' in header:
@@ -619,8 +638,6 @@ if __name__ == '__main__':
         INIT_COOKIE = args.cookie
         PROXY = { 'http': args.proxy, 'https': args.proxy } if args.proxy else None
 
-        urls = args.url
-
         print("  Starting socks server [%s:%d]" % (args.listen_on, args.listen_port) )
         print("  Tunnel at:")
         for url in urls:
@@ -629,8 +646,10 @@ if __name__ == '__main__':
         if args.proxy:
             print("  Client Proxy:\n    "+ args.proxy)
 
-        if args.redirect_url:
-            print("  Redirect to:\n    "+ args.redirect_url)
+        if redirect_urls:
+            print("  Redirect to:")
+            for url in args.redirect_url:
+                print("    "+url)
 
         print(separation)
         try:
@@ -641,8 +660,7 @@ if __name__ == '__main__':
             conn.headers['User-Agent'] = USERAGENT
 
             servSock_start = False
-            # only check first
-            askGeorg(conn, urls[0])
+            askGeorg(conn, urls, redirect_urls)
 
             READBUFSIZE  = min(args.read_buff, 2600)
             MAXTHERADS   = args.max_threads
@@ -664,7 +682,7 @@ if __name__ == '__main__':
                     sock, addr_info = servSock.accept()
                     sock.settimeout(SOCKTIMEOUT)
                     log.debug("Incomming connection")
-                    session(conn, sock, urls).start()
+                    session(conn, sock, urls, redirect_urls).start()
                 except KeyboardInterrupt as ex:
                     break
                 except Exception as e:
