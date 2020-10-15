@@ -1,4 +1,4 @@
-<%@page import="java.nio.ByteBuffer, java.net.InetSocketAddress, java.nio.channels.SocketChannel, java.util.Arrays, java.io.*, java.net.UnknownHostException, java.net.*"%>
+<%@page import="java.nio.ByteBuffer, java.net.InetSocketAddress, java.nio.channels.SocketChannel, java.io.*, java.net.*"%>
 <%
     String rUrl = request.getHeader("X-REDIRECTURL");
     if (rUrl != null) {
@@ -176,6 +176,7 @@
     }
 
     private static void redirectRequest(String urlheader, String url, HttpServletRequest request, HttpServletResponse response) throws Exception {
+        response.reset();
         ServletInputStream inputStream = request.getInputStream();
         String method = request.getMethod();
         URL u = new URL(url);
@@ -219,8 +220,6 @@
                 response.setHeader(key, value);
             }
         }
-        if (conn.getHeaderFields().get("Set-Cookie") == null && request.getHeader("Cookie") != null)
-            response.setHeader("Set-Cookie", request.getHeader("Cookie"));
 
         InputStream hin;
         if (conn.getResponseCode() < HttpURLConnection.HTTP_BAD_REQUEST) {
