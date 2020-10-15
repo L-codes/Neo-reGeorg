@@ -125,8 +125,8 @@ $ python neoreg.py generate -h
 
 # 连接服务端
 $ python neoreg.py -h
-    usage: neoreg.py [-h] -u URI -k KEY [-l IP] [-p PORT] [-s] [-H LINE] [-c LINE]
-                     [-x LINE] [--local-dns] [--read-buff Bytes]
+    usage: neoreg.py [-h] -u URI [-r URL] -k KEY [-l IP] [-p PORT] [-s] [-H LINE]
+                     [-c LINE] [-x LINE] [--local-dns] [--read-buff Bytes]
                      [--read-interval MS] [--max-threads N] [-v]
 
     Socks server for Neoreg HTTP(s) tunneller. DEBUG MODE: -k
@@ -135,6 +135,9 @@ $ python neoreg.py -h
     optional arguments:
       -h, --help            show this help message and exit
       -u URI, --url URI     The url containing the tunnel script
+      -r URL, --redirect-url URL
+                            Intranet forwarding the designated server (only
+                            jsp(x))
       -k KEY, --key KEY     Specify connection key
       -l IP, --listen-on IP
                             The default listening address.(default: 127.0.0.1)
@@ -153,7 +156,8 @@ $ python neoreg.py -h
                             POST.(default: 2048 max: 2600)
       --read-interval MS    Read data interval in milliseconds.(default: 100)
       --max-threads N       Proxy max threads.(default: 1000)
-      -v                    Increase verbosity level (use -vv or more for greater effect)
+      -v                    Increase verbosity level (use -vv or more for greater
+                            effect)
 ```
 
 
