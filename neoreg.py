@@ -55,6 +55,7 @@ BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE = range(8)
 # CRITICAL > ERROR > WARNING > INFO > DEBUG > NOTSET
 LEVEL = [
     ('ERROR', logging.ERROR),
+    ('WARNING', logging.WARNING),
     ('INFO', logging.INFO),
     ('DEBUG', logging.DEBUG),
 ]
@@ -436,6 +437,10 @@ def askGeorg(conn, connectURLs, redirectURLs):
     except:
         log.error("Georg is not ready, please check url.")
         exit()
+    
+    if redirectURLs and response.status_code >= 400:
+        log.warning('Using redirection will affect performance when the response code >= 400')
+
     if BASICCHECKSTRING == response.content.strip():
         log.info("Georg says, 'All seems fine'")
         return True
@@ -538,7 +543,7 @@ if __name__ == '__main__':
         parser.add_argument("-k", "--key", metavar="KEY", required=True, help="Specify connection key.")
         parser.add_argument("-o", "--outdir", metavar="DIR", help="Output directory.", default='neoreg_servers')
         parser.add_argument("-f", "--file", metavar="FILE", help="Camouflage html page file")
-        parser.add_argument("-c", "--httpcode", metavar="CODE", help="Specify HTTP response code. (default: 200)", type=int, default=200)
+        parser.add_argument("-c", "--httpcode", metavar="CODE", help="Specify HTTP response code. When using -r, it is recommended to <400. (default: 200)", type=int, default=200)
         parser.add_argument("--read-buff", metavar="Bytes", help="Remote read buffer. (default: 513)", type=int, default=513)
         args = parser.parse_args()
     else:
@@ -744,4 +749,3 @@ if __name__ == '__main__':
                 file_write(outfile, text)
                 print("       => %s/%s" % (outdir, os.path.basename(outfile)))
         print('')
-

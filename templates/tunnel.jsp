@@ -141,6 +141,10 @@
             hin = conn.getInputStream();
         } else {
             hin = conn.getErrorStream();
+            if (hin == null){
+                response.setStatus(HTTPCODE);
+                return;
+            }
         }
 
         ServletOutputStream outputStream = response.getOutputStream();
