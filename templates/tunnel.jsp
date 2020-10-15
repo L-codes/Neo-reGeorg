@@ -55,6 +55,7 @@
 
             } catch (Exception e) {
                 response.setHeader("X-STATUS", "FAIL");
+                puts(response, "");
             }
 
         } else if (cmd.compareTo("FORWARD") == 0){
