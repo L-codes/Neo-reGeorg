@@ -177,15 +177,14 @@
 
     private static void redirectRequest(String urlheader, String url, HttpServletRequest request, HttpServletResponse response) throws Exception {
         response.reset();
-        ServletInputStream inputStream = request.getInputStream();
         String method = request.getMethod();
         URL u = new URL(url);
         HttpURLConnection conn = (HttpURLConnection) u.openConnection();
         conn.setRequestMethod(method);
         conn.setDoOutput(true);
 
-		// conn.setConnectTimeout(200);
-		// conn.setReadTimeout(200);
+        // conn.setConnectTimeout(200);
+        // conn.setReadTimeout(200);
 
         java.util.Enumeration enu=request.getHeaderNames();
         while(enu.hasMoreElements()){
@@ -196,21 +195,24 @@
             }
         }
 
-        OutputStream output;
-        try{
-            output = conn.getOutputStream();
-        }catch(Exception e){
-            response.setHeader("X-ERROR", "Intranet forwarding failed");
-            return;
-        }
-
+        int i;
         byte[] buffer = new byte[1024];
-        int i = 0;
-        while ((i = inputStream.read(buffer)) != -1) {
-            output.write(buffer, 0, i);
+        if (request.getContentLength() != -1){
+            OutputStream output;
+            try{
+                output = conn.getOutputStream();
+            }catch(Exception e){
+                response.setHeader("X-ERROR", "Intranet forwarding failed");
+                return;
+            }
+
+            ServletInputStream inputStream = request.getInputStream();
+            while ((i = inputStream.read(buffer)) != -1) {
+                output.write(buffer, 0, i);
+            }
+            output.flush();
+            output.close();
         }
-        output.flush();
-        output.close();
 
         for (String key : conn.getHeaderFields().keySet()) {
             // Solve the jdk low version conn.getHeaderFields()
