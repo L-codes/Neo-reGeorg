@@ -15,7 +15,7 @@ Neo-reGeorg
 Version
 ----
 
-2.0.0 - [Change Log](CHANGELOG.md)
+2.1.0 - [Change Log](CHANGELOG.md)
 
 
 Features
@@ -31,6 +31,7 @@ Features
 * Compatible with python2 / python3
 * High compatibility of the server environment
 * Refer to [pivotnacci](https://github.com/blackarrowsec/pivotnacci) to implement a single `SESSION` to create multiple TCP connections to deal with some load balancing scenarios
+* Support HTTP forwarding, coping with load balancing environment
 
 
 Dependencies
@@ -99,6 +100,11 @@ $ python neoreg.py -k <you_password> -u <server_url> -H 'Authorization: cm9vdDpp
 $ python neoreg.py -k <you_password> -u <url_1> -u <url_2> -u <url_3> ...
 ```
 
+5. Turn on http forwarding to cope with load balancing
+```ruby
+$ python neoreg.py -k <you_password> -u <url> -r <redirect_url>
+```
+
 * For more information on performance and stability parameters, refer to -h help information
 ```ruby
 # Generate server-side scripts
@@ -113,13 +119,14 @@ $ python neoreg.py generate -h
       -o DIR, --outdir DIR  Output directory.
       -f FILE, --file FILE  Camouflage html page file
       -c CODE, --httpcode CODE
-                            Specify HTTP response code. (default: 200)
+                            Specify HTTP response code. When using -r, it is
+                            recommended to <400. (default: 200)
       --read-buff Bytes     Remote read buffer. (default: 513)
 
 # Connection server
 $ python neoreg.py -h
-    usage: neoreg.py [-h] -u URI -k KEY [-l IP] [-p PORT] [-s] [-H LINE] [-c LINE]
-                     [-x LINE] [--local-dns] [--read-buff Bytes]
+    usage: neoreg.py [-h] -u URI [-r URL] -k KEY [-l IP] [-p PORT] [-s] [-H LINE]
+                     [-c LINE] [-x LINE] [--local-dns] [--read-buff Bytes]
                      [--read-interval MS] [--max-threads N] [-v]
 
     Socks server for Neoreg HTTP(s) tunneller. DEBUG MODE: -k
@@ -128,6 +135,9 @@ $ python neoreg.py -h
     optional arguments:
       -h, --help            show this help message and exit
       -u URI, --url URI     The url containing the tunnel script
+      -r URL, --redirect-url URL
+                            Intranet forwarding the designated server (only
+                            jsp(x))
       -k KEY, --key KEY     Specify connection key
       -l IP, --listen-on IP
                             The default listening address.(default: 127.0.0.1)
@@ -146,7 +156,8 @@ $ python neoreg.py -h
                             POST.(default: 2048 max: 2600)
       --read-interval MS    Read data interval in milliseconds.(default: 100)
       --max-threads N       Proxy max threads.(default: 1000)
-      -v                    Increase verbosity level (use -vv or more for greater effect)
+      -v                    Increase verbosity level (use -vv or more for greater
+                            effect)
 ```
 
 

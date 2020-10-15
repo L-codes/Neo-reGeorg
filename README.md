@@ -15,7 +15,7 @@ Neo-reGeorg
 Version
 ----
 
-2.0.0 - [版本修改日志](CHANGELOG.md)
+2.1.0 - [版本修改日志](CHANGELOG.md)
 
 
 
@@ -32,6 +32,7 @@ Features
 * 兼容 python2 / python3
 * 服务端环境的高兼容性
 * 参考 [pivotnacci](https://github.com/blackarrowsec/pivotnacci) 实现单 Session 创建多 TCP 连接，应对部分负载均衡场景
+* 支持内网转发，应对负载均衡环境
 
 
 
@@ -100,6 +101,10 @@ $ python neoreg.py -k <you_password> -u <server_url> -H 'Authorization: cm9vdDpp
 $ python neoreg.py -k <you_password> -u <url_1> -u <url_2> -u <url_3> ...
 ```
 
+5. 开启内网转发，应对负载均衡
+```ruby
+$ python neoreg.py -k <you_password> -u <url> -r <redirect_url>
+```
 
 * 更多关于性能和稳定性的参数设置参考 -h 帮助信息
 ```ruby
