@@ -626,6 +626,9 @@ if __name__ == '__main__':
         for url in urls:
             print("    "+url)
 
+        if args.proxy:
+            print("  Client Proxy:\n    "+ args.proxy)
+
         if args.redirect_url:
             print("  Redirect to:\n    "+ args.redirect_url)
 
