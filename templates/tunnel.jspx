@@ -81,7 +81,7 @@
     }
 
     void puts(HttpServletResponse r, String str) throws Exception {
-        byte[] bs = str.getBytes();
+        byte[] bs = str.getBytes("ISO8859-1");
         ServletOutputStream so = r.getOutputStream();
         so.write(bs, 0, bs.length);
         so.close();
