@@ -661,7 +661,7 @@ if __name__ == '__main__':
             conn = requests.Session()
             conn.proxies = PROXY
             conn.verify = False
-            conn.headers['Accept-Encoding'] = 'deflate'
+            conn.headers['Accept-Encoding'] = 'gzip, deflate'
             conn.headers['User-Agent'] = USERAGENT
 
             servSock_start = False
