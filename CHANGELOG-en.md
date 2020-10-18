@@ -1,5 +1,10 @@
 # Change Log
 
+### v2.2.0
+    Fix the wrong encoding problem of `--file` file
+    Optimize the transmission rate
+    Intranet forwarding, no forwarding locally
+
 ### v2.1.0
     Support HTTP forwarding, coping with load balancing environment
     Optimize the output printing information

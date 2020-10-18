@@ -15,7 +15,7 @@ Neo-reGeorg
 Version
 ----
 
-2.1.0 - [版本修改日志](CHANGELOG.md)
+2.2.0 - [版本修改日志](CHANGELOG.md)
 
 
 
