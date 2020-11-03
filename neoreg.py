@@ -100,12 +100,13 @@ class ColoredFormatter(logging.Formatter):
 class ColoredLogger(logging.Logger):
 
     def __init__(self, name):
+        use_color = not sys.platform.startswith('win')
         FORMAT = "[$BOLD%(levelname)-19s$RESET]  %(message)s"
-        COLOR_FORMAT = formatter_message(FORMAT, True)
+        COLOR_FORMAT = formatter_message(FORMAT, use_color)
         logging.Logger.__init__(self, name, 'INFO')
         if (name == "transfer"):
             COLOR_FORMAT = "\x1b[80D\x1b[1A\x1b[K%s" % COLOR_FORMAT
-        color_formatter = ColoredFormatter(COLOR_FORMAT)
+        color_formatter = ColoredFormatter(COLOR_FORMAT, use_color)
         console = logging.StreamHandler()
         console.setFormatter(color_formatter)
         self.addHandler(console)
@@ -691,6 +692,7 @@ if __name__ == '__main__':
                     log.debug("Incomming connection")
                     session(conn, sock, urls, redirect_urls).start()
                 except KeyboardInterrupt as ex:
+                    print('\r  \n[Interrupt] Receive Ctrl+C to exit.')
                     break
                 except Exception as e:
                     log.error(e)
