@@ -1,5 +1,10 @@
 # Change Log
 
+### v2.3.0
+    jsp(x) 恢复兼容低版本 jdk 的 `trimDirectiveWhitespaces` 设置版本 `tunnel_compatibility.jsp(x)`
+    jsp(x) 的 `response.getOutputStream()` 替换成 `out.write()` 解决 websphere 上错误信息导致的性能与稳定性问题
+    关闭 Windows 上的彩色终端打印
+
 ### v2.2.0
     修复 `--file` 文件的错误编码问题
     优化传输速率

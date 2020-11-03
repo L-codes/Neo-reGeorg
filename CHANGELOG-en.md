@@ -1,5 +1,10 @@
 # Change Log
 
+### v2.3.0
+    jsp(x) Restore the `trimDirectiveWhitespaces` set version `tunnel_compatibility.jsp(x)` that is compatible with the lower version of jdk
+    jsp(x) `response.getOutputStream()` replaced with ʻout.write()` to solve the performance and stability problems caused by error messages on websphere
+    Turn off color terminal printing on Windows
+
 ### v2.2.0
     Fix the wrong encoding problem of `--file` file
     Optimize the transmission rate

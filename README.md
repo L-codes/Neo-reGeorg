@@ -15,7 +15,7 @@ Neo-reGeorg
 Version
 ----
 
-2.2.0 - [版本修改日志](CHANGELOG.md)
+2.3.0 - [版本修改日志](CHANGELOG.md)
 
 
 
@@ -53,10 +53,12 @@ $ python neoreg.py generate -k password
 
     [+] Create neoreg server files:
        => neoreg_servers/tunnel.jspx
+       => neoreg_servers/tunnel_compatibility.jspx
        => neoreg_servers/tunnel.php
        => neoreg_servers/tunnel.ashx
        => neoreg_servers/tunnel.aspx
        => neoreg_servers/tunnel.jsp
+       => neoreg_servers/tunnel_compatibility.jsp
 
 ```
 
