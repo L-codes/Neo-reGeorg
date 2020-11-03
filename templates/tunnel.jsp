@@ -1,4 +1,4 @@
-<%@page import="java.nio.ByteBuffer, java.nio.channels.SocketChannel, java.io.*, java.net.*, java.util.*" trimDirectiveWhitespaces="true"%>
+<%@page import="java.nio.ByteBuffer, java.nio.channels.SocketChannel, java.io.*, java.net.*, java.util.*" pageEncoding="utf-8" trimDirectiveWhitespaces="true"%>
 <%!
     private static char[] en = "BASE64 CHARSLIST".toCharArray();
     public static String b64en(byte[] data) {

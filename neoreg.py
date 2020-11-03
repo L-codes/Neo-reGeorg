@@ -361,8 +361,10 @@ class session(Thread):
                     else:
                         log.error("[READ] [%s:%d] HTTP [%d]: Shutting down" % (self.target, self.port, response.status_code))
                         break
-                    transferLog.info("[%s:%d] <<<< [%d]" % (self.target, self.port, len(data)))
-                    self.pSocket.send(data)
+
+                    if len(data) > 0:
+                        transferLog.info("[%s:%d] <<<< [%d]" % (self.target, self.port, len(data)))
+                        self.pSocket.send(data)
                 except error: # python2 socket.send error
                     pass
                 except Exception as ex:
@@ -692,7 +694,6 @@ if __name__ == '__main__':
                     log.debug("Incomming connection")
                     session(conn, sock, urls, redirect_urls).start()
                 except KeyboardInterrupt as ex:
-                    print('\r  \n[Interrupt] Receive Ctrl+C to exit.')
                     break
                 except Exception as e:
                     log.error(e)
@@ -733,10 +734,10 @@ if __name__ == '__main__':
                 text = file_read(filepath)
 
                 if args.file:
-                    http_get_content = file_read(args.file).replace('"', '\\"').replace('\n', '')
+                    http_get_content = file_read(args.file).replace('"', '\\"').replace('\n', '\\n')
                 else:
                     http_get_content = BASICCHECKSTRING.decode()
-                text = re.sub(r"Georg says, 'All seems fine'", http_get_content, text)
+                text = text.replace(r"Georg says, 'All seems fine'", http_get_content)
 
                 text = re.sub(r"BASE64 CHARSLIST", M_BASE64CHARS, text)
 
