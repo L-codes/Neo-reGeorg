@@ -455,6 +455,8 @@ def askGeorg(conn, connectURLs, redirectURLs):
                     message = rV[message]
                 log.error("Georg is not ready. Error message: %s" % message)
             else:
+                log.error('Expect Response: ' + BASICCHECKSTRING[0:100])
+                log.error('Real Response: ' + response.content.strip()[0:100])
                 log.error("Georg is not ready, please check URL and KEY. rep: [{}] {}".format(response.status_code, response.reason))
             exit()
 
@@ -724,9 +726,9 @@ if __name__ == '__main__':
         print("    [+] Create neoreg server files:")
         for filename in os.listdir(script_dir):
             outfile = os.path.join(outdir, filename)
-            filename = os.path.join(script_dir, filename)
-            if os.path.isfile(filename) and os.path.basename(filename).startswith('tunnel.'):
-                text = file_read(filename)
+            filepath = os.path.join(script_dir, filename)
+            if os.path.isfile(filepath) and filename.startswith('tunnel.'):
+                text = file_read(filepath)
 
                 if args.file:
                     http_get_content = file_read(args.file).replace('"', '\\"').replace('\n', '')
@@ -748,4 +750,11 @@ if __name__ == '__main__':
 
                 file_write(outfile, text)
                 print("       => %s/%s" % (outdir, os.path.basename(outfile)))
+
+                # jsp/jspx trimDirectiveWhitespaces=true
+                if filename.endswith(('.jsp', '.jspx')):
+                    text = text.replace(' trimDirectiveWhitespaces="true"', '')
+                    outfile = os.path.join(outdir, filename.replace('tunnel.', 'tunnel_compatibility.'))
+                    file_write(outfile, text)
+                    print("       => %s/%s" % (outdir, os.path.basename(outfile)))
         print('')

