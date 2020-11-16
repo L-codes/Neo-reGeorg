@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 __author__  = 'L'
-__version__ = '2.3.0'
+__version__ = '2.3.1'
 
 import sys
 import os
@@ -458,8 +458,8 @@ def askGeorg(conn, connectURLs, redirectURLs):
                     message = rV[message]
                 log.error("Georg is not ready. Error message: %s" % message)
             else:
-                log.error('Expect Response: ' + BASICCHECKSTRING[0:100])
-                log.error('Real Response: ' + response.content.strip()[0:100])
+                log.error('Expect Response: {}'.format(BASICCHECKSTRING[0:100]))
+                log.error('Real Response: {}'.format(response.content.strip()[0:100]))
                 log.error("Georg is not ready, please check URL and KEY. rep: [{}] {}".format(response.status_code, response.reason))
             exit()
 
