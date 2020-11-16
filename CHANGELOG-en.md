@@ -1,5 +1,9 @@
 # Change Log
 
+### v2.3.1
+    Fix the BUG in response to error messages in python3
+    Optimized the error message reminder
+
 ### v2.3.0
     jsp(x) Restore the `trimDirectiveWhitespaces` set version `tunnel_compatibility.jsp(x)` that is compatible with the lower version of jdk
     jsp(x) `response.getOutputStream()` replaced with ʻout.write()` to solve the performance and stability problems caused by error messages on websphere

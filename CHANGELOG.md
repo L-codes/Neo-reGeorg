@@ -1,5 +1,9 @@
 # Change Log
 
+### v2.3.1
+    修复 python3 中 response 错误信息提醒 BUG
+    优化了错误信息提醒
+
 ### v2.3.0
     jsp(x) 恢复兼容低版本 jdk 的 `trimDirectiveWhitespaces` 设置版本 `tunnel_compatibility.jsp(x)`
     jsp(x) 的 `response.getOutputStream()` 替换成 `out.write()` 解决 websphere 上错误信息导致的性能与稳定性问题

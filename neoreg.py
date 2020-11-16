@@ -458,9 +458,10 @@ def askGeorg(conn, connectURLs, redirectURLs):
                     message = rV[message]
                 log.error("Georg is not ready. Error message: %s" % message)
             else:
-                log.error('Expect Response: {}'.format(BASICCHECKSTRING[0:100]))
-                log.error('Real Response: {}'.format(response.content.strip()[0:100]))
+                log.warning('Expect Response: {}'.format(BASICCHECKSTRING[0:100]))
+                log.warning('Real Response: {}'.format(response.content.strip()[0:100]))
                 log.error("Georg is not ready, please check URL and KEY. rep: [{}] {}".format(response.status_code, response.reason))
+                log.error("You can set the `--skip` parameter to ignore errors")
             exit()
 
 
