@@ -1,5 +1,8 @@
 # Change Log
 
+### v2.3.2
+    修复 `--local-dns` 参数注释
+
 ### v2.3.1
     修复 python3 中 response 错误信息提醒 BUG
     优化了错误信息提醒

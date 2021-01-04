@@ -1,5 +1,8 @@
 # Change Log
 
+### v2.3.2
+    Fix `--local-dns` commit
+
 ### v2.3.1
     Fix the BUG in response to error messages in python3
     Optimized the error message reminder

@@ -15,7 +15,7 @@ Neo-reGeorg
 Version
 ----
 
-2.3.1 - [版本修改日志](CHANGELOG.md)
+2.3.2 - [版本修改日志](CHANGELOG.md)
 
 
 
@@ -151,9 +151,8 @@ $ python neoreg.py -h
       -c LINE, --cookie LINE
                             Custom init cookies
       -x LINE, --proxy LINE
-                            proto://host[:port] Use proxy on given port
-      --local-dns           Local read buffer, max data to be sent per
-                            POST.(default: 2048 max: 2600)
+                            Proto://host[:port] Use proxy on given port
+      --local-dns           Use local resolution DNS
       --read-buff Bytes     Local read buffer, max data to be sent per
                             POST.(default: 2048 max: 2600)
       --read-interval MS    Read data interval in milliseconds.(default: 100)
