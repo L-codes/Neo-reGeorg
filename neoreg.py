@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 __author__  = 'L'
-__version__ = '2.3.1'
+__version__ = '2.3.2'
 
 import sys
 import os
@@ -562,8 +562,8 @@ if __name__ == '__main__':
         parser.add_argument("-s", "--skip", help="Skip usability testing", action='store_true')
         parser.add_argument("-H", "--header", metavar="LINE", help="Pass custom header LINE to server", action='append', default=[])
         parser.add_argument("-c", "--cookie", metavar="LINE", help="Custom init cookies")
-        parser.add_argument("-x", "--proxy", metavar="LINE", help="proto://host[:port]  Use proxy on given port", default=None)
-        parser.add_argument("--local-dns", help="Local read buffer, max data to be sent per POST.(default: 2048 max: 2600)", action='store_true')
+        parser.add_argument("-x", "--proxy", metavar="LINE", help="Proto://host[:port]  Use proxy on given port", default=None)
+        parser.add_argument("--local-dns", help="Use local resolution DNS", action='store_true')
         parser.add_argument("--read-buff", metavar="Bytes", help="Local read buffer, max data to be sent per POST.(default: 2048 max: 2600)", type=int, default=READBUFSIZE)
         parser.add_argument("--read-interval", metavar="MS", help="Read data interval in milliseconds.(default: 100)", type=int, default=READINTERVAL)
         parser.add_argument("--max-threads", metavar="N", help="Proxy max threads.(default: 1000)", type=int, default=MAXTHERADS)
