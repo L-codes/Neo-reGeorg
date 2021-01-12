@@ -1,5 +1,8 @@
 # Change Log
 
+### v2.4.0
+    修复非 apache 的环境 BUG [php]
+
 ### v2.3.2
     修复 `--local-dns` 参数注释
 

@@ -1,5 +1,8 @@
 # Change Log
 
+### v2.4.0
+    Fix non-apache environment BUG [php]
+
 ### v2.3.2
     Fix `--local-dns` commit
 
