@@ -175,3 +175,9 @@ License
 ----
 
 GPL 3.0
+
+
+Stargazers over time
+----
+
+[![Stargazers over time](https://starchart.cc/L-codes/Neo-reGeorg.svg)](https://starchart.cc/L-codes/Neo-reGeorg)
