@@ -1,5 +1,9 @@
 # Change Log
 
+### v2.4.1
+    添加 Session 过期提示
+    调整 `askGeorg` 检测请求，timeout 为 10 秒
+
 ### v2.4.0
     修复非 apache 的环境 BUG [php]
 

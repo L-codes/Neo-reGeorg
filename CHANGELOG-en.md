@@ -1,5 +1,9 @@
 # Change Log
 
+### v2.4.1
+    Added session expiration reminder
+    Adjust `askGeorg` detection request, timeout is 10 seconds
+
 ### v2.4.0
     Fix non-apache environment BUG [php]
 
