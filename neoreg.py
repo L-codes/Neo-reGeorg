@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 __author__  = 'L'
-__version__ = '2.4.0'
+__version__ = '2.4.1'
 
 import sys
 import os
@@ -15,7 +15,8 @@ import logging
 import argparse
 import requests
 import uuid
-from time import sleep
+from time import sleep, time, mktime
+from datetime import datetime
 from socket import *
 from itertools import chain
 from threading import Thread
@@ -435,12 +436,32 @@ def askGeorg(conn, connectURLs, redirectURLs):
     if INIT_COOKIE:
         headers['Cookie'] = INIT_COOKIE
 
+    need_exit = False
     try:
-        response = conn.get(connectURLs[0], headers=headers, timeout=5)
+        response = conn.get(connectURLs[0], headers=headers, timeout=10)
+        if 'Expires' in response.headers:
+            expires = response.headers['Expires']
+            try:
+                expires_date = datetime.strptime(expires, '%a, %d %b %Y %H:%M:%S %Z')
+                if mktime(expires_date.timetuple()) < time():
+                    log.error('Server Session expired')
+                    if 'Set-Cookie' in response.headers:
+                        cookie = ''
+                        for k, v in response.cookies.items():
+                            cookie += '{}={};'.format(k, v)
+                        log.error("You can add the following parameters to use:\n            -H 'Cookie: {}'".format(cookie))
+                    else:
+                        log.error('There is no valid cookie return')
+                    need_exit = True
+            except ValueError:
+                log.warning('Expires wrong format: {}'.format(expires))
     except:
-        log.error("Georg is not ready, please check url.")
+        log.error("Georg is not ready, please check URL.")
         exit()
-    
+
+    if need_exit:
+        exit()
+
     if redirectURLs and response.status_code >= 400:
         log.warning('Using redirection will affect performance when the response code >= 400')
 
@@ -544,7 +565,7 @@ if __name__ == '__main__':
         print(use_examples)
         exit()
     elif len(sys.argv) > 1 and sys.argv[1] == 'generate':
-        del sys.argv[1] 
+        del sys.argv[1]
         parser = argparse.ArgumentParser(description='Generate neoreg webshell')
         parser.add_argument("-k", "--key", metavar="KEY", required=True, help="Specify connection key.")
         parser.add_argument("-o", "--outdir", metavar="DIR", help="Output directory.", default='neoreg_servers')
