@@ -121,14 +121,6 @@ transferLog = logging.getLogger("transfer")
 class SocksCmdNotImplemented(Exception):
     pass
 
-
-class SocksProtocolNotImplemented(Exception):
-    pass
-
-
-class RemoteConnectionFailed(Exception):
-    pass
-
 class DoesNotSupportTheProtocol(Exception):
     pass
 
@@ -181,6 +173,7 @@ class session(Thread):
         self.redirectURLs = redirectURLs
         self.conn = conn
         self.connect_closed = False
+        self.socks_connected = False
 
     def url_sample(self):
         return random.choice(self.connectURLs)
@@ -234,6 +227,9 @@ class session(Thread):
             targetPort = sock.recv(2)
             target = inet_ntop(AF_INET6, target)
 
+        if targetPort == None:
+            return False
+
         targetPortNum = struct.unpack('>H', targetPort)[0]
 
         if cmd == b"\x02":   # BIND
@@ -252,16 +248,27 @@ class session(Thread):
                 return True
             else:
                 sock.sendall(VER + REFUSED + b"\x00" + b"\x01" + serverIp + targetPort)
-                raise RemoteConnectionFailed("[%s:%d] [Abnormal Response] Remote failed" % (target, targetPortNum))
+                log.error("[%s:%d] [Abnormal Response] Remote failed" % (target, targetPortNum))
+                return False
 
         raise SocksCmdNotImplemented("Socks5 - Unknown CMD")
 
     def handleSocks(self, sock):
-        ver = sock.recv(1)
-        if ver == b"\x05":
-            return self.parseSocks5(sock)
-        else:
-            raise DoesNotSupportTheProtocol("Only support Socks5 protocol")
+        try:
+            ver = sock.recv(1)
+            if ver == b"\x05":
+                res = self.parseSocks5(sock)
+                if not res:
+                    sock.close()
+                return res
+            elif ver == b'':
+                log.warning("[SOCKS] Failed to get version")
+            else:
+                raise DoesNotSupportTheProtocol("Only support Socks5 protocol")
+        except OSError:
+            return False
+        except timeout:
+            return False
 
     def error_log(self, str_format, headers):
         if K['X-ERROR'] in headers:
@@ -318,24 +325,27 @@ class session(Thread):
             return False
 
     def closeRemoteSession(self):
-        if not self.connect_closed:
-            try:
-                self.pSocket.close()
-                log.debug("[%s:%d] Closing localsocket" % (self.target, self.port))
-            except:
-                if hasattr(self, 'target'):
-                    log.debug("[%s:%d] Localsocket already closed" % (self.target, self.port))
-
-            if hasattr(self, 'mark'):
-                headers = {K["X-CMD"]: self.mark+V["DISCONNECT"]}
-                self.headerupdate(headers)
-                response = self.conn.get(self.url_sample(), headers=headers)
+        try:
             if not self.connect_closed:
-                if hasattr(self, 'target'):
-                    log.info("[DISCONNECT] [%s:%d] Connection Terminated" % (self.target, self.port))
-                else:
-                    log.error("[DISCONNECT] Can't find target")
-            self.connect_closed = True
+                self.connect_closed = True
+                try:
+                    self.pSocket.close()
+                    log.debug("[%s:%d] Closing localsocket" % (self.target, self.port))
+                except:
+                    if hasattr(self, 'target'):
+                        log.debug("[%s:%d] Localsocket already closed" % (self.target, self.port))
+
+                if hasattr(self, 'mark'):
+                    headers = {K["X-CMD"]: self.mark+V["DISCONNECT"]}
+                    self.headerupdate(headers)
+                    response = self.conn.get(self.url_sample(), headers=headers)
+                if not self.connect_closed:
+                    if hasattr(self, 'target'):
+                        log.info("[DISCONNECT] [%s:%d] Connection Terminated" % (self.target, self.port))
+                    else:
+                        log.error("[DISCONNECT] Can't find target")
+        except requests.exceptions.ConnectionError as e:
+            log.warning('[requests.exceptions.ConnectionError] {}'.format(e))
 
     def reader(self):
         try:
@@ -343,7 +353,7 @@ class session(Thread):
             self.headerupdate(headers)
             while True:
                 try:
-                    if self.connect_closed or not self.pSocket:
+                    if self.connect_closed or self.pSocket.fileno() == -1:
                         break
                     response = self.conn.get(self.url_sample(), headers=headers)
                     rep_headers = response.headers
@@ -368,6 +378,9 @@ class session(Thread):
                         self.pSocket.send(data)
                 except error: # python2 socket.send error
                     pass
+                except requests.exceptions.ConnectionError as e: # python2 socket.send error
+                    log.warning('[requests.exceptions.ConnectionError] {}'.format(e))
+                    sleep(1)
                 except Exception as ex:
                     raise ex
         finally:
@@ -379,7 +392,6 @@ class session(Thread):
             self.headerupdate(headers)
             while True:
                 try:
-                    self.pSocket.settimeout(1)
                     data = self.pSocket.recv(READBUFSIZE)
                     if not data:
                         break
@@ -398,6 +410,13 @@ class session(Thread):
                     transferLog.info("[%s:%d] >>>> [%d]" % (self.target, self.port, len(data)))
                 except timeout:
                     continue
+                except error:
+                    break
+                except OSError:
+                    break
+                except requests.exceptions.ConnectionError as e: # python2 socket.send error
+                    log.error('[requests.exceptions.ConnectionError] {}'.format(e))
+                    break
                 except Exception as ex:
                     raise ex
                     break
@@ -406,7 +425,8 @@ class session(Thread):
 
     def run(self):
         try:
-            if self.handleSocks(self.pSocket):
+            self.socks_connected = self.handleSocks(self.pSocket)
+            if self.socks_connected:
                 log.debug("Staring reader")
                 r = Thread(target=self.reader)
                 r.start()
@@ -417,11 +437,14 @@ class session(Thread):
                 w.join()
         except SocksCmdNotImplemented as si:
             log.error('[SocksCmdNotImplemented] {}'.format(si))
-        except SocksProtocolNotImplemented as spi:
-            log.error('[SocksProtocolNotImplemented] {}'.format(spi))
+        except requests.exceptions.ConnectionError as e:
+            log.warning('[requests.exceptions.ConnectionError] {}'.format(e))
         except Exception as e:
             log.error('[RUN] {}'.format(e))
-            self.closeRemoteSession()
+            raise e
+        finally:
+            if self.socks_connected:
+                self.closeRemoteSession()
 
 
 def askGeorg(conn, connectURLs, redirectURLs):
@@ -717,6 +740,15 @@ if __name__ == '__main__':
                     session(conn, sock, urls, redirect_urls).start()
                 except KeyboardInterrupt as ex:
                     break
+                except timeout:
+                    log.warning("[Socks Connect Tiemout] {}".format(addr_info))
+                    if sock:
+                        sock.close()
+                except OSError:
+                    if sock:
+                        sock.close()
+                except error:
+                    pass
                 except Exception as e:
                     log.error(e)
                     raise e
