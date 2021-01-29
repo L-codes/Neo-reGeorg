@@ -44,7 +44,7 @@ REFUSED           = b"\x05"
 # Globals
 READBUFSIZE  = 2048
 MAXTHERADS   = 1000
-READINTERVAL = 100
+READINTERVAL = 500
 
 # Logging
 RESET_SEQ = "\033[0m"
@@ -119,9 +119,6 @@ transferLog = logging.getLogger("transfer")
 
 
 class SocksCmdNotImplemented(Exception):
-    pass
-
-class DoesNotSupportTheProtocol(Exception):
     pass
 
 class Rand:
@@ -264,7 +261,8 @@ class session(Thread):
             elif ver == b'':
                 log.warning("[SOCKS] Failed to get version")
             else:
-                raise DoesNotSupportTheProtocol("Only support Socks5 protocol")
+                log.error("Only support Socks5 protocol")
+                return False
         except OSError:
             return False
         except timeout:
@@ -378,9 +376,10 @@ class session(Thread):
                         self.pSocket.send(data)
                 except error: # python2 socket.send error
                     pass
-                except requests.exceptions.ConnectionError as e: # python2 socket.send error
+                except requests.exceptions.ConnectionError as e:
                     log.warning('[requests.exceptions.ConnectionError] {}'.format(e))
-                    sleep(1)
+                except requests.exceptions.ChunkedEncodingError as e: # python2 requests error
+                    log.warning('[requests.exceptions.ChunkedEncodingError] {}'.format(e))
                 except Exception as ex:
                     raise ex
         finally:
@@ -609,7 +608,7 @@ if __name__ == '__main__':
         parser.add_argument("-x", "--proxy", metavar="LINE", help="Proto://host[:port]  Use proxy on given port", default=None)
         parser.add_argument("--local-dns", help="Use local resolution DNS", action='store_true')
         parser.add_argument("--read-buff", metavar="Bytes", help="Local read buffer, max data to be sent per POST.(default: 2048 max: 2600)", type=int, default=READBUFSIZE)
-        parser.add_argument("--read-interval", metavar="MS", help="Read data interval in milliseconds.(default: 100)", type=int, default=READINTERVAL)
+        parser.add_argument("--read-interval", metavar="MS", help="Read data interval in milliseconds.(default: 500)", type=int, default=READINTERVAL)
         parser.add_argument("--max-threads", metavar="N", help="Proxy max threads.(default: 1000)", type=int, default=MAXTHERADS)
         parser.add_argument("-v", help="Increase verbosity level (use -vv or more for greater effect)", action='count', default=0)
         args = parser.parse_args()
