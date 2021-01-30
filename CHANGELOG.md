@@ -1,5 +1,12 @@
 # Change Log
 
+### v2.5.0
+    Client: 检测 socks 连接已关闭，则自动结束会话，减少大量请求流量
+    Client: 优化了异常信息输出，已能捕获高并发产生的异常
+    Client: 文档新增 Mac OSX 环境的运行建议
+    Client: 调整默认设置，流量减少约 46%
+    Client: 修复 `--file` 读取复杂文件编码转义问题
+
 ### v2.4.1
     添加 Session 过期提示
     调整 `askGeorg` 检测请求，timeout 为 10 秒

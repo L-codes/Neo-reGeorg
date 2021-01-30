@@ -15,7 +15,7 @@ Neo-reGeorg
 Version
 ----
 
-2.4.1 - [版本修改日志](CHANGELOG.md)
+2.5.0 - [版本修改日志](CHANGELOG.md)
 
 
 
@@ -155,11 +155,18 @@ $ python neoreg.py -h
       --local-dns           Use local resolution DNS
       --read-buff Bytes     Local read buffer, max data to be sent per
                             POST.(default: 2048 max: 2600)
-      --read-interval MS    Read data interval in milliseconds.(default: 100)
+      --read-interval MS    Read data interval in milliseconds.(default: 500)
       --max-threads N       Proxy max threads.(default: 1000)
       -v                    Increase verbosity level (use -vv or more for greater
                             effect)
 ```
+
+
+Remind
+----
+
+* Mac OSX 运行 `neoreg.py` 高并发会出现掉包情况，可通过 `ulimit -n 2560` 修改当前 shell 的 "最大文件打开数"
+
 
 
 TODO

@@ -15,7 +15,7 @@ Neo-reGeorg
 Version
 ----
 
-2.4.1 - [Change Log](CHANGELOG-en.md)
+2.5.0 - [Change Log](CHANGELOG-en.md)
 
 
 Features
@@ -155,11 +155,18 @@ $ python neoreg.py -h
       --local-dns           Use local resolution DNS
       --read-buff Bytes     Local read buffer, max data to be sent per
                             POST.(default: 2048 max: 2600)
-      --read-interval MS    Read data interval in milliseconds.(default: 100)
+      --read-interval MS    Read data interval in milliseconds.(default: 500)
       --max-threads N       Proxy max threads.(default: 1000)
       -v                    Increase verbosity level (use -vv or more for greater
                             effect)
 ```
+
+
+
+Remind
+----
+
+* When running `neoreg.py` with high concurrency on Mac OSX, a large number of network requests will be lost. You can use `ulimit -n 2560` to modify the "maximum number of open files" of the current shell.
 
 
 

@@ -1,5 +1,12 @@
 # Change Log
 
+### v2.5.0
+    Client: When detecting that the socks connection is closed, the session is automatically ended, reducing a lot of request traffic
+    Client: Optimized the output of exception information, and has been able to capture exceptions caused by high concurrency
+    Client: The document adds operating suggestions for the Mac OSX environment
+    Client: Adjust the default settings, the network traffic is reduced by about 46%
+    Client: Fix `--file` read complex file encoding escape problem 
+
 ### v2.4.1
     Added session expiration reminder
     Adjust `askGeorg` detection request, timeout is 10 seconds
