@@ -165,7 +165,7 @@ $ python neoreg.py -h
 Remind
 ----
 
-* Mac OSX 运行 `neoreg.py` 高并发会出现掉包情况，可通过 `ulimit -n 2560` 修改当前 shell 的 "最大文件打开数"
+* Mac OSX 上运行 `neoreg.py` 时，高并发请求会出现网络丢包情况，可通过 `ulimit -n 2560` 修改当前 shell 的 "最大文件打开数"
 
 
 
