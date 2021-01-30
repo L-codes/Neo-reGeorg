@@ -15,6 +15,7 @@ import logging
 import argparse
 import requests
 import uuid
+import codecs
 from time import sleep, time, mktime
 from datetime import datetime
 from socket import *
@@ -362,7 +363,8 @@ class session(Thread):
                             if len(data) == 0:
                                 sleep(READINTERVAL)
                                 continue
-                            data = self.decode_body(data)
+                            else:
+                                data = self.decode_body(data)
                         else:
                             msg = "[READ] [%s:%d] HTTP [%d]: Status: [%s]: Message [{}] Shutting down" % (self.target, self.port, response.status_code, rV[status])
                             self.error_log(msg, rep_headers)
@@ -526,7 +528,7 @@ def choice_useragent():
 
 def file_read(filename):
     try:
-        with open(filename) as f:
+        with codecs.open(filename, encoding="utf-8") as f:
             return f.read()
     except:
         log.error("Failed to read file: %s" % filename)
@@ -780,18 +782,21 @@ if __name__ == '__main__':
 
         script_dir = os.path.join(ROOT, 'templates')
         print("    [+] Create neoreg server files:")
+
+        if args.file:
+            http_get_content = repr(file_read(args.file)).replace("\\'", "'").replace('"', '\\"')[1:-1]
+            http_get_content, n = re.subn(r'\\[xX][a-fA-F0-9]{2}', '', http_get_content)
+            if n > 0:
+                print("    [*] %d invisible strings were deleted" % n)
+        else:
+            http_get_content = BASICCHECKSTRING.decode()
+
         for filename in os.listdir(script_dir):
             outfile = os.path.join(outdir, filename)
             filepath = os.path.join(script_dir, filename)
             if os.path.isfile(filepath) and filename.startswith('tunnel.'):
                 text = file_read(filepath)
-
-                if args.file:
-                    http_get_content = file_read(args.file).replace('"', '\\"').replace('\n', '\\n')
-                else:
-                    http_get_content = BASICCHECKSTRING.decode()
                 text = text.replace(r"Georg says, 'All seems fine'", http_get_content)
-
                 text = re.sub(r"BASE64 CHARSLIST", M_BASE64CHARS, text)
 
                 # only jsp
