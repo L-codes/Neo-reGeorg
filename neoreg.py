@@ -468,15 +468,16 @@ def askGeorg(conn, connectURLs, redirectURLs):
             try:
                 expires_date = datetime.strptime(expires, '%a, %d %b %Y %H:%M:%S %Z')
                 if mktime(expires_date.timetuple()) < time():
-                    log.error('Server Session expired')
+                    log.warning('Server Session expired')
                     if 'Set-Cookie' in response.headers:
                         cookie = ''
                         for k, v in response.cookies.items():
                             cookie += '{}={};'.format(k, v)
-                        log.error("You can add the following parameters to use:\n            -H 'Cookie: {}'".format(cookie))
+                        HEADERS.update({'Cookie' : cookie})
+                        log.warning("Automatically append Cookies: {}".format(cookie))
                     else:
                         log.error('There is no valid cookie return')
-                    need_exit = True
+                        need_exit = True
             except ValueError:
                 log.warning('Expires wrong format: {}'.format(expires))
     except:
