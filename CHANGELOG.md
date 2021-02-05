@@ -1,5 +1,9 @@
 # Change Log
 
+### v2.5.1
+    Client: 当 Session 过期时，自动追加 Cookie 继续运行
+    Server: 修复 jsp(x) 在部分 jdk 低版本中找不到 java.nio.ByteBuffer.clear() 方法问题
+
 ### v2.5.0
     Client: 检测 socks 连接已关闭，则自动结束会话，减少大量请求流量
     Client: 优化了异常信息输出，已能捕获高并发产生的异常

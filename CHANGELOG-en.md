@@ -1,5 +1,9 @@
 # Change Log
 
+### v2.5.1
+    Client: When the Session expires, automatically append cookies to continue running
+    Server: Fix jsp(x) find java.nio.ByteBuffer.clear() method problem in some low jdk versions
+
 ### v2.5.0
     Client: When detecting that the socks connection is closed, the session is automatically ended, reducing a lot of request traffic
     Client: Optimized the output of exception information, and has been able to capture exceptions caused by high concurrency

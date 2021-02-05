@@ -15,7 +15,7 @@ Neo-reGeorg
 Version
 ----
 
-2.5.0 - [Change Log](CHANGELOG-en.md)
+2.5.1 - [Change Log](CHANGELOG-en.md)
 
 
 Features
