@@ -45,7 +45,8 @@ REFUSED           = b"\x05"
 # Globals
 READBUFSIZE  = 2048
 MAXTHERADS   = 1000
-READINTERVAL = 500
+READINTERVAL = 300
+WRITEINTERVAL = 200
 
 # Logging
 RESET_SEQ = "\033[0m"
@@ -246,7 +247,6 @@ class session(Thread):
                 return True
             else:
                 sock.sendall(VER + REFUSED + b"\x00" + b"\x01" + serverIp + targetPort)
-                log.error("[%s:%d] [Abnormal Response] Remote failed" % (target, targetPortNum))
                 return False
 
         raise SocksCmdNotImplemented("Socks5 - Unknown CMD")
@@ -319,6 +319,7 @@ class session(Thread):
                 return self.mark
             else:
                 self.error_log('[CONNECT] [%s:%d] ERROR: {}' % (self.target, self.port), rep_headers)
+                return False
         else:
             log.critical('Bad KEY or non-neoreg server')
             return False
@@ -376,6 +377,9 @@ class session(Thread):
                     if len(data) > 0:
                         transferLog.info("[%s:%d] <<<< [%d]" % (self.target, self.port, len(data)))
                         self.pSocket.send(data)
+                        if len(data) < 500:
+                            sleep(READINTERVAL)
+
                 except error: # python2 socket.send error
                     pass
                 except requests.exceptions.ConnectionError as e:
@@ -409,6 +413,7 @@ class session(Thread):
                         log.error("[FORWARD] [%s:%d] HTTP [%d]: Shutting down" % (self.target, self.port, response.status_code))
                         break
                     transferLog.info("[%s:%d] >>>> [%d]" % (self.target, self.port, len(data)))
+                    sleep(WRITEINTERVAL)
                 except timeout:
                     continue
                 except error:
@@ -611,7 +616,8 @@ if __name__ == '__main__':
         parser.add_argument("-x", "--proxy", metavar="LINE", help="Proto://host[:port]  Use proxy on given port", default=None)
         parser.add_argument("--local-dns", help="Use local resolution DNS", action='store_true')
         parser.add_argument("--read-buff", metavar="Bytes", help="Local read buffer, max data to be sent per POST.(default: 2048 max: 2600)", type=int, default=READBUFSIZE)
-        parser.add_argument("--read-interval", metavar="MS", help="Read data interval in milliseconds.(default: 500)", type=int, default=READINTERVAL)
+        parser.add_argument("--read-interval", metavar="MS", help="Read data interval in milliseconds.(default: {})".format(READINTERVAL), type=int, default=READINTERVAL)
+        parser.add_argument("--write-interval", metavar="MS", help="Write data interval in milliseconds.(default: {})".format(WRITEINTERVAL), type=int, default=WRITEINTERVAL)
         parser.add_argument("--max-threads", metavar="N", help="Proxy max threads.(default: 1000)", type=int, default=MAXTHERADS)
         parser.add_argument("-v", help="Increase verbosity level (use -vv or more for greater effect)", action='count', default=0)
         args = parser.parse_args()
@@ -722,6 +728,7 @@ if __name__ == '__main__':
             READBUFSIZE  = min(args.read_buff, 2600)
             MAXTHERADS   = args.max_threads
             READINTERVAL = args.read_interval / 1000.0
+            WRITEINTERVAL = args.write_interval / 1000.0
 
             try:
                 servSock = socket(AF_INET, SOCK_STREAM)
