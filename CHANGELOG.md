@@ -1,5 +1,10 @@
 # Change Log
 
+### v2.6.0
+    Client: 增加 `--write-interval` 参数，可调整 FORWARD 请求间隔
+    Client: 重新调整 `--read-interval` 默认值为 300
+    Clinet: 增加 `--target` 参数，实现端口转发功能
+
 ### v2.5.1
     Client: 当 Session 过期时，自动追加 Cookie 继续运行
     Server: 修复 jsp(x) 在部分 jdk 低版本中找不到 java.nio.ByteBuffer.clear() 方法问题

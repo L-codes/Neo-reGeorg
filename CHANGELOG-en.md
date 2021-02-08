@@ -1,5 +1,10 @@
 # Change Log
 
+### v2.6.0
+    Client: Add the `--write-interval` parameter to adjust the FORWARD request interval
+    Client: Readjust `--read-interval` default value is 300
+    Clinet: Add `--target` parameter to realize port forwarding function
+
 ### v2.5.1
     Client: When the Session expires, automatically append cookies to continue running
     Server: Fix jsp(x) find java.nio.ByteBuffer.clear() method problem in some low jdk versions

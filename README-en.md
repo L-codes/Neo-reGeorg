@@ -15,7 +15,7 @@ Neo-reGeorg
 Version
 ----
 
-2.5.1 - [Change Log](CHANGELOG-en.md)
+2.6.0 - [Change Log](CHANGELOG-en.md)
 
 
 Features
@@ -107,6 +107,11 @@ $ python neoreg.py -k <you_password> -u <url_1> -u <url_2> -u <url_3> ...
 $ python neoreg.py -k <you_password> -u <url> -r <redirect_url>
 ```
 
+6. Use the port forwarding function, do not start the socks5 service ( 127.0.0.1:1080 -> ip:port )
+```ruby
+$ python neoreg.py -k <you_password> -u <url> -t <ip:port>
+```
+
 * For more information on performance and stability parameters, refer to -h help information
 ```ruby
 # Generate server-side scripts
@@ -127,9 +132,10 @@ $ python neoreg.py generate -h
 
 # Connection server
 $ python neoreg.py -h
-    usage: neoreg.py [-h] -u URI [-r URL] -k KEY [-l IP] [-p PORT] [-s] [-H LINE]
-                     [-c LINE] [-x LINE] [--local-dns] [--read-buff Bytes]
-                     [--read-interval MS] [--max-threads N] [-v]
+    usage: neoreg.py [-h] -u URI [-r URL] [-t IP:PORT] -k KEY [-l IP] [-p PORT]
+                     [-s] [-H LINE] [-c LINE] [-x LINE] [--local-dns]
+                     [--read-buff Bytes] [--read-interval MS]
+                     [--write-interval MS] [--max-threads N] [-v]
 
     Socks server for Neoreg HTTP(s) tunneller. DEBUG MODE: -k
     (debug_all|debug_base64|debug_headers_key|debug_headers_values)
@@ -140,6 +146,9 @@ $ python neoreg.py -h
       -r URL, --redirect-url URL
                             Intranet forwarding the designated server (only
                             jsp(x))
+      -t IP:PORT, --target IP:PORT
+                            Network forwarding Target, After setting this
+                            parameter, port forwarding will be enabled
       -k KEY, --key KEY     Specify connection key
       -l IP, --listen-on IP
                             The default listening address.(default: 127.0.0.1)
@@ -155,7 +164,8 @@ $ python neoreg.py -h
       --local-dns           Use local resolution DNS
       --read-buff Bytes     Local read buffer, max data to be sent per
                             POST.(default: 2048 max: 2600)
-      --read-interval MS    Read data interval in milliseconds.(default: 500)
+      --read-interval MS    Read data interval in milliseconds.(default: 300)
+      --write-interval MS   Write data interval in milliseconds.(default: 200)
       --max-threads N       Proxy max threads.(default: 1000)
       -v                    Increase verbosity level (use -vv or more for greater
                             effect)
