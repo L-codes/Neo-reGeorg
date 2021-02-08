@@ -165,14 +165,15 @@ class Rand:
 
 
 class session(Thread):
-    def __init__(self, conn, pSocket, connectURLs, redirectURLs):
+    def __init__(self, conn, pSocket, connectURLs, redirectURLs, FwdTarget):
         Thread.__init__(self)
         self.pSocket = pSocket
         self.connectURLs = connectURLs
         self.redirectURLs = redirectURLs
         self.conn = conn
         self.connect_closed = False
-        self.socks_connected = False
+        self.session_connected = False
+        self.fwd_target = FwdTarget
 
     def url_sample(self):
         return random.choice(self.connectURLs)
@@ -268,6 +269,13 @@ class session(Thread):
             return False
         except timeout:
             return False
+
+    def handleFwd(self, sock):
+        log.debug("Forward detected")
+        host, port = self.fwd_target.split(':', 1)
+        mark = self.setupRemoteSession(host, int(port))
+        return bool(mark)
+
 
     def error_log(self, str_format, headers):
         if K['X-ERROR'] in headers:
@@ -431,8 +439,12 @@ class session(Thread):
 
     def run(self):
         try:
-            self.socks_connected = self.handleSocks(self.pSocket)
-            if self.socks_connected:
+            if self.fwd_target:
+                self.session_connected = self.handleFwd(self.pSocket)
+            else:
+                self.session_connected = self.handleSocks(self.pSocket)
+
+            if self.session_connected:
                 log.debug("Staring reader")
                 r = Thread(target=self.reader)
                 r.start()
@@ -449,7 +461,7 @@ class session(Thread):
             log.error('[RUN] {}'.format(e))
             raise e
         finally:
-            if self.socks_connected:
+            if self.session_connected:
                 self.closeRemoteSession()
 
 
@@ -607,6 +619,7 @@ if __name__ == '__main__':
         parser = argparse.ArgumentParser(description="Socks server for Neoreg HTTP(s) tunneller. DEBUG MODE: -k (debug_all|debug_base64|debug_headers_key|debug_headers_values)")
         parser.add_argument("-u", "--url", metavar="URI", required=True, help="The url containing the tunnel script", action='append')
         parser.add_argument("-r", "--redirect-url", metavar="URL", help="Intranet forwarding the designated server (only jsp(x))", action='append')
+        parser.add_argument("-t", "--target", metavar="IP:PORT", help="Network forwarding Target, After setting this parameter, port forwarding will be enabled")
         parser.add_argument("-k", "--key", metavar="KEY", required=True, help="Specify connection key")
         parser.add_argument("-l", "--listen-on", metavar="IP", help="The default listening address.(default: 127.0.0.1)", default="127.0.0.1")
         parser.add_argument("-p", "--listen-port", metavar="PORT", help="The default listening port.(default: 1080)", type=int, default=1080)
@@ -701,7 +714,15 @@ if __name__ == '__main__':
         INIT_COOKIE = args.cookie
         PROXY = { 'http': args.proxy, 'https': args.proxy } if args.proxy else None
 
-        print("  Starting socks server [%s:%d]" % (args.listen_on, args.listen_port) )
+        if args.target:
+            if not re.match(r'[^:]+:\d+', args.target):
+                print("[!] Target parameter error: {}".format(args.target))
+                exit()
+            print("  Starting Forward [%s:%d] => [%s]" % (args.listen_on, args.listen_port, args.target))
+        else:
+            print("  Starting SOCKS5 server [%s:%d]" % (args.listen_on, args.listen_port))
+
+
         print("  Tunnel at:")
         for url in urls:
             print("    "+url)
@@ -746,7 +767,7 @@ if __name__ == '__main__':
                     sock, addr_info = servSock.accept()
                     sock.settimeout(SOCKTIMEOUT)
                     log.debug("Incomming connection")
-                    session(conn, sock, urls, redirect_urls).start()
+                    session(conn, sock, urls, redirect_urls, args.target).start()
                 except KeyboardInterrupt as ex:
                     break
                 except timeout:
