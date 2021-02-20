@@ -763,7 +763,7 @@ if __name__ == '__main__':
                 servSock.bind((args.listen_on, args.listen_port))
                 servSock.listen(MAXTHERADS)
             except Exception as e:
-                log.error(e)
+                log.error("[Server Listen] {}".format(e))
                 exit()
 
 
