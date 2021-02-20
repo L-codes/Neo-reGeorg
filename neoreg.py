@@ -359,6 +359,7 @@ class session(Thread):
         try:
             headers = {K["X-CMD"]: self.mark+V["READ"]}
             self.headerupdate(headers)
+            n = 0
             while True:
                 try:
                     if self.connect_closed or self.pSocket.fileno() == -1:
@@ -383,7 +384,8 @@ class session(Thread):
                         break
 
                     if len(data) > 0:
-                        transferLog.info("[%s:%d] <<<< [%d]" % (self.target, self.port, len(data)))
+                        n += 1
+                        transferLog.info("[%s:%d] (%d)<<<< [%d]" % (self.target, self.port, n, len(data)))
                         self.pSocket.send(data)
                         if len(data) < 500:
                             sleep(READINTERVAL)
@@ -403,6 +405,7 @@ class session(Thread):
         try:
             headers = {K["X-CMD"]: self.mark+V["FORWARD"]}
             self.headerupdate(headers)
+            n = 0
             while True:
                 try:
                     raw_data = self.pSocket.recv(READBUFSIZE)
@@ -420,7 +423,8 @@ class session(Thread):
                     else:
                         log.error("[FORWARD] [%s:%d] HTTP [%d]: Shutting down" % (self.target, self.port, response.status_code))
                         break
-                    transferLog.info("[%s:%d] >>>> [%d]" % (self.target, self.port, len(data)))
+                    n += 1
+                    transferLog.info("[%s:%d] (%d)>>>> [%d]" % (self.target, self.port, n, len(data)))
                     if len(raw_data) < READBUFSIZE:
                         sleep(WRITEINTERVAL)
                 except timeout:
@@ -759,7 +763,7 @@ if __name__ == '__main__':
                 servSock.bind((args.listen_on, args.listen_port))
                 servSock.listen(MAXTHERADS)
             except Exception as e:
-                log.critical(e)
+                log.error(e)
                 exit()
 
 
