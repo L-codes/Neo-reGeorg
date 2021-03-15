@@ -10,7 +10,7 @@ Neo-reGeorg
 * Improve the confidentiality of transmission content
 * Solve the existing problems of reGeorg and fix some small bugs
 
-
+> This tool is limited to safety research and teaching, and the user assumes all legal and related responsibilities caused by the use of this tool! The author does not bear any legal and related responsibilities!
 
 Version
 ----
