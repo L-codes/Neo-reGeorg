@@ -1,5 +1,4 @@
-Neo-reGeorg
-=========
+# Neo-reGeorg
 
 [简体中文](README.md)　｜　[English](README-en.md)
 
@@ -13,15 +12,13 @@ Neo-reGeorg
 > 此工具仅限于安全研究和教学，用户承担因使用此工具而导致的所有法律和相关责任！ 作者不承担任何法律和相关责任！
 
 
-Version
-----
+## Version
 
 2.6.0 - [版本修改日志](CHANGELOG.md)
 
 
 
-Features
-----
+## Features
 
 * 传输内容经过变形 base64 加密，伪装成 base64 编码
 * 直接请求响应可定制化 (如伪装的404页面)
@@ -37,15 +34,13 @@ Features
 
 
 
-Dependencies
------------
+## Dependencies
 
 * [**requests**] - https://github.com/kennethreitz/requests
 
 
 
-Basic Usage
---------------
+## Basic Usage
 
 * **Step 1.**
 设置密码生成 tunnel.(aspx|ashx|jsp|jspx|php) 并上传到WEB服务器
@@ -80,8 +75,7 @@ $ python3 neoreg.py -k password -u http://xx/tunnel.php
 
 
 
-Advanced Usage
---------------
+## Advanced Usage
 
 1. 支持生成的服务端，默认直接请求响应指定的页面内容 (如伪装的 404 页面)
 ```ruby
@@ -173,31 +167,24 @@ $ python neoreg.py -h
 ```
 
 
-Remind
-----
+## Remind
 
 * Mac OSX 上运行 `neoreg.py` 时，高并发请求会出现网络丢包情况，可通过 `ulimit -n 2560` 修改当前 shell 的 "最大文件打开数"
 
 
 
-TODO
-----
+## TODO
 
  * HTTP body 隐写
 
  * 传输 Target 隐写
 
- * 根据不同的 web 端，使用更佳的传输方案，与不同的默认参数
 
-
-
-License
-----
+## License
 
 GPL 3.0
 
 
-Stargazers over time
-----
+## Stargazers over time
 
 [![Stargazers over time](https://starchart.cc/L-codes/Neo-reGeorg.svg)](https://starchart.cc/L-codes/Neo-reGeorg)

@@ -1,5 +1,4 @@
-Neo-reGeorg
-=========
+# Neo-reGeorg
 
 [简体中文](README.md)　｜　[English](README-en.md)
 
@@ -12,14 +11,12 @@ Neo-reGeorg
 
 > This tool is limited to safety research and teaching, and the user assumes all legal and related responsibilities caused by the use of this tool! The author does not bear any legal and related responsibilities!
 
-Version
-----
+## Version
 
 2.6.0 - [Change Log](CHANGELOG-en.md)
 
 
-Features
-----
+## Features
 
 * Transfer content through out-of-order base64 encryption
 * GET request response can be customized (such as masquerading 404 pages)
@@ -34,16 +31,14 @@ Features
 * Support HTTP forwarding, coping with load balancing environment
 
 
-Dependencies
------------
+## Dependencies
 
 * [**requests**] - https://github.com/kennethreitz/requests
 
 
 
 
-Basic Usage
---------------
+## Basic Usage
 
 * **Step 1.**
 Set the password to generate tunnel server.(aspx|ashx|jsp|jspx|php) and upload it to the web server.
@@ -78,8 +73,7 @@ $ python3 neoreg.py -k password -u http://xx/tunnel.php
 
 
 
-Advanced Usage
---------------
+## Advanced Usage
 
 1. Support the generated server, by default directly requesting and responding to the specified page content (such as a disguised 404 page)
 ```ruby
@@ -172,16 +166,13 @@ $ python neoreg.py -h
 ```
 
 
-
-Remind
-----
+## Remind
 
 * When running `neoreg.py` with high concurrency on Mac OSX, a large number of network requests will be lost. You can use `ulimit -n 2560` to modify the "maximum number of open files" of the current shell.
 
 
 
-TODO
-----
+## TODO
 
 * HTTP body steganography
 
@@ -189,13 +180,11 @@ TODO
 
 
 
-License
-----
+## License
 
 GPL 3.0
 
 
-Stargazers over time
-----
+## Stargazers over time
 
 [![Stargazers over time](https://starchart.cc/L-codes/Neo-reGeorg.svg)](https://starchart.cc/L-codes/Neo-reGeorg)
