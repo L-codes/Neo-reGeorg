@@ -179,6 +179,8 @@ $ python neoreg.py -h
 
  * 传输 Target 隐写
 
+ * 解决无 cookie 支持环境下，reg 无法使用的情况
+
 
 ## License
 
