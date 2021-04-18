@@ -1,5 +1,9 @@
 # Change Log
 
+### v3.0.0:
+    Client: 仅对 php 的 Cookie 进行验证
+    Server: aspx/ashx/jsp/jspx 使用全局变量替代了 Session, 已不再依赖 Cookie (特别感谢 @c0ny1 的解决方案)
+
 ### v2.6.0
     Client: 增加 `--write-interval` 参数，可调整 FORWARD 请求间隔
     Client: 重新调整 `--read-interval` 默认值为 300
@@ -55,7 +59,7 @@
     优化了错误信息输出
     修改了目录名称 scripts/ => templates/ 和 neoreg_server/ => neoreg_servers/
     移除 socks4 的支持
-	移除 javascript tunnel 支持
+    移除 javascript tunnel 支持
 
 ### v1.5.0
     修复 php >= 7.1 版本，无法正常使用的问题

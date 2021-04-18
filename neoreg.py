@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 __author__  = 'L'
-__version__ = '2.6.0'
+__version__ = '3.0.0'
 
 import sys
 import os
@@ -485,23 +485,24 @@ def askGeorg(conn, connectURLs, redirectURLs):
     need_exit = False
     try:
         response = conn.get(connectURLs[0], headers=headers, timeout=10)
-        if 'Expires' in response.headers:
-            expires = response.headers['Expires']
-            try:
-                expires_date = datetime.strptime(expires, '%a, %d %b %Y %H:%M:%S %Z')
-                if mktime(expires_date.timetuple()) < time():
-                    log.warning('Server Session expired')
-                    if 'Set-Cookie' in response.headers:
-                        cookie = ''
-                        for k, v in response.cookies.items():
-                            cookie += '{}={};'.format(k, v)
-                        HEADERS.update({'Cookie' : cookie})
-                        log.warning("Automatically append Cookies: {}".format(cookie))
-                    else:
-                        log.error('There is no valid cookie return')
-                        need_exit = True
-            except ValueError:
-                log.warning('Expires wrong format: {}'.format(expires))
+        if '.php' in connectURLs[0]:
+            if 'Expires' in response.headers:
+                expires = response.headers['Expires']
+                try:
+                    expires_date = datetime.strptime(expires, '%a, %d %b %Y %H:%M:%S %Z')
+                    if mktime(expires_date.timetuple()) < time():
+                        log.warning('Server Session expired')
+                        if 'Set-Cookie' in response.headers:
+                            cookie = ''
+                            for k, v in response.cookies.items():
+                                cookie += '{}={};'.format(k, v)
+                            HEADERS.update({'Cookie' : cookie})
+                            log.warning("Automatically append Cookies: {}".format(cookie))
+                        else:
+                            log.error('There is no valid cookie return')
+                            need_exit = True
+                except ValueError:
+                    log.warning('Expires wrong format: {}'.format(expires))
     except:
         log.error("Georg is not ready, please check URL.")
         exit()

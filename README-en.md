@@ -13,7 +13,7 @@
 
 ## Version
 
-2.6.0 - [Change Log](CHANGELOG-en.md)
+3.0.0 - [Change Log](CHANGELOG-en.md)
 
 
 ## Features
@@ -27,7 +27,8 @@
 * Server-node DNS resolution
 * Compatible with python2 / python3
 * High compatibility of the server environment
-* Refer to [pivotnacci](https://github.com/blackarrowsec/pivotnacci) to implement a single `SESSION` to create multiple TCP connections to deal with some load balancing scenarios
+* (only php) Refer to [pivotnacci](https://github.com/blackarrowsec/pivotnacci) to implement a single `SESSION` to create multiple TCP connections to deal with some load balancing scenarios
+* aspx/ashx/jsp/jspx no longer relies on Session, and can run normally in harsh environments such as cookie-free
 * Support HTTP forwarding, coping with load balancing environment
 
 

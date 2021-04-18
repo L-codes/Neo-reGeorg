@@ -1,5 +1,9 @@
 # Change Log
 
+### v3.0.0:
+    Client: Client: Only verify php cookies
+    Server: aspx/ashx/jsp/jspx Use global variables to replace `Session`, and no longer rely on Cookie (Special thanks to @c0ny1 for the solution)
+
 ### v2.6.0
     Client: Add the `--write-interval` parameter to adjust the FORWARD request interval
     Client: Readjust `--read-interval` default value is 300
@@ -46,14 +50,14 @@
     Fix `-H` setting bug
 
 ### v2.0.0
-	Realize single-session multiple TCP sessions, and solve the unavailability caused by only supporting single-session HTTP communication in some environments
-	Support multiple URL request paths of the same server to avoid excessive single-path access frequency
-	Support custom server HTTP response code
-	Modified some commands to GET, which is closer to normal requests
-	Remove blank lines and remove some features
-	Support DNS resolution on the server, and use (local DNS resolution with `--local-dns`) to optimize the output of error messages. Modify the directory name scripts / => templates / and neoreg_server / => neoreg_servers /
-	Support for removing socks 4
-	Removable javascript tunnel support
+    Realize single-session multiple TCP sessions, and solve the unavailability caused by only supporting single-session HTTP communication in some environments
+    Support multiple URL request paths of the same server to avoid excessive single-path access frequency
+    Support custom server HTTP response code
+    Modified some commands to GET, which is closer to normal requests
+    Remove blank lines and remove some features
+    Support DNS resolution on the server, and use (local DNS resolution with `--local-dns`) to optimize the output of error messages. Modify the directory name scripts / => templates / and neoreg_server / => neoreg_servers /
+    Support for removing socks 4
+    Removable javascript tunnel support
 
 ### v1.5.0
     Fix the problem that php>= 7.1 version cannot be used normally
