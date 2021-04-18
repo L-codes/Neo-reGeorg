@@ -66,7 +66,7 @@ switch($cmd){
 
             while ($_SESSION[$run])
             {
-                if (empty($SESSION[$writebuf])) {
+                if (empty($_SESSION[$writebuf])) {
                     usleep(50000);
                 }
 
