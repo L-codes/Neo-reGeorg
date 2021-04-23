@@ -1,6 +1,6 @@
 # Change Log
 
-### v3.0.0:
+### v3.0.0
     Client: Client: Only verify php cookies
     Server: aspx/ashx/jsp/jspx Use global variables to replace `Session`, and no longer rely on Cookie (Special thanks to @c0ny1 for the solution)
 

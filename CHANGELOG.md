@@ -1,6 +1,6 @@
 # Change Log
 
-### v3.0.0:
+### v3.0.0
     Client: 仅对 php 的 Cookie 进行验证
     Server: aspx/ashx/jsp/jspx 使用全局变量替代了 Session, 已不再依赖 Cookie (特别感谢 @c0ny1 的解决方案)
 
