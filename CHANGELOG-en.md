@@ -1,5 +1,8 @@
 # Change Log
 
+### v3.1.0:
+    Server: jsp(x) fixes performance issues while maintaining compatibility, greatly improves the speed of `READ` requests (special thanks to @XinRoom for the RP solution)
+
 ### v3.0.0
     Client: Client: Only verify php cookies
     Server: aspx/ashx/jsp/jspx Use global variables to replace `Session`, and no longer rely on Cookie (Special thanks to @c0ny1 for the solution)

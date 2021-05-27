@@ -1,5 +1,8 @@
 # Change Log
 
+### v3.1.0:
+    Server: jsp(x) 在保持兼容性的前提下，修复性能问题，大幅提高 `READ` 请求速度 (特别感谢 @XinRoom 的 RP 解决方案)
+
 ### v3.0.0
     Client: 仅对 php 的 Cookie 进行验证
     Server: aspx/ashx/jsp/jspx 使用全局变量替代了 Session, 已不再依赖 Cookie (特别感谢 @c0ny1 的解决方案)
