@@ -1,7 +1,7 @@
 # Change Log
 
 ### v3.1.0:
-    Server: jsp(x) fixes performance issues while maintaining compatibility, greatly improves the speed of `READ` requests (special thanks to @XinRoom for the RP solution)
+    Server: jsp(x) fixes performance issues while maintaining compatibility, greatly improves the speed of `READ` requests (special thanks to @XinRoom for the PR solution)
 
 ### v3.0.0
     Client: Client: Only verify php cookies
