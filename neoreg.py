@@ -620,6 +620,7 @@ if __name__ == '__main__':
         parser.add_argument("-f", "--file", metavar="FILE", help="Camouflage html page file")
         parser.add_argument("-c", "--httpcode", metavar="CODE", help="Specify HTTP response code. When using -r, it is recommended to <400. (default: 200)", type=int, default=200)
         parser.add_argument("--read-buff", metavar="Bytes", help="Remote read buffer. (default: 513)", type=int, default=513)
+        parser.add_argument("--max-read-size", metavar="KB", help="Remote max read size. (default: 512)", type=int, default=512)
         args = parser.parse_args()
     else:
         parser = argparse.ArgumentParser(description="Socks server for Neoreg HTTP(s) tunneller. DEBUG MODE: -k (debug_all|debug_base64|debug_headers_key|debug_headers_values)")
@@ -798,7 +799,8 @@ if __name__ == '__main__':
     else:
         # neoreg server generate
         print(banner)
-        MAXREADBUFF = args.read_buff - (args.read_buff % 3)
+        READBUF = args.read_buff - (args.read_buff % 3)
+        MAXREADSIZE = args.max_read_size * 1024
         outdir = args.outdir
         if not os.path.isdir(outdir):
             os.mkdir(outdir)
@@ -837,7 +839,8 @@ if __name__ == '__main__':
                 # only jsp
                 text = re.sub(r"BASE64 ARRAYLIST", ','.join(map(str, M_BASE64ARRAY)), text)
 
-                text = re.sub(r"\b513\b", str(MAXREADBUFF), text)
+                text = re.sub(r"\bREADBUF\b", str(READBUF), text)
+                text = re.sub(r"\bMAXREADSIZE\b", str(MAXREADSIZE), text)
 
                 for k, v in chain(K.items(), V.items()):
                     text = re.sub(r'\b%s\b' % k, v, text)
