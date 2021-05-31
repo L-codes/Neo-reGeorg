@@ -43,7 +43,7 @@ REFUSED           = b"\x05"
 #UNASSIGNED       = b"\x09"
 
 # Globals
-READBUFSIZE   = 1024
+READBUFSIZE   = 7
 MAXTHERADS    = 1000
 READINTERVAL  = 300
 WRITEINTERVAL = 200
@@ -427,7 +427,7 @@ class session(Thread):
                         log.error("[FORWARD] [%s:%d] HTTP [%d]: Shutting down" % (self.target, self.port, response.status_code))
                         break
                     n += 1
-                    transferLog.info("[%s:%d] (%d)>>>> [%d]" % (self.target, self.port, n, len(data)))
+                    transferLog.info("[%s:%d] (%d)>>>> [%d]" % (self.target, self.port, n, len(raw_data)))
                     if len(raw_data) < READBUFSIZE:
                         sleep(WRITEINTERVAL)
                 except timeout:
@@ -638,7 +638,7 @@ if __name__ == '__main__':
         parser.add_argument("-c", "--cookie", metavar="LINE", help="Custom init cookies")
         parser.add_argument("-x", "--proxy", metavar="LINE", help="Proto://host[:port]  Use proxy on given port", default=None)
         parser.add_argument("--local-dns", help="Use local resolution DNS", action='store_true')
-        parser.add_argument("--read-buff", metavar="Bytes", help="Local read buffer, max data to be sent per POST.(default: {} max: 2600)".format(READBUFSIZE), type=int, default=READBUFSIZE)
+        parser.add_argument("--read-buff", metavar="KB", help="Local read buffer, max data to be sent per POST.(default: {}, max: 50)".format(READBUFSIZE), type=int, default=READBUFSIZE)
         parser.add_argument("--read-interval", metavar="MS", help="Read data interval in milliseconds.(default: {})".format(READINTERVAL), type=int, default=READINTERVAL)
         parser.add_argument("--write-interval", metavar="MS", help="Write data interval in milliseconds.(default: {})".format(WRITEINTERVAL), type=int, default=WRITEINTERVAL)
         parser.add_argument("--max-threads", metavar="N", help="Proxy max threads.(default: 1000)", type=int, default=MAXTHERADS)
@@ -756,7 +756,7 @@ if __name__ == '__main__':
             servSock_start = False
             askGeorg(conn, urls, redirect_urls)
 
-            READBUFSIZE  = min(args.read_buff, 2600)
+            READBUFSIZE  = min(args.read_buff, 50) * 1024
             MAXTHERADS   = args.max_threads
             READINTERVAL = args.read_interval / 1000.0
             WRITEINTERVAL = args.write_interval / 1000.0
