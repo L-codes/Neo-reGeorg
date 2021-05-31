@@ -14,7 +14,7 @@
 
 ## Version
 
-3.1.0 - [版本修改日志](CHANGELOG.md)
+3.2.0 - [版本修改日志](CHANGELOG.md)
 
 
 
@@ -114,6 +114,7 @@ $ python neoreg.py -k <you_password> -u <url> -t <ip:port>
 # 生成服务端脚本
 $ python neoreg.py generate -h
     usage: neoreg.py [-h] -k KEY [-o DIR] [-f FILE] [-c CODE] [--read-buff Bytes]
+                     [--max-read-size KB]
 
     Generate neoreg webshell
 
@@ -123,15 +124,17 @@ $ python neoreg.py generate -h
       -o DIR, --outdir DIR  Output directory.
       -f FILE, --file FILE  Camouflage html page file
       -c CODE, --httpcode CODE
-                            Specify HTTP response code. (default: 200)
+                            Specify HTTP response code. When using -r, it is
+                            recommended to <400. (default: 200)
       --read-buff Bytes     Remote read buffer. (default: 513)
+      --max-read-size KB    Remote max read size. (default: 512)
 
 # 连接服务端
 $ python neoreg.py -h
     usage: neoreg.py [-h] -u URI [-r URL] [-t IP:PORT] -k KEY [-l IP] [-p PORT]
                      [-s] [-H LINE] [-c LINE] [-x LINE] [--local-dns]
-                     [--read-buff Bytes] [--read-interval MS]
-                     [--write-interval MS] [--max-threads N] [-v]
+                     [--read-buff KB] [--read-interval MS] [--write-interval MS]
+                     [--max-threads N] [-v]
 
     Socks server for Neoreg HTTP(s) tunneller. DEBUG MODE: -k
     (debug_all|debug_base64|debug_headers_key|debug_headers_values)
@@ -158,8 +161,8 @@ $ python neoreg.py -h
       -x LINE, --proxy LINE
                             Proto://host[:port] Use proxy on given port
       --local-dns           Use local resolution DNS
-      --read-buff Bytes     Local read buffer, max data to be sent per
-                            POST.(default: 2048 max: 2600)
+      --read-buff KB        Local read buffer, max data to be sent per
+                            POST.(default: 7, max: 50)
       --read-interval MS    Read data interval in milliseconds.(default: 300)
       --write-interval MS   Write data interval in milliseconds.(default: 200)
       --max-threads N       Proxy max threads.(default: 1000)

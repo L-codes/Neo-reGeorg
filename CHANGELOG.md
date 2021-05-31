@@ -1,5 +1,15 @@
 # Change Log
 
+### v3.2.0:
+    修复解决高宽带时出现的 BUG 提高稳定性，并提升10倍以上高宽带的传输速度
+    Client: 添加 `--max-read-size` 参数控制 `READ` 请求的响应包最大长度
+    Client: 修复 python 的 `socket.send()` 不能完全写入的问题
+    Client: 修复 INFO 打印模式下，`FORWARD` 请求的调试信息打印信息的准确性
+    Client: 释放 `--read-buff` 参数限制，并设置默认值为 7kb
+    Server: aspx/ashx/jsp(x) 解决下载流量过大时，无法即时更新 socket IO 问题 (特别感谢 Godzilla 作者 @BeichenDream 的解决方案)
+    Server: jsp(x) 修复下载流量过大时，base64 内容被截断问题
+    Server: jsp(x) 修复释放 POST Body 的限制，大幅提升 `FORWARD` 请求速度
+
 ### v3.1.0:
     Server: jsp(x) 在保持兼容性的前提下，修复性能问题，大幅提高 `READ` 请求速度 (特别感谢 @XinRoom 的 PR 解决方案)
 
