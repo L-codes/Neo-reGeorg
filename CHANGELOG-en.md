@@ -1,5 +1,8 @@
 # Change Log
 
+### v3.2.1:
+    Server: jsp(x) fixes the error that cannot be compiled normally in the Jboss environment
+
 ### v3.2.0:
     Fix bugs that occurred when solving high-bandwidth, improve stability, and increase the transmission speed of high-bandwidth by more than 10 times
     Client: Add the `--max-read-size` parameter to control the maximum length of the response packet of the `READ` request

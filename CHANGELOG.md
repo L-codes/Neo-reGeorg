@@ -1,5 +1,8 @@
 # Change Log
 
+### v3.2.1:
+    Server: jsp(x) 修复在 Jboss 环境下，无法正常编译的错误
+
 ### v3.2.0:
     修复解决高宽带时出现的 BUG 提高稳定性，并提升10倍以上高宽带的传输速度
     Client: 添加 `--max-read-size` 参数控制 `READ` 请求的响应包最大长度
