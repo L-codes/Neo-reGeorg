@@ -175,6 +175,7 @@
                 byte[] data = new byte[i];
                 System.arraycopy(buffer, 0, data, 0, i);
                 out.write(new String(data));
+                out.flush();
             }
 
             if ( true ) return; // exit
