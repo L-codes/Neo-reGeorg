@@ -1,5 +1,10 @@
 # Change Log
 
+### v3.3.0:
+    Client: Enhance the printing information during data transmission, which is convenient for debugging
+    Client: Fix the special case of `FORWARD` request, the data type is wrong, resulting in the inability to obtain the body
+    Server: jsp(x) fixed forwarding compatibility issues when using HTTP/1.0 in Nginx
+
 ### v3.2.1:
     Server: jsp(x) fixes the error that cannot be compiled normally in the Jboss environment
 

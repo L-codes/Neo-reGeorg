@@ -1,5 +1,10 @@
 # Change Log
 
+### v3.3.0:
+    Client: 增强了数据传输时的打印信息，便于调试
+    Client: 修复 `FORWARD` 请求，数据类型错误，导致无法获取 body 的特殊情况
+    Server: jsp(x) 修复在 Nginx 使用 HTTP/1.0 时转发兼容性问题
+
 ### v3.2.1:
     Server: jsp(x) 修复在 Jboss 环境下，无法正常编译的错误
 
