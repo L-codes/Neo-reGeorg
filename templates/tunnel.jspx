@@ -150,9 +150,7 @@
             }
 
             for (String key : conn.getHeaderFields().keySet()) {
-                // Solve the jdk low version conn.getHeaderFields()
-                // Solve the problem of weblogic blank line cannot remove
-                if (key != null && !key.equalsIgnoreCase("Content-Length")){
+                if (key != null && !key.equalsIgnoreCase("Content-Length") && !key.equalsIgnoreCase("Transfer-Encoding")){
                     String value = conn.getHeaderField(key);
                     response.setHeader(key, value);
                 }
@@ -169,14 +167,17 @@
                 }
             }
 
-            response.setStatus(conn.getResponseCode());
-
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
             while ((i = hin.read(buffer)) != -1) {
                 byte[] data = new byte[i];
                 System.arraycopy(buffer, 0, data, 0, i);
-                out.write(new String(data));
-                out.flush();
+                baos.write(data);
             }
+            String responseBody = new String(baos.toByteArray());
+            response.addHeader("Content-Length", Integer.toString(responseBody.length()));
+            response.setStatus(conn.getResponseCode());
+            out.write(responseBody);
+            out.flush();
 
             if ( true ) return; // exit
         }

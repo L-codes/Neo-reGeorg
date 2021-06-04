@@ -386,7 +386,7 @@ class session(Thread):
                     if len(data) > 0:
                         n += 1
                         data_len = len(data)
-                        transferLog.info("[%s:%d] (%d)<<<< [%d]" % (self.target, self.port, n, data_len))
+                        transferLog.info("[%s:%d] [%s] (%d)<<<< [%d]" % (self.target, self.port, self.mark, n, data_len))
                         while data:
                             writed_size = self.pSocket.send(data)
                             data = data[writed_size:]
@@ -406,7 +406,7 @@ class session(Thread):
 
     def writer(self):
         try:
-            headers = {K["X-CMD"]: self.mark+V["FORWARD"]}
+            headers = {K["X-CMD"]: self.mark+V["FORWARD"], 'Content-type': 'application/octet-stream'}
             self.headerupdate(headers)
             n = 0
             while True:
@@ -427,7 +427,7 @@ class session(Thread):
                         log.error("[FORWARD] [%s:%d] HTTP [%d]: Shutting down" % (self.target, self.port, response.status_code))
                         break
                     n += 1
-                    transferLog.info("[%s:%d] (%d)>>>> [%d]" % (self.target, self.port, n, len(raw_data)))
+                    transferLog.info("[%s:%d] [%s] (%d)>>>> [%d]" % (self.target, self.port, self.mark, n, len(raw_data)))
                     if len(raw_data) < READBUFSIZE:
                         sleep(WRITEINTERVAL)
                 except timeout:
