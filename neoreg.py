@@ -47,6 +47,7 @@ READBUFSIZE   = 7
 MAXTHERADS    = 1000
 READINTERVAL  = 300
 WRITEINTERVAL = 200
+PHPTIMEOUT    = 0.5
 
 # Logging
 RESET_SEQ = "\033[0m"
@@ -311,7 +312,7 @@ class session(Thread):
 
         if '.php' in self.connectURLs[0]:
             try:
-                response = self.conn.get(self.url_sample(), headers=headers, timeout=0.5)
+                response = self.conn.get(self.url_sample(), headers=headers, timeout=PHPTIMEOUT)
             except:
                 log.info("[%s:%d] HTTP [200]: mark [%s]" % (self.target, self.port, self.mark))
                 return self.mark
@@ -637,6 +638,7 @@ if __name__ == '__main__':
         parser.add_argument("-H", "--header", metavar="LINE", help="Pass custom header LINE to server", action='append', default=[])
         parser.add_argument("-c", "--cookie", metavar="LINE", help="Custom init cookies")
         parser.add_argument("-x", "--proxy", metavar="LINE", help="Proto://host[:port]  Use proxy on given port", default=None)
+        parser.add_argument("--php-connect-timeout", metavar="S", help="PHP connect timeout.(default: 0.5)", type=float, default=PHPTIMEOUT)
         parser.add_argument("--local-dns", help="Use local resolution DNS", action='store_true')
         parser.add_argument("--read-buff", metavar="KB", help="Local read buffer, max data to be sent per POST.(default: {}, max: 50)".format(READBUFSIZE), type=int, default=READBUFSIZE)
         parser.add_argument("--read-interval", metavar="MS", help="Read data interval in milliseconds.(default: {})".format(READINTERVAL), type=int, default=READINTERVAL)
@@ -701,6 +703,7 @@ if __name__ == '__main__':
         print("  Log Level set to [%s]" % LEVELNAME)
 
         USERAGENT = choice_useragent()
+        PHPTIMEOUT = args.php_connect_timeout
 
         urls = args.url
         redirect_urls = []
