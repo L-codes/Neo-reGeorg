@@ -1,5 +1,8 @@
 # Change Log
 
+### v3.4.0:
+    Clinet: 增加 `--php-connect-timeout` 参数，解决 Windows 上 PHP 响应较慢导致的端口连接状态无法判断问题
+
 ### v3.3.0:
     Client: 增强了数据传输时的打印信息，便于调试
     Client: 修复 `FORWARD` 请求，数据类型错误，导致无法获取 body 的特殊情况
