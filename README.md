@@ -14,7 +14,7 @@
 
 ## Version
 
-3.3.0 - [版本修改日志](CHANGELOG.md)
+3.4.0 - [版本修改日志](CHANGELOG.md)
 
 
 

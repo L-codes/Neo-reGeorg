@@ -13,7 +13,7 @@
 
 ## Version
 
-3.3.0 - [Change Log](CHANGELOG-en.md)
+3.4.0 - [Change Log](CHANGELOG-en.md)
 
 
 ## Features

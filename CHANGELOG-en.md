@@ -1,5 +1,8 @@
 # Change Log
 
+### v3.4.0:
+    Clinet: Add the `--php-connect-timeout` parameter to solve the problem that the port connection status cannot be judged due to the slow response of PHP on Windows
+
 ### v3.3.0:
     Client: Enhance the printing information during data transmission, which is convenient for debugging
     Client: Fix the special case of `FORWARD` request, the data type is wrong, resulting in the inability to obtain the body
