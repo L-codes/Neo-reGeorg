@@ -2,4 +2,4 @@ neoreg_servers/*
 .DS_Store
 TODO.md
 .idea
-templates/tunnel_old.jsp
+templates/tunnel.old.jsp
