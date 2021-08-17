@@ -176,9 +176,11 @@ public class NeoreGeorg {
                         String inputData = "";
                         InputStream in = request.getInputStream();
                         while ( true ){
-                            byte[] buff = new byte[in.available()];
-                            if (in.read(buff) == -1)
+                            int buffLen = in.available();
+                            if (buffLen == -1)
                                 break;
+                            byte[] buff = new byte[buffLen];
+                            in.read(buff);
                             inputData += new String(buff);
                         }
                         byte[] base64 = b64de(inputData);
