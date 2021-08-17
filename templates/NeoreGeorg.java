@@ -206,11 +206,6 @@ public class NeoreGeorg {
         return false;
     }
 
-
-    public String b64en(String data){
-        return b64en(data.getBytes());
-    }
-
     public String o2s(Object obj){
         return (String)obj;
     }
