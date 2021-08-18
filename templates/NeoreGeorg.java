@@ -193,8 +193,8 @@ public class NeoreGeorg {
                         InputStream in = request.getInputStream();
                         while ( true ){
                             int buffLen = in.available();
-                            // if (buffLen == -1)
-                            //     break;
+                            if (buffLen == -1)
+                                break;
                             byte[] buff = new byte[buffLen];
                             if (in.read(buff) == -1)
                                 break;
