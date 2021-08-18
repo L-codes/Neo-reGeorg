@@ -76,7 +76,7 @@ public class NeoreGeorg {
                     List<String> keys = Collections.list(enu);
                     Collections.reverse(keys);
                     for (String key : keys){
-                        if (!key.equalsIgnoreCase(XREDIRECTURL)){ // X-REDIRECTURL
+                        if (!key.equalsIgnoreCase(XREDIRECTURL)){
                             String value=request.getHeader(key);
                             conn.setRequestProperty(headerkey(key), value);
                         }
@@ -213,7 +213,7 @@ public class NeoreGeorg {
 
                     } catch (Exception e) {
                         response.setHeader(XERROR, ReadFiled);
-                        response.setHeader(XSTATUS, FAIL); // X-STATUS: FAIL
+                        response.setHeader(XSTATUS, FAIL);
                         socketChannel.socket().close();
                     }
                 }
