@@ -61,6 +61,7 @@ public class NeoreGeorg {
             if (rUrl != null) {
                 rUrl = new String(b64de(rUrl));
                 if (!islocal(rUrl)){
+                    // ssl verify is not ignored
                     response.reset();
                     String method = request.getMethod();
                     URL u = new URL(rUrl);
@@ -75,7 +76,7 @@ public class NeoreGeorg {
                     List<String> keys = Collections.list(enu);
                     Collections.reverse(keys);
                     for (String key : keys){
-                        if (!key.equalsIgnoreCase((String)args[11])){ // X-REDIRECTURL
+                        if (!key.equalsIgnoreCase(XREDIRECTURL)){ // X-REDIRECTURL
                             String value=request.getHeader(key);
                             conn.setRequestProperty(headerkey(key), value);
                         }
