@@ -3,3 +3,5 @@ neoreg_servers/*
 TODO.md
 .idea
 templates/tunnel.old.jsp
+templates/NeoreGeorg.class
+tools/*
