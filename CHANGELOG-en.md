@@ -1,7 +1,7 @@
 # Change Log
 
 ### v3.5.0:
-    Server: jsp(x) uses classloader instead to solve the problem that jdk syntax is not backward compatible and cannot run normally (compatible with jdk >= 1.5)
+    Server: jsp(x) uses classloader instead to solve the problem that jdk syntax is not backward compatible and cannot run normally (compatible with jdk >= 1.5) (special thanks to @c0ny1 for the PR solution)
     Server: jsp(x) repair websphere environment, java.lang.NegativeArraySizeException error of FORWARD
 
 ### v3.4.0:

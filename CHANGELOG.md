@@ -1,7 +1,7 @@
 # Change Log
 
 ### v3.5.0:
-    Server: jsp(x) 改用 classloader 的方式，解决 jdk 语法不向下兼容导致无法正常运行的问题 (兼容 jdk >= 1.5)
+    Server: jsp(x) 改用 classloader 的方式，解决 jdk 语法不向下兼容导致无法正常运行的问题 (兼容 jdk >= 1.5) (特别感谢 @c0ny1 的 PR)
     Server: jsp(x) 修复 websphere 环境，FORWARD 的 java.lang.NegativeArraySizeException 错误
 
 ### v3.4.0:
