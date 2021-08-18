@@ -1,5 +1,9 @@
 # Change Log
 
+### v3.5.0:
+    Server: jsp(x) 改用 classloader 的方式，解决 jdk 语法不向下兼容导致无法正常运行的问题 (兼容 jdk >= 1.5)
+    Server: jsp(x) 修复 websphere 环境，FORWARD 的 java.lang.NegativeArraySizeException 错误
+
 ### v3.4.0:
     Clinet: 增加 `--php-connect-timeout` 参数，解决 Windows 上 PHP 响应较慢导致的端口连接状态无法判断问题
 

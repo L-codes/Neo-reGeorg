@@ -1,5 +1,9 @@
 # Change Log
 
+### v3.5.0:
+    Server: jsp(x) uses classloader instead to solve the problem that jdk syntax is not backward compatible and cannot run normally (compatible with jdk >= 1.5)
+    Server: jsp(x) repair websphere environment, java.lang.NegativeArraySizeException error of FORWARD
+
 ### v3.4.0:
     Clinet: Add the `--php-connect-timeout` parameter to solve the problem that the port connection status cannot be judged due to the slow response of PHP on Windows
 

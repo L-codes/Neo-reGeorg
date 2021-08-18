@@ -13,7 +13,7 @@
 
 ## Version
 
-3.4.0 - [Change Log](CHANGELOG-en.md)
+3.5.0 - [Change Log](CHANGELOG-en.md)
 
 
 ## Features
@@ -180,6 +180,8 @@ $ python neoreg.py -h
 * HTTP body steganography
 
 * Transfer Target field steganography
+
+* Problem of ignoring the verification of https in the intranet forwarding
 
 
 

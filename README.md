@@ -14,7 +14,7 @@
 
 ## Version
 
-3.4.0 - [版本修改日志](CHANGELOG.md)
+3.5.0 - [版本修改日志](CHANGELOG.md)
 
 
 
@@ -182,6 +182,8 @@ $ python neoreg.py -h
  * HTTP body 隐写
 
  * 传输 Target 隐写
+
+ * 内网转发 https 的验证忽略
 
 
 ## License
