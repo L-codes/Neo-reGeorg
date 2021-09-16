@@ -13,7 +13,7 @@
 
 ## Version
 
-3.5.0 - [Change Log](CHANGELOG-en.md)
+3.6.0 - [Change Log](CHANGELOG-en.md)
 
 
 ## Features
@@ -29,7 +29,7 @@
 * High compatibility of the server environment
 * (only php) Refer to [pivotnacci](https://github.com/blackarrowsec/pivotnacci) to implement a single `SESSION` to create multiple TCP connections to deal with some load balancing scenarios
 * aspx/ashx/jsp/jspx no longer relies on Session, and can run normally in harsh environments such as cookie-free
-* Support HTTP forwarding, coping with load balancing environment
+* (non-php) Support HTTP forwarding, coping with load balancing environment
 
 
 ## Dependencies

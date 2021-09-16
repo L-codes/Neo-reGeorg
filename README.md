@@ -14,7 +14,7 @@
 
 ## Version
 
-3.5.0 - [版本修改日志](CHANGELOG.md)
+3.6.0 - [版本修改日志](CHANGELOG.md)
 
 
 
@@ -31,7 +31,7 @@
 * 服务端环境的高兼容性
 * (仅 php) 参考 [pivotnacci](https://github.com/blackarrowsec/pivotnacci) 实现单 Session 创建多 TCP 连接，应对部分负载均衡场景
 * aspx/ashx/jsp/jspx 已不再依赖 Session，可在无 Cookie 等恶劣环境正常运行
-* 支持内网转发，应对负载均衡环境
+* (非 php) 支持内网转发，应对负载均衡环境
 
 
 
