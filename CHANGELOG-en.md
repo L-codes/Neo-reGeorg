@@ -1,5 +1,8 @@
 # Change Log
 
+### v3.7.0:
+    Client: Added `--cut-left/--cut-right` parameters to adjust the offset of the body according to the special environment (such as Confluence)
+
 ### v3.6.0:
     Server: aspx/ashx added support for intranet forwarding function (reference -r)
 

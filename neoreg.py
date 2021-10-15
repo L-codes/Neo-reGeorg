@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 __author__  = 'L'
-__version__ = '3.6.0'
+__version__ = '3.7.0'
 
 import sys
 import os
@@ -371,6 +371,10 @@ class session(Thread):
                         status = rep_headers[K["X-STATUS"]]
                         if status == V["OK"]:
                             data = response.content
+                            if args.cut_left > 0:
+                                data = data[args.cut_left:]
+                            if args.cut_right > 0:
+                                data = data[:-args.cut_right]
                             if len(data) == 0:
                                 sleep(READINTERVAL)
                                 continue
@@ -517,7 +521,13 @@ def askGeorg(conn, connectURLs, redirectURLs):
     if redirectURLs and response.status_code >= 400:
         log.warning('Using redirection will affect performance when the response code >= 400')
 
-    if BASICCHECKSTRING == response.content.strip():
+    data = response.content
+    if args.cut_left > 0:
+        data = data[args.cut_left:]
+    if args.cut_right > 0:
+        data = data[:-args.cut_right]
+
+    if BASICCHECKSTRING == data.strip():
         log.info("Georg says, 'All seems fine'")
         return True
     else:
@@ -532,7 +542,7 @@ def askGeorg(conn, connectURLs, redirectURLs):
                 log.error("Georg is not ready. Error message: %s" % message)
             else:
                 log.warning('Expect Response: {}'.format(BASICCHECKSTRING[0:100]))
-                log.warning('Real Response: {}'.format(response.content.strip()[0:100]))
+                log.warning('Real Response: {}'.format(data.strip()[0:100]))
                 log.error("Georg is not ready, please check URL and KEY. rep: [{}] {}".format(response.status_code, response.reason))
                 log.error("You can set the `--skip` parameter to ignore errors")
             exit()
@@ -644,6 +654,8 @@ if __name__ == '__main__':
         parser.add_argument("--read-interval", metavar="MS", help="Read data interval in milliseconds.(default: {})".format(READINTERVAL), type=int, default=READINTERVAL)
         parser.add_argument("--write-interval", metavar="MS", help="Write data interval in milliseconds.(default: {})".format(WRITEINTERVAL), type=int, default=WRITEINTERVAL)
         parser.add_argument("--max-threads", metavar="N", help="Proxy max threads.(default: 1000)", type=int, default=MAXTHERADS)
+        parser.add_argument("--cut-left", metavar="N", help="Truncate the left side of the response body", type=int, default=0)
+        parser.add_argument("--cut-right", metavar="N", help="Truncate the right side of the response body", type=int, default=0)
         parser.add_argument("-v", help="Increase verbosity level (use -vv or more for greater effect)", action='count', default=0)
         args = parser.parse_args()
 

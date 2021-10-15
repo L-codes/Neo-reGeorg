@@ -14,7 +14,7 @@
 
 ## Version
 
-3.6.0 - [版本修改日志](CHANGELOG.md)
+3.7.0 - [版本修改日志](CHANGELOG.md)
 
 
 
@@ -132,9 +132,10 @@ $ python neoreg.py generate -h
 # 连接服务端
 $ python neoreg.py -h
     usage: neoreg.py [-h] -u URI [-r URL] [-t IP:PORT] -k KEY [-l IP] [-p PORT]
-                     [-s] [-H LINE] [-c LINE] [-x LINE] [--local-dns]
-                     [--read-buff KB] [--read-interval MS] [--write-interval MS]
-                     [--max-threads N] [-v]
+                     [-s] [-H LINE] [-c LINE] [-x LINE] [--php-connect-timeout S]
+                     [--local-dns] [--read-buff KB] [--read-interval MS]
+                     [--write-interval MS] [--max-threads N] [--cut-left N]
+                     [--cut-right N] [-v]
 
     Socks server for Neoreg HTTP(s) tunneller. DEBUG MODE: -k
     (debug_all|debug_base64|debug_headers_key|debug_headers_values)
@@ -160,12 +161,16 @@ $ python neoreg.py -h
                             Custom init cookies
       -x LINE, --proxy LINE
                             Proto://host[:port] Use proxy on given port
+      --php-connect-timeout S
+                            PHP connect timeout.(default: 0.5)
       --local-dns           Use local resolution DNS
       --read-buff KB        Local read buffer, max data to be sent per
                             POST.(default: 7, max: 50)
       --read-interval MS    Read data interval in milliseconds.(default: 300)
       --write-interval MS   Write data interval in milliseconds.(default: 200)
       --max-threads N       Proxy max threads.(default: 1000)
+      --cut-left N          Truncate the left side of the response body
+      --cut-right N         Truncate the right side of the response body
       -v                    Increase verbosity level (use -vv or more for greater
                             effect)
 ```

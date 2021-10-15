@@ -1,5 +1,8 @@
 # Change Log
 
+### v3.7.0:
+    Client: 新增 `--cut-left/--cut-right` 参数，可根据特殊环境进行调整body的偏移 (如Confluence)
+
 ### v3.6.0:
     Server: aspx/ashx 新增支持内网转发功能 (参考 -r)
 
