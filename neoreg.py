@@ -530,6 +530,12 @@ def askGeorg(conn, connectURLs, redirectURLs):
     if BASICCHECKSTRING == data.strip():
         log.info("Georg says, 'All seems fine'")
         return True
+    elif BASICCHECKSTRING in data:
+        left_offset = data.index(BASICCHECKSTRING)
+        right_offset = len(data) - ( left_offset + len(BASICCHECKSTRING) )
+        log.error("Georg is ready, but the body needs to be offset")
+        log.error("You can set the `--cut-left {} --cut-right {}` parameter to body offset".format(left_offset, right_offset))
+        exit()
     else:
         if args.skip:
             log.debug("Ignore detecting that Georg is ready")
