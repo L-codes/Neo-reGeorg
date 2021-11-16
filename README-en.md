@@ -178,6 +178,8 @@ $ python neoreg.py -h
 
 * When running `neoreg.py` with high concurrency on Mac OSX, a large number of network requests will be lost. You can use `ulimit -n 2560` to modify the "maximum number of open files" of the current shell.
 
+* For Tomcat5 and other low jdk versions, use `tunnel_compatibility.jsp(x)`
+
 
 
 ## TODO

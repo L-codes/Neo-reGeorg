@@ -180,6 +180,8 @@ $ python neoreg.py -h
 
 * Mac OSX 上运行 `neoreg.py` 时，高并发请求会出现网络丢包情况，可通过 `ulimit -n 2560` 修改当前 shell 的 "最大文件打开数"
 
+* Tomcat5 等 jdk 低版本情况，用 `tunnel_compatibility.jsp(x)` 即可
+
 
 
 ## TODO
