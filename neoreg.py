@@ -348,6 +348,8 @@ class session(Thread):
                     headers = {K["X-CMD"]: self.mark+V["DISCONNECT"]}
                     self.headerupdate(headers)
                     response = self.conn.get(self.url_sample(), headers=headers)
+                    if(response.ok):
+                        log.info("[DISCONNECT] [%s:%d(%s)] disconnected" % (self.target, self.port, self.mark))
                 if not self.connect_closed:
                     if hasattr(self, 'target'):
                         log.info("[DISCONNECT] [%s:%d] Connection Terminated" % (self.target, self.port))
@@ -793,13 +795,19 @@ if __name__ == '__main__':
                 exit()
 
 
+            sessions = []
             while True:
                 try:
                     sock, addr_info = servSock.accept()
                     sock.settimeout(SOCKTIMEOUT)
                     log.debug("Incomming connection")
-                    session(conn, sock, urls, redirect_urls, args.target).start()
+                    new_session = session(conn, sock, urls, redirect_urls, args.target)
+                    sessions.append(new_session)
+                    new_session.start()
                 except KeyboardInterrupt as ex:
+                    log.debug("There are {} connections".format(len(sessions)))
+                    log.info("exit by CTRL/C")
+                    [s.closeRemoteSession() for s in sessions if not s.connect_closed]
                     break
                 except timeout:
                     log.warning("[Socks Connect Tiemout] {}".format(addr_info))
