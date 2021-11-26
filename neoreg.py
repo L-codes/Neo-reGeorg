@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 __author__  = 'L'
-__version__ = '3.7.0'
+__version__ = '3.8.0(preview)'
 
 import sys
 import os
