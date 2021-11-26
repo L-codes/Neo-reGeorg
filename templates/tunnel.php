@@ -162,4 +162,3 @@ switch($cmd){
         exit("Georg says, 'All seems fine'");
     }
 }
-?>
