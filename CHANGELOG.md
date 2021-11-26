@@ -2,6 +2,7 @@
 
 ### v3.8.0:
     Server: 优化 php, 删除 `?>` 结尾，避免其它编辑器保存时末尾添加`\n`
+    Client: 增加 http 请求时的 debug 信息, 方便调试分析
 
 ### v3.7.0:
     Client: 新增 `--cut-left/--cut-right` 参数，可根据特殊环境进行调整body的偏移 (如Confluence)

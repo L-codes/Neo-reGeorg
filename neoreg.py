@@ -312,7 +312,9 @@ class session(Thread):
 
         if '.php' in self.connectURLs[0]:
             try:
+                log.debug("[HTTP] CONNECT Request ({}) => Target: {}".format(self.mark, target_data))
                 response = self.conn.get(self.url_sample(), headers=headers, timeout=PHPTIMEOUT)
+                log.debug("[HTTP] CONNECT Response ({}) => Code: {}".format(self.mark, response.status_code))
             except:
                 log.info("[%s:%d] HTTP [200]: mark [%s]" % (self.target, self.port, self.mark))
                 return self.mark
@@ -347,7 +349,9 @@ class session(Thread):
                 if hasattr(self, 'mark'):
                     headers = {K["X-CMD"]: self.mark+V["DISCONNECT"]}
                     self.headerupdate(headers)
+                    log.debug("[HTTP] DISCONNECT Request ({})".format(self.mark))
                     response = self.conn.get(self.url_sample(), headers=headers)
+                    log.debug("[HTTP] DISCONNECT Response ({}) => Code: {}".format(self.mark, response.status_code))
                 if not self.connect_closed:
                     if hasattr(self, 'target'):
                         log.info("[DISCONNECT] [%s:%d] Connection Terminated" % (self.target, self.port))
@@ -365,7 +369,9 @@ class session(Thread):
                 try:
                     if self.connect_closed or self.pSocket.fileno() == -1:
                         break
+                    log.debug("[HTTP] READ Request ({})".format(self.mark))
                     response = self.conn.get(self.url_sample(), headers=headers)
+                    log.debug("[HTTP] READ Response ({}) => Code: {}, Size: {}".format(self.mark, response.status_code, len(response.content)))
                     rep_headers = response.headers
                     if K['X-STATUS'] in rep_headers:
                         status = rep_headers[K["X-STATUS"]]
@@ -420,7 +426,9 @@ class session(Thread):
                     if not raw_data:
                         break
                     data = self.encode_body(raw_data)
+                    log.debug("[HTTP] FORWARD Request ({}) => Size: {}".format(self.mark, len(data)))
                     response = self.conn.post(self.url_sample(), headers=headers, data=data)
+                    log.debug("[HTTP] FORWARD Response ({}) => Code: {}".format(self.mark, response.status_code))
                     rep_headers = response.headers
                     if K['X-STATUS'] in rep_headers:
                         status = rep_headers[K["X-STATUS"]]
@@ -492,7 +500,9 @@ def askGeorg(conn, connectURLs, redirectURLs):
 
     need_exit = False
     try:
+        log.debug("[HTTP] Ask Georg Request".format())
         response = conn.get(connectURLs[0], headers=headers, timeout=10)
+        log.debug("[HTTP] Ask Georg Response =>  Code: {}".format(response.status_code))
         if '.php' in connectURLs[0]:
             if 'Expires' in response.headers:
                 expires = response.headers['Expires']
@@ -707,8 +717,8 @@ if __name__ == '__main__':
 
     if 'url' in args:
         # neoreg connect
-        if args.v > 2:
-            args.v = 2
+        if args.v > 3:
+            args.v = 3
 
         LOCALDNS = args.local_dns
 
