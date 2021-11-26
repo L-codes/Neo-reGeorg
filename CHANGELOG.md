@@ -1,6 +1,6 @@
 # Change Log
 
-### v3.8.0:
+### v3.8.0(preview):
     Server: 优化 php, 删除 `?>` 结尾，避免其它编辑器保存时末尾添加`\n`
     Client: 增加 http 请求时的 debug 信息, 方便调试分析
 
