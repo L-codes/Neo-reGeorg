@@ -544,7 +544,12 @@ def askGeorg(conn, connectURLs, redirectURLs):
         left_offset = data.index(BASICCHECKSTRING)
         right_offset = len(data) - ( left_offset + len(BASICCHECKSTRING) )
         log.error("Georg is ready, but the body needs to be offset")
-        log.error("You can set the `--cut-left {} --cut-right {}` parameter to body offset".format(left_offset, right_offset))
+        args_tips = ''
+        if left_offset:
+            args_tips += '--cut-left {}'.format(left_offset)
+        if right_offset:
+            args_tips += '--cut-right {}'.format(right_offset)
+        log.error("You can set the `{}` parameter to body offset".format(args_tips))
         exit()
     else:
         if args.skip:
