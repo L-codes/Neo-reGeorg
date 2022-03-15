@@ -377,10 +377,7 @@ class session(Thread):
                         status = rep_headers[K["X-STATUS"]]
                         if status == V["OK"]:
                             data = response.content
-                            if args.cut_left > 0:
-                                data = data[args.cut_left:]
-                            if args.cut_right > 0:
-                                data = data[:-args.cut_right]
+                            data = extract_body(data)
                             if len(data) == 0:
                                 sleep(READINTERVAL)
                                 continue
@@ -532,10 +529,7 @@ def askGeorg(conn, connectURLs, redirectURLs):
         log.warning('Using redirection will affect performance when the response code >= 400')
 
     data = response.content
-    if args.cut_left > 0:
-        data = data[args.cut_left:]
-    if args.cut_right > 0:
-        data = data[:-args.cut_right]
+    data = extract_body(data)
 
     if BASICCHECKSTRING == data.strip():
         log.info("Georg says, 'All seems fine'")
@@ -567,6 +561,18 @@ def askGeorg(conn, connectURLs, redirectURLs):
                 log.error("Georg is not ready, please check URL and KEY. rep: [{}] {}".format(response.status_code, response.reason))
                 log.error("You can set the `--skip` parameter to ignore errors")
             exit()
+
+
+def extract_body(data):
+    if args.cut_left > 0:
+        data = data[args.cut_left:]
+    if args.cut_right > 0:
+        data = data[:-args.cut_right]
+    if args.extract:
+        match = EXTRACT_EXPR.search(data.decode())
+        if match:
+            data = match[1].encode()
+    return data
 
 
 def choice_useragent():
@@ -677,6 +683,7 @@ if __name__ == '__main__':
         parser.add_argument("--max-threads", metavar="N", help="Proxy max threads.(default: 1000)", type=int, default=MAXTHERADS)
         parser.add_argument("--cut-left", metavar="N", help="Truncate the left side of the response body", type=int, default=0)
         parser.add_argument("--cut-right", metavar="N", help="Truncate the right side of the response body", type=int, default=0)
+        parser.add_argument("--extract", metavar="EXPR", help="Manually extract BODY content. (eg: <html><p>REGBODY</p></html> )")
         parser.add_argument("-v", help="Increase verbosity level (use -vv or more for greater effect)", action='count', default=0)
         args = parser.parse_args()
 
@@ -694,6 +701,15 @@ if __name__ == '__main__':
         maketrans = str.maketrans
     else:
         from string import maketrans
+
+    if args.extract:
+        if 'REGBODY' not in args.extract:
+            print('[!] Error extracting expression, REGBODY not found')
+            exit()
+        else:
+            expr = re.sub('REGBODY', r'\\s*([A-Za-z0-9+/]*(?:=|==)?|<!-- [a-zA-Z0-9]+ -->)\\s*', re.escape(args.extract))
+            EXTRACT_EXPR = re.compile(expr, re.S)
+
 
     EncodeMap = maketrans(BASE64CHARS, M_BASE64CHARS)
     DecodeMap = maketrans(M_BASE64CHARS, BASE64CHARS)

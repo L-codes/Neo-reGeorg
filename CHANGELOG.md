@@ -3,6 +3,7 @@
 ### v3.8.0(preview):
     Server: 优化 php, 删除 `?>` 结尾，避免其它编辑器保存时末尾添加`\n`
     Client: 增加 http 请求时的 debug 信息, 方便调试分析
+    Client: 增加 `--extract expr` 参数，应对服务端动态前后追加内容的环境，手动设置提取 BODY 内容, 如服务端返回 <p>base64data  </p>, 则可用 `--extract '<p>REGBODY</p>'` 应对
 
 ### v3.7.0:
     Client: 新增 `--cut-left/--cut-right` 参数，可根据特殊环境进行调整body的偏移 (如Confluence)

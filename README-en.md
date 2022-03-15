@@ -169,6 +169,7 @@ $ python neoreg.py -h
       --max-threads N       Proxy max threads.(default: 1000)
       --cut-left N          Truncate the left side of the response body
       --cut-right N         Truncate the right side of the response body
+      --extract EXPR        Manually extract BODY content. (eg: <html><p>REGBODY</p></html> )
       -v                    Increase verbosity level (use -vv or more for greater
                             effect)
 ```
