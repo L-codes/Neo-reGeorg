@@ -687,6 +687,14 @@ if __name__ == '__main__':
         parser.add_argument("-v", help="Increase verbosity level (use -vv or more for greater effect)", action='count', default=0)
         args = parser.parse_args()
 
+        if args.extract:
+            if 'REGBODY' not in args.extract:
+                print('[!] Error extracting expression, REGBODY not found')
+                exit()
+            else:
+                expr = re.sub('REGBODY', r'\\s*([A-Za-z0-9+/]*(?:=|==)?|<!-- [a-zA-Z0-9]+ -->)\\s*', re.escape(args.extract))
+                EXTRACT_EXPR = re.compile(expr, re.S)
+
     rand = Rand(args.key)
 
     BASE64CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
@@ -701,15 +709,6 @@ if __name__ == '__main__':
         maketrans = str.maketrans
     else:
         from string import maketrans
-
-    if args.extract:
-        if 'REGBODY' not in args.extract:
-            print('[!] Error extracting expression, REGBODY not found')
-            exit()
-        else:
-            expr = re.sub('REGBODY', r'\\s*([A-Za-z0-9+/]*(?:=|==)?|<!-- [a-zA-Z0-9]+ -->)\\s*', re.escape(args.extract))
-            EXTRACT_EXPR = re.compile(expr, re.S)
-
 
     EncodeMap = maketrans(BASE64CHARS, M_BASE64CHARS)
     DecodeMap = maketrans(M_BASE64CHARS, BASE64CHARS)
