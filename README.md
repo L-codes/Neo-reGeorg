@@ -8,6 +8,7 @@
 * 提高可用性，避免特征检测
 * 提高传输内容保密性
 * 应对更多的网络环境场景
+* 使用基于BeichenDream Godzilla的KTLV 序列化与反序列化引擎
 
 > 此工具仅限于安全研究和教学，用户承担因使用此工具而导致的所有法律和相关责任！ 作者不承担任何法律和相关责任！
 
@@ -183,15 +184,6 @@ $ python neoreg.py -h
 
 * Tomcat5 等 jdk 低版本情况，用 `tunnel_compatibility.jsp(x)` 即可
 
-
-
-## TODO
-
- * HTTP body 隐写
-
- * 传输 Target 隐写
-
- * 内网转发 https 的验证忽略
 
 
 ## License

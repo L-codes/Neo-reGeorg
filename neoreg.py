@@ -28,6 +28,12 @@ ROOT = os.path.dirname(os.path.realpath(__file__))
 
 ispython3 = True if sys.version_info >= (3, 0) else False
 
+
+# TypeDef
+StringType = b'\x01'
+ByteArrayType = b'\x02'
+IntType = b'\x03'
+
 # Constants
 SOCKTIMEOUT       = 5
 VER               = b"\x05"
@@ -79,6 +85,61 @@ COLORS = {
     'WHITE':    WHITE,
 }
 
+#@Author  : BeichenDream
+def serialize(parameters):
+    result = bytearray()
+    for key, value in parameters.items():
+        if isinstance(key, str):
+            valueBytes = bytes()
+            valueType = 0x00
+            if isinstance(value, str):
+                valueBytes = bytes(value, "utf-8")
+                valueType = StringType
+            elif isinstance(value, bytes) or isinstance(value, bytearray):
+                valueBytes = value
+                valueType = ByteArrayType
+            elif isinstance(value, int):
+                valueBytes = value.to_bytes(4, byteorder="little", signed=True)
+                valueType = IntType
+            else:
+                raise Exception("The type of value must be String,Bytes,Int!", type(key))
+            valueLength = len(valueBytes)
+            result.extend(bytes(key, "utf-8"))
+            result.extend(valueType)
+            result.extend(valueLength.to_bytes(4, byteorder="little", signed=True))
+            result.extend(valueBytes)
+        else:
+            raise Exception("key must be a string!", type(key))
+    return result
+#@Author  : BeichenDream
+def deserialize(resp):
+    result = {}
+    respSize = len(resp)
+    i = 0
+    tempBytes = bytearray()
+    while i < respSize:
+        tmpByte = resp[i]
+        i += 1
+        if tmpByte > 0x20 and tmpByte <= 0x7e:
+            tempBytes.append(tmpByte)
+        else:
+            valueType = bytes([tmpByte])
+            key = str(tempBytes, "utf-8")
+            valueLength = int.from_bytes(resp[i:i + 4], byteorder='little')
+            i += 4
+            value = resp[i:i+valueLength]
+            i += valueLength
+            if valueType == StringType:
+                value = str(value, "utf-8")
+            elif valueType == ByteArrayType:
+                value = bytes(value)
+            elif valueType == IntType:
+                value = int.from_bytes(value, byteorder='little')
+            else:
+                raise Exception("Unsupported types!", valueType)
+            result[key] = value
+            tempBytes.clear()
+    return result
 
 def formatter_message(message, use_color=True):
     if use_color:
@@ -182,10 +243,11 @@ class session(Thread):
     def redirect_url_sample(self):
         return random.choice(self.redirectURLs)
 
-    def headerupdate(self, headers):
+    def requestupdate(self, parameters,headers):
         headers.update(HEADERS)
+        headers['Content-type'] = 'application/octet-stream'
         if self.redirectURLs:
-            headers[K['X-REDIRECTURL']] = self.redirect_url_sample()
+            parameters[K['X-REDIRECTURL']] = self.redirect_url_sample()
 
     def session_mark(self):
         mark = base64.b64encode(uuid.uuid4().bytes)[0:-2]
@@ -285,12 +347,6 @@ class session(Thread):
                 message = rV[message]
             log.error(str_format.format(repr(message)))
 
-    def encode_target(self, data):
-        data = base64.b64encode(data)
-        if ispython3:
-            data = data.decode()
-        return data.translate(EncodeMap)
-
     def encode_body(self, data):
         data = base64.b64encode(data)
         if ispython3:
@@ -305,31 +361,31 @@ class session(Thread):
     def setupRemoteSession(self, target, port):
         self.mark = self.session_mark()
         target_data = ("%s|%d" % (target, port)).encode()
-        headers = {K["X-CMD"]: self.mark+V["CONNECT"], K["X-TARGET"]: self.encode_target(target_data)}
-        self.headerupdate(headers)
+        requestParameters = {K["X-CMD"]: self.mark+V["CONNECT"], K["X-HOST"]: target,K["X-PORT"]: port}
+        headers = {}
+        self.requestupdate(requestParameters,headers)
         self.target = target
         self.port = port
 
         if '.php' in self.connectURLs[0]:
             try:
                 log.debug("[HTTP] CONNECT Request ({}) => Target: {}".format(self.mark, target_data))
-                response = self.conn.get(self.url_sample(), headers=headers, timeout=PHPTIMEOUT)
+                response = self.conn.post(self.url_sample(),data=self.encode_body(serialize(requestParameters)), headers=headers, timeout=PHPTIMEOUT)
                 log.debug("[HTTP] CONNECT Response ({}) => Code: {}".format(self.mark, response.status_code))
             except:
                 log.info("[%s:%d] HTTP [200]: mark [%s]" % (self.target, self.port, self.mark))
                 return self.mark
         else:
-            response = self.conn.get(self.url_sample(), headers=headers)
+            response = self.conn.post(self.url_sample(), data=self.encode_body(serialize(requestParameters)),headers=headers)
 
-
-        rep_headers = response.headers
-        if K['X-STATUS'] in rep_headers:
-            status = rep_headers[K["X-STATUS"]]
+        resp = deserialize(self.decode_body(extract_body(response.content)))
+        if K['X-STATUS'] in resp:
+            status = resp[K["X-STATUS"]]
             if status == V["OK"]:
                 log.info("[%s:%d] Session mark [%s]" % (self.target, self.port, self.mark))
                 return self.mark
             else:
-                self.error_log('[CONNECT] [%s:%d] ERROR: {}' % (self.target, self.port), rep_headers)
+                self.error_log('[CONNECT] [%s:%d] ERROR: {}' % (self.target, self.port), resp)
                 return False
         else:
             log.critical('Bad KEY or non-neoreg server')
@@ -347,10 +403,11 @@ class session(Thread):
                         log.debug("[%s:%d] Localsocket already closed" % (self.target, self.port))
 
                 if hasattr(self, 'mark'):
-                    headers = {K["X-CMD"]: self.mark+V["DISCONNECT"]}
-                    self.headerupdate(headers)
+                    headers = {}
+                    requestParameters = {K["X-CMD"]: self.mark+V["DISCONNECT"]}
+                    self.requestupdate(requestParameters,headers)
                     log.debug("[HTTP] DISCONNECT Request ({})".format(self.mark))
-                    response = self.conn.get(self.url_sample(), headers=headers)
+                    response = self.conn.post(self.url_sample(),data=self.encode_body(serialize(requestParameters)), headers=headers)
                     log.debug("[HTTP] DISCONNECT Response ({}) => Code: {}".format(self.mark, response.status_code))
                 if not self.connect_closed:
                     if hasattr(self, 'target'):
@@ -362,30 +419,30 @@ class session(Thread):
 
     def reader(self):
         try:
-            headers = {K["X-CMD"]: self.mark+V["READ"]}
-            self.headerupdate(headers)
+            headers = {}
+            requestParameters = {K["X-CMD"]: self.mark+V["READ"]}
+            self.requestupdate(requestParameters,headers)
             n = 0
             while True:
                 try:
                     if self.connect_closed or self.pSocket.fileno() == -1:
                         break
                     log.debug("[HTTP] READ Request ({})".format(self.mark))
-                    response = self.conn.get(self.url_sample(), headers=headers)
+                    response = self.conn.post(self.url_sample(),data = self.encode_body(serialize(requestParameters)), headers=headers)
                     log.debug("[HTTP] READ Response ({}) => Code: {}, Size: {}".format(self.mark, response.status_code, len(response.content)))
-                    rep_headers = response.headers
-                    if K['X-STATUS'] in rep_headers:
-                        status = rep_headers[K["X-STATUS"]]
+                    resp = deserialize(self.decode_body(extract_body(response.content)))
+                    if K['X-STATUS'] in resp:
+                        status = resp[K["X-STATUS"]]
                         if status == V["OK"]:
-                            data = response.content
-                            data = extract_body(data)
+                            data = resp[K["X-DATA"]]
                             if len(data) == 0:
                                 sleep(READINTERVAL)
                                 continue
                             else:
-                                data = self.decode_body(data)
+                                data = resp[K["X-DATA"]]
                         else:
                             msg = "[READ] [%s:%d] HTTP [%d]: Status: [%s]: Message [{}] Shutting down" % (self.target, self.port, response.status_code, rV[status])
-                            self.error_log(msg, rep_headers)
+                            self.error_log(msg, resp)
                             break
                     else:
                         log.error("[READ] [%s:%d] HTTP [%d]: Shutting down" % (self.target, self.port, response.status_code))
@@ -414,24 +471,25 @@ class session(Thread):
 
     def writer(self):
         try:
-            headers = {K["X-CMD"]: self.mark+V["FORWARD"], 'Content-type': 'application/octet-stream'}
-            self.headerupdate(headers)
+            headers = {}
+            requestParameters = {K["X-CMD"]: self.mark+V["FORWARD"]}
+            self.requestupdate(requestParameters,headers)
             n = 0
             while True:
                 try:
                     raw_data = self.pSocket.recv(READBUFSIZE)
                     if not raw_data:
                         break
-                    data = self.encode_body(raw_data)
-                    log.debug("[HTTP] FORWARD Request ({}) => Size: {}".format(self.mark, len(data)))
-                    response = self.conn.post(self.url_sample(), headers=headers, data=data)
+                    requestParameters[K["X-DATA"]] = raw_data
+                    log.debug("[HTTP] FORWARD Request ({}) => Size: {}".format(self.mark, len(raw_data)))
+                    response = self.conn.post(self.url_sample(), headers=headers, data=self.encode_body(serialize(requestParameters)))
                     log.debug("[HTTP] FORWARD Response ({}) => Code: {}".format(self.mark, response.status_code))
-                    rep_headers = response.headers
-                    if K['X-STATUS'] in rep_headers:
-                        status = rep_headers[K["X-STATUS"]]
+                    resp = deserialize(self.decode_body(extract_body(response.content)))
+                    if K['X-STATUS'] in resp:
+                        status = resp[K["X-STATUS"]]
                         if status != V["OK"]:
                             msg = "[FORWARD] [%s:%d] HTTP [%d]: Status: [%s]: Message [{}] Shutting down" % (self.target, self.port, response.status_code, rV[status])
-                            self.error_log(msg, rep_headers)
+                            self.error_log(msg, resp)
                             break
                     else:
                         log.error("[FORWARD] [%s:%d] HTTP [%d]: Shutting down" % (self.target, self.port, response.status_code))
@@ -631,6 +689,7 @@ banner = r"""
 
 
     [ Github ] https://github.com/L-codes/neoreg
+    NeoreGeorg proudly uses BeichenDream Godzilla's KTLV-based serialization and deserialization engine
 """.format(__version__)
 
 use_examples = r"""
@@ -716,24 +775,17 @@ if __name__ == '__main__':
     BASICCHECKSTRING = ('<!-- ' + rand.header_value() + ' -->').encode()
 
     K = {}
-    for name in ["X-STATUS", "X-ERROR", "X-CMD", "X-TARGET", "X-REDIRECTURL"]:
-        if args.key in ['debug_all', 'debug_headers_key']:
-            K[name] = name
-        else:
-            K[name] = rand.header_key()
+    for name in ["X-STATUS", "X-ERROR", "X-CMD","X-HOST","X-PORT","X-DATA", "X-REDIRECTURL"]:
+        K[name] = name
+
 
     V = {}
     rV = {}
     for name in ["FAIL", "Failed creating socket", "Failed connecting to target", "OK", "Failed writing socket",
             "CONNECT", "DISCONNECT", "READ", "FORWARD", "Failed reading from socket", "No more running, close now",
             "POST request read filed", "Intranet forwarding failed"]:
-        if args.key in ['debug_all', 'debug_headers_value']:
-            V[name] = name
-            rV[name] = name
-        else:
-            value = rand.header_value()
-            V[name] = value
-            rV[value] = name
+        V[name] = name
+        rV[name] = name
 
     if 'url' in args:
         # neoreg connect
@@ -759,10 +811,10 @@ if __name__ == '__main__':
         HEADERS = {}
         if args.redirect_url:
             for url in args.redirect_url:
-                data = base64.b64encode(url.encode())
+                data = url.encode()
                 if ispython3:
                     data = data.decode()
-                redirect_urls.append( data.translate(EncodeMap) )
+                redirect_urls.append( data )
 
         for header in args.header:
             if ':' in header:
