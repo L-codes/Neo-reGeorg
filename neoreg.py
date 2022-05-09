@@ -630,7 +630,7 @@ banner = r"""
            $$                 '$$$
 
 
-    [ Github ] https://github.com/L-codes/neoreg
+    [ Github ] https://github.com/L-codes/Neo-reGeorg
 """.format(__version__)
 
 use_examples = r"""
