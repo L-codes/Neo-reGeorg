@@ -518,8 +518,8 @@ def askGeorg(conn, connectURLs, redirectURLs):
                             need_exit = True
                 except ValueError:
                     log.warning('Expires wrong format: {}'.format(expires))
-    except:
-        log.error("Georg is not ready, please check URL.")
+    except Exception as ex:
+        log.error("Georg is not ready, please check URL. Error: " + str(ex))
         exit()
 
     if need_exit:
