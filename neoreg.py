@@ -897,9 +897,6 @@ if __name__ == '__main__':
                 text = re.sub(r"\bMAXREADSIZE\b", str(MAXREADSIZE), text)
 
                 for k, v in chain(K.items(), V.items()):
-                    # add nodejs support
-                    if k in ("X-CMD", "X-TARGET") and filename.endswith(".js"):
-                        v = v.lower()
                     text = re.sub(r'\b%s\b' % k, v, text)
 
                 text = re.sub(r"\bHTTPCODE\b", str(args.httpcode), text)
