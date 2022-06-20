@@ -130,6 +130,7 @@ public class NeoreGeorg {
                     response.setStatus(conn.getResponseCode());
                     out.write(responseBody);
                     out.flush();
+                    out.close();
 
                     if ( true ) return false; // exit
                 }
@@ -182,6 +183,7 @@ public class NeoreGeorg {
                             bytesRead = socketChannel.read(buf);
                         }
                         response.setHeader(XSTATUS, OK);
+                        out.close();
 
                     } catch (Exception e) {
                         response.setHeader(XSTATUS, FAIL);
@@ -219,6 +221,8 @@ public class NeoreGeorg {
                 }
             } else {
                 out.write(GeorgHello);
+                out.flush();
+                out.close();
             }
         }catch (Exception e){
 
