@@ -1,5 +1,9 @@
 # Change Log
 
+### v3.8.1:
+    Server: java 端，修复在 listener 下 neoreg 没有回显问题
+    Server: java 端，内网转发支持 https 了 (忽略证书安全 @BeichenDream 的 PR)
+
 ### v3.8.0:
     Server: 优化 php, 删除 `?>` 结尾，避免其它编辑器保存时末尾添加`\n`
     Client: 增加 http 请求时的 debug 信息, 方便调试分析

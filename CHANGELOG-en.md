@@ -1,5 +1,9 @@
 # Change Log
 
+### v3.8.1:
+    Server: java side, fix the problem that neoreg has no echo under listener
+    Server: java side, intranet forwarding supports https (ignoring certificate security @BeichenDream PR)
+
 ### v3.8.0:
     Server: Optimize php, remove the `?>` end, avoid adding `\n` at the end when other editors save
     Client: Add debug information for http requests to facilitate debugging and analysis
