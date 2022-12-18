@@ -183,7 +183,9 @@ public class NeoreGeorg implements HostnameVerifier,X509TrustManager {
                         int bytesRead = socketChannel.read(buf);
                         int maxRead = MAXREADSIZE;
                         int readLen = 0;
+                        boolean hasData = false;
                         while (bytesRead > 0){
+                            hasData = true;
                             byte[] data = new byte[bytesRead];
                             System.arraycopy(buf.array(), 0, data, 0, bytesRead);
                             out.write(b64en(data));
@@ -195,7 +197,11 @@ public class NeoreGeorg implements HostnameVerifier,X509TrustManager {
                             bytesRead = socketChannel.read(buf);
                         }
                         response.setHeader(XSTATUS, OK);
-                        out.close();
+
+                        // 避免 trimDirectiveWhitespaces="true" 时，没数据写入时，出现的异常
+                        if (hasData) {
+                            out.close();
+                        }
 
                     } catch (Exception e) {
                         response.setHeader(XSTATUS, FAIL);
