@@ -332,7 +332,7 @@ class session(Thread):
                 self.error_log('[CONNECT] [%s:%d] ERROR: {}' % (self.target, self.port), rep_headers)
                 return False
         else:
-            log.critical('Bad KEY or non-neoreg server')
+            log.critical('Bad KEY or non-neoreg server or Request Timeout')
             return False
 
     def closeRemoteSession(self):
