@@ -1,5 +1,10 @@
 # Change Log
 
+### :
+    Server: 修复部分环境设置了 `trimDirectiveWhitespaces="true"` 导致 READ 运行时报错的 BUG
+    Server: java 改用 Gzip 压缩，对 jsp(x) 进行压缩体积，缩小了40%
+    Server: java/csharp/php 等都设置了 connect timeout 为 3 秒，保证稳定性的同时，在极端网络下提升并发速度
+
 ### v3.8.1:
     Server: java 端，修复在 listener 下 neoreg 没有回显问题
     Server: java 端，内网转发支持 https 了 (忽略证书安全 @BeichenDream 的 PR)
