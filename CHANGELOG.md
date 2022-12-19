@@ -3,7 +3,9 @@
 ### :
     Server: 修复部分环境设置了 `trimDirectiveWhitespaces="true"` 导致 READ 运行时报错的 BUG
     Server: java 改用 Gzip 压缩，对 jsp(x) 进行压缩体积，缩小了40%
-    Server: java/csharp/php 等都设置了 connect timeout 为 3 秒，保证稳定性的同时，在极端网络下提升并发速度
+    Server: php 修改了 `set_time_limit(0)` 的位置，使得 CONNECT 以外的请求时间更加稳定可靠
+    Server: java/csharp/php 等都设置了 connect timeout 为 3 秒，保证稳定性的同时，在极端网络下提升并发速度 (特别感谢 @c0ny1 的解决方案)
+    Client: 优化错误提示的准确性
 
 ### v3.8.1:
     Server: java 端，修复在 listener 下 neoreg 没有回显问题
