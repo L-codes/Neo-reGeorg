@@ -83,10 +83,22 @@
                     }
                     System.Net.IPEndPoint remoteEP = new IPEndPoint(ip, port);
                     Socket sender = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                    sender.Connect(remoteEP);
-                    sender.Blocking = false;
-                    Application.Add(mark, sender);
-                    Response.AddHeader("X-STATUS", "OK");
+
+                    // set the connect timeout to 3 seconds, default 20 seconds
+                    IAsyncResult result = sender.BeginConnect(remoteEP,null,null);
+                    bool success = result.AsyncWaitHandle.WaitOne( 3000, true );
+
+                    if ( sender.Connected ) {
+                        sender.Blocking = false;
+                        Application.Add(mark, sender);
+                        Response.AddHeader("X-STATUS", "OK");
+                    } else {
+                        // success == True ? "close" : "filtered"
+                        sender.Close();
+                        Response.AddHeader("X-ERROR", "Failed connecting to target");
+                        Response.AddHeader("X-STATUS", "FAIL");
+                    }
+
                 } catch (Exception ex) {
                     Response.AddHeader("X-ERROR", "Failed connecting to target");
                     Response.AddHeader("X-STATUS", "FAIL");

