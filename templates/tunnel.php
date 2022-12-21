@@ -112,7 +112,7 @@ switch($cmd){
                     }
                 }
                 stream_set_blocking($res, false);
-                while ($o = fgets($res, 10)) {
+                while ($o = fgets($res, READBUF)) {
                     if($o === false)
                     {
                         @session_start();
@@ -121,6 +121,9 @@ switch($cmd){
                         return;
                     }
                     $readBuff .= $o;
+                    if ( strlen($readBuff) > MAXREADSIZE ) {
+                        break;
+                    }
                 }
                 if ($readBuff != ""){
                     @session_start();

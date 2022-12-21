@@ -469,21 +469,20 @@ class session(Thread):
                     rinfo = self.neoreg_request(info)
                     if rinfo['STATUS'] == 'OK':
                         data = rinfo['DATA']
-                        if len(data) == 0:
+                        data_len = len(data)
+
+                        if data_len == 0:
                             sleep(READINTERVAL)
-                            continue
+                        elif data_len > 0:
+                            n += 1
+                            transferLog.info("[%s:%d] [%s] No.%d <<<< [%d byte]" % (self.target, self.port, self.mark, n, data_len))
+                            while data:
+                                writed_size = self.pSocket.send(data)
+                                data = data[writed_size:]
+                            if data_len < 500:
+                                sleep(READINTERVAL)
                     else:
                         break
-
-                    if len(data) > 0:
-                        n += 1
-                        data_len = len(data)
-                        transferLog.info("[%s:%d] [%s] No.%d <<<< [%d byte]" % (self.target, self.port, self.mark, n, data_len))
-                        while data:
-                            writed_size = self.pSocket.send(data)
-                            data = data[writed_size:]
-                        if data_len < 500:
-                            sleep(READINTERVAL)
 
                 except error: # python2 socket.send error
                     pass
@@ -920,8 +919,6 @@ if __name__ == '__main__':
                 text = text.replace(r"NeoGeorg says, 'All seems fine'", neoreg_hello)
                 text = re.sub(r"BASE64 CHARSLIST", M_BASE64CHARS, text)
                 text = re.sub(r"\bHTTPCODE\b", str(args.httpcode), text)
-
-                # java/c#
                 text = re.sub(r"\bREADBUF\b", str(READBUF), text)
                 text = re.sub(r"\bMAXREADSIZE\b", str(MAXREADSIZE), text)
 
