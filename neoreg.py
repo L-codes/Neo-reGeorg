@@ -162,7 +162,7 @@ def file_read(filename):
         with codecs.open(filename, encoding="utf-8") as f:
             return f.read()
     except:
-        log.error("Failed to read file: %s" % filename)
+        log.error("[Generate] Failed to read file: %s" % filename)
         exit()
 
 
@@ -171,7 +171,7 @@ def file_write(filename, data):
         with open(filename, 'w') as f:
             f.write(data)
     except:
-        log.error("Failed to write file: %s" % filename)
+        log.error("[Generate] Failed to write file: %s" % filename)
         exit()
 
 
@@ -217,6 +217,10 @@ transferLog = logging.getLogger("transfer")
 
 
 class SocksCmdNotImplemented(Exception):
+    pass
+
+
+class NeoregReponseFormatError(Exception):
     pass
 
 
@@ -274,16 +278,14 @@ class session(Thread):
 
 
     def session_mark(self):
-        mark = base64.b64encode(uuid.uuid4().bytes)[0:-2]
+        mark = base64.b64encode(uuid.uuid4().bytes)[0:-8]
         if ispython3:
             mark = mark.decode()
-        mark = mark.replace('+', ' ').replace('/', '_')
-        mark = re.sub('^[ _]| $', 'L', mark) # Invalid return character or leading space in header
         return mark
 
 
     def parseSocks5(self, sock):
-        log.debug("SocksVersion5 detected")
+        log.debug("[SOCKS5] Version5 detected")
         nmethods = sock.recv(1)
         methods = sock.recv(ord(nmethods))
         sock.sendall(VER + METHOD)
@@ -306,7 +308,7 @@ class session(Thread):
                 try:
                     target = gethostbyname(target)
                 except:
-                    log.error("DNS resolution failed(%s)" % target.decode())
+                    log.error("[SOCKS5] DNS resolution failed: (%s)" % target.decode())
                     return False
             else:
                 target = target.decode()
@@ -350,9 +352,9 @@ class session(Thread):
                     sock.close()
                 return res
             elif ver == b'':
-                log.warning("[SOCKS] Failed to get version")
+                log.error("[SOCKS5] Failed to get version")
             else:
-                log.error("Only support Socks5 protocol")
+                log.error("[SOCKS5] Only support Socks5 protocol")
                 return False
         except OSError:
             return False
@@ -361,7 +363,7 @@ class session(Thread):
 
 
     def handleFwd(self, sock):
-        log.debug("Forward detected")
+        log.debug("[PORT FWD] Forward detected")
         host, port = self.fwd_target.split(':', 1)
         mark = self.setupRemoteSession(host, int(port))
         return bool(mark)
@@ -371,10 +373,25 @@ class session(Thread):
         if self.redirectURL:
             info['REDIRECTURL'] = self.redirectURL
         data = encode_body(info)
-        log.debug("[HTTP] {} Request ({}) => Target: {}:{}".format(info['CMD'], self.mark, self.target, self.port))
-        response = self.conn.post(self.url_sample(), headers=HEADERS, timeout=timeout, data=data)
-        log.debug("[HTTP] {} Response ({}) => Code: {}".format(info['CMD'], self.mark, response.status_code))
-        return decode_body(response.content)
+        log.debug("[HTTP] [%s:%d] %s Request (%s)" % (self.target, self.port, info['CMD'], self.mark))
+
+        while True:
+            try:
+                response = self.conn.post(self.url_sample(), headers=HEADERS, timeout=timeout, data=data)
+                break
+            except requests.exceptions.ConnectionError as e:
+                log.warning('[{}] [requests.exceptions.ConnectionError] {}'.format(info['CMD'], e))
+            except requests.exceptions.ChunkedEncodingError as e: # python2 requests error
+                log.warning('[{}] [requests.exceptions.ChunkedEncodingError] {}'.format(info['CMD'], e))
+
+        log.debug("[HTTP] [%s:%d] %s Response (%s) => HttpCode: %d" % (self.target, self.port, info['CMD'], self.mark, response.status_code))
+        rinfo = decode_body(response.content)
+        if rinfo is None:
+            raise NeoregReponseFormatError("[HTTP] Response Format Error: {}".format(response.content))
+        else:
+            if rinfo['STATUS'] != 'OK' and info['CMD'] != 'DISCONNECT':
+                log.warning('[%s] [%s:%d] %s' % (info['CMD'], self.target, self.port, rinfo['ERROR']))
+            return rinfo
 
 
     def setupRemoteSession(self, target, port):
@@ -386,47 +403,39 @@ class session(Thread):
 
         if '.php' in self.connectURLs[0]:
             try:
-                rinfo = self.neoreg_request(info, timeout=PHPTIMEOUT)
+                self.neoreg_request(info, timeout=PHPTIMEOUT)
             except:
-                log.info("[%s:%d] HTTP [200]: mark [%s]" % (self.target, self.port, self.mark))
+                log.info("[CONNECT] [%s:%d] Session mark: %s" % (self.target, self.port, self.mark))
                 return self.mark
         else:
             rinfo = self.neoreg_request(info)
 
-        if rinfo:
-            status = rinfo["STATUS"]
-            if status == "OK":
-                log.info("[%s:%d] Session mark [%s]" % (self.target, self.port, self.mark))
-                return self.mark
-            else:
-                log.error('[CONNECT] [%s:%d] ERROR: %s' % (self.target, self.port, rinfo['ERROR']))
-                return False
+        status = rinfo["STATUS"]
+        if status == "OK":
+            log.info("[CONNECT] [%s:%d] Session mark: %s" % (self.target, self.port, self.mark))
+            return self.mark
         else:
-            log.critical('Bad KEY or non-neoreg server or Request Timeout')
             return False
 
 
     def closeRemoteSession(self):
-        try:
-            if not self.connect_closed:
-                self.connect_closed = True
-                try:
-                    self.pSocket.close()
-                    log.debug("[%s:%d] Closing localsocket" % (self.target, self.port))
-                except:
-                    if hasattr(self, 'target'):
-                        log.debug("[%s:%d] Localsocket already closed" % (self.target, self.port))
+        if not self.connect_closed:
+            self.connect_closed = True
+            try:
+                self.pSocket.close()
+                log.debug("[DISCONNECT] [%s:%d] Closing localsocket" % (self.target, self.port))
+            except:
+                if hasattr(self, 'target'):
+                    log.debug("[DISCONNECT] [%s:%d] Localsocket already closed" % (self.target, self.port))
 
-                if hasattr(self, 'mark'):
-                    info = {'CMD': 'DISCONNECT', 'MARK': self.mark}
-                    rinfo = self.neoreg_request(info)
-                if not self.connect_closed:
-                    if hasattr(self, 'target'):
-                        log.info("[DISCONNECT] [%s:%d] Connection Terminated" % (self.target, self.port))
-                    else:
-                        log.error("[DISCONNECT] Can't find target")
-        except requests.exceptions.ConnectionError as e:
-            log.warning('[requests.exceptions.ConnectionError] {}'.format(e))
+            if hasattr(self, 'mark'):
+                info = {'CMD': 'DISCONNECT', 'MARK': self.mark}
+                rinfo = self.neoreg_request(info)
+            if not self.connect_closed:
+                if hasattr(self, 'target'):
+                    log.info("[DISCONNECT] [%s:%d] Connection Terminated" % (self.target, self.port))
+                else:
+                    log.error("[DISCONNECT] Connection Terminated")
 
 
     def reader(self):
@@ -438,23 +447,18 @@ class session(Thread):
                     if self.connect_closed or self.pSocket.fileno() == -1:
                         break
                     rinfo = self.neoreg_request(info)
-                    if rinfo:
-                        if rinfo['STATUS'] == 'OK':
-                            data = rinfo['DATA']
-                            if len(data) == 0:
-                                sleep(READINTERVAL)
-                                continue
-                        else:
-                            log.error("[READ] [%s:%d] STATUS [%s] Message [%s] Shutting down" % (self.target, self.port, rinfo['STATUS'], rinfo['ERROR']))
-                            break
+                    if rinfo['STATUS'] == 'OK':
+                        data = rinfo['DATA']
+                        if len(data) == 0:
+                            sleep(READINTERVAL)
+                            continue
                     else:
-                        log.error("[READ] [%s:%d] HTTP [%d]: Shutting down" % (self.target, self.port, response.status_code))
                         break
 
                     if len(data) > 0:
                         n += 1
                         data_len = len(data)
-                        transferLog.info("[%s:%d] [%s] (%d)<<<< [%d]" % (self.target, self.port, self.mark, n, data_len))
+                        transferLog.info("[%s:%d] [%s] No.%d <<<< [%d byte]" % (self.target, self.port, self.mark, n, data_len))
                         while data:
                             writed_size = self.pSocket.send(data)
                             data = data[writed_size:]
@@ -463,12 +467,8 @@ class session(Thread):
 
                 except error: # python2 socket.send error
                     pass
-                except requests.exceptions.ConnectionError as e:
-                    log.warning('[requests.exceptions.ConnectionError] {}'.format(e))
-                except requests.exceptions.ChunkedEncodingError as e: # python2 requests error
-                    log.warning('[requests.exceptions.ChunkedEncodingError] {}'.format(e))
                 except Exception as ex:
-                    log.expression(ex)
+                    log.exception(ex)
                     break
         finally:
             self.closeRemoteSession()
@@ -485,15 +485,10 @@ class session(Thread):
                         break
                     info['DATA'] = raw_data
                     rinfo = self.neoreg_request(info)
-                    if rinfo:
-                        if rinfo['STATUS'] != "OK":
-                            log.error("[FORWARD] [%s:%d] HTTP [%d]: Status: [%s]: Message [%s] Shutting down" % (self.target, self.port, response.status_code, rinfo['STATUS'], rinfo['ERROR']))
-                            break
-                    else:
-                        log.error("[FORWARD] [%s:%d] HTTP [%d]: Shutting down" % (self.target, self.port, response.status_code))
+                    if rinfo['STATUS'] != "OK":
                         break
                     n += 1
-                    transferLog.info("[%s:%d] [%s] (%d)>>>> [%d]" % (self.target, self.port, self.mark, n, len(raw_data)))
+                    transferLog.info("[%s:%d] [%s] No.%d >>>> [%d byte]" % (self.target, self.port, self.mark, n, len(raw_data)))
                     if len(raw_data) < READBUFSIZE:
                         sleep(WRITEINTERVAL)
                 except timeout:
@@ -501,9 +496,6 @@ class session(Thread):
                 except error:
                     break
                 except OSError:
-                    break
-                except requests.exceptions.ConnectionError as e: # python2 socket.send error
-                    log.error('[requests.exceptions.ConnectionError] {}'.format(e))
                     break
                 except Exception as ex:
                     log.exception(ex)
@@ -520,30 +512,28 @@ class session(Thread):
                 self.session_connected = self.handleSocks(self.pSocket)
 
             if self.session_connected:
-                log.debug("Staring reader")
                 r = Thread(target=self.reader)
                 r.start()
-                log.debug("Staring writer")
                 w = Thread(target=self.writer)
                 w.start()
                 r.join()
                 w.join()
-        except SocksCmdNotImplemented as si:
-            log.error('[SocksCmdNotImplemented] {}'.format(si))
-        except requests.exceptions.ConnectionError as e:
-            log.warning('[requests.exceptions.ConnectionError] {}'.format(e))
-        except Exception as e:
-            log.error('[RUN]:')
-            log.exception(e)
-            raise e
+        except NeoregReponseFormatError as ex:
+            log.error('[HTTP] [NeoregReponseFormatError] {}'.format(ex))
+        except SocksCmdNotImplemented as ex:
+            log.error('[SOCKS5] [SocksCmdNotImplemented] {}'.format(ex))
+        except requests.exceptions.ConnectionError as ex:
+            log.warning('[HTTP] [requests.exceptions.ConnectionError] {}'.format(ex))
+        except Exception as ex:
+            log.exception(ex)
         finally:
             if self.session_connected:
                 self.closeRemoteSession()
 
 
-def askGeorg(conn, connectURLs, redirectURLs):
+def askNeoGeorg(conn, connectURLs, redirectURLs):
     # only check first
-    log.info("Checking if Georg is ready")
+    log.info("[Ask NeoGeorg] Checking if NeoGeorg is ready")
     headers = {}
     headers.update(HEADERS)
 
@@ -552,34 +542,34 @@ def askGeorg(conn, connectURLs, redirectURLs):
 
     need_exit = False
     try:
-        log.debug("[HTTP] Ask Georg Request".format())
+        log.debug("[HTTP] Ask NeoGeorg Request".format())
         if redirectURLs:
             info = {'REDIRECTURL': redirectURLs[0]}
             data = encode_body(info)
             response = conn.post(connectURLs[0], headers=headers, timeout=10, data=data)
         else:
             response = conn.get(connectURLs[0], headers=headers, timeout=10)
-        log.debug("[HTTP] Ask Georg Response =>  Code: {}".format(response.status_code))
+        log.debug("[HTTP] Ask NeoGeorg Response => HttpCode: {}".format(response.status_code))
         if '.php' in connectURLs[0]:
             if 'Expires' in response.headers:
                 expires = response.headers['Expires']
                 try:
                     expires_date = datetime.strptime(expires, '%a, %d %b %Y %H:%M:%S %Z')
                     if mktime(expires_date.timetuple()) < time():
-                        log.warning('Server Session expired')
+                        log.warning('[Ask NeoGeorg] Server Session expired')
                         if 'Set-Cookie' in response.headers:
                             cookie = ''
                             for k, v in response.cookies.items():
                                 cookie += '{}={};'.format(k, v)
                             HEADERS.update({'Cookie' : cookie})
-                            log.warning("Automatically append Cookies: {}".format(cookie))
+                            log.warning("[Ask NeoGeorg] Automatically append Cookies: {}".format(cookie))
                         else:
-                            log.error('There is no valid cookie return')
+                            log.error('[Ask NeoGeorg] There is no valid cookie return')
                             need_exit = True
                 except ValueError:
-                    log.warning('Expires wrong format: {}'.format(expires))
+                    log.warning('[Ask NeoGeorg] Expires wrong format: {}'.format(expires))
     except Exception as ex:
-        log.error("Georg is not ready, please check URL")
+        log.error("[Ask NeoGeorg] NeoGeorg is not ready, please check URL")
         log.exception(ex)
         exit()
 
@@ -587,34 +577,34 @@ def askGeorg(conn, connectURLs, redirectURLs):
         exit()
 
     if redirectURLs and response.status_code >= 400:
-        log.warning('Using redirection will affect performance when the response code >= 400')
+        log.warning('[Ask NeoGeorg] Using redirection will affect performance when the response code >= 400')
 
     data = response.content
     data = extract_body(data)
 
     if BASICCHECKSTRING == data.strip():
-        log.info("Georg says, 'All seems fine'")
+        log.info("[Ask NeoGeorg] NeoGeorg says, 'All seems fine'")
         return True
     elif BASICCHECKSTRING in data:
         left_offset = data.index(BASICCHECKSTRING)
         right_offset = len(data) - ( left_offset + len(BASICCHECKSTRING) )
-        log.error("Georg is ready, but the body needs to be offset")
+        log.error("[Ask NeoGeorg] NeoGeorg is ready, but the body needs to be offset")
         args_tips = ''
         if left_offset:
             args_tips += '--cut-left {}'.format(left_offset)
         if right_offset:
             args_tips += '--cut-right {}'.format(right_offset)
-        log.error("You can set the `{}` parameter to body offset".format(args_tips))
+        log.error("[Ask NeoGeorg] You can set the `{}` parameter to body offset".format(args_tips))
         exit()
     else:
         if args.skip:
-            log.debug("Ignore detecting that Georg is ready")
+            log.debug("[Ask NeoGeorg] Ignore detecting that NeoGeorg is ready")
 
         else:
-            log.warning('Expect Response: {}'.format(BASICCHECKSTRING[0:100]))
-            log.warning('Real Response: {}'.format(data.strip()[0:100]))
-            log.error("Georg is not ready, please check URL and KEY. rep: [{}] {}".format(response.status_code, response.reason))
-            log.error("You can set the `--skip` parameter to ignore errors")
+            log.warning('[Ask NeoGeorg] Expect Response: {}'.format(BASICCHECKSTRING[0:100]))
+            log.warning('[Ask NeoGeorg] Real Response: {}'.format(data.strip()[0:100]))
+            log.error("[Ask NeoGeorg] NeoGeorg is not ready, please check URL and KEY. rep: [{}] {}".format(response.status_code, response.reason))
+            log.error("[Ask NeoGeorg] You can set the `--skip` parameter to ignore errors")
             exit()
 
 
@@ -817,12 +807,12 @@ if __name__ == '__main__':
             conn.headers['User-Agent'] = USERAGENT
 
             servSock_start = False
-            askGeorg(conn, urls, redirect_urls)
+            askNeoGeorg(conn, urls, redirect_urls)
 
-            READBUFSIZE  = min(args.read_buff, 50) * 1024
-            MAXTHERADS   = args.max_threads
-            READINTERVAL = args.read_interval / 1000.0
-            WRITEINTERVAL = args.write_interval / 1000.0
+            READBUFSIZE   = min(args.read_buff, 50) * 1024
+            MAXTHERADS    = args.max_threads
+            READINTERVAL  = args.read_interval  /   1000.0
+            WRITEINTERVAL = args.write_interval /   1000.0
 
             try:
                 servSock = socket(AF_INET, SOCK_STREAM)
@@ -834,17 +824,15 @@ if __name__ == '__main__':
                 log.error("[Server Listen] {}".format(e))
                 exit()
 
-
             while True:
                 try:
                     sock, addr_info = servSock.accept()
                     sock.settimeout(SOCKTIMEOUT)
-                    log.debug("Incomming connection")
                     session(conn, sock, urls, redirect_urls, args.target).start()
                 except KeyboardInterrupt as ex:
                     break
                 except timeout:
-                    log.warning("[Socks Connect Timeout] {}".format(addr_info))
+                    log.error("[SOCKS5] Connect Timeout from {}:{}".format(addr_info[0], addr_info[1]))
                     if sock:
                         sock.close()
                 except OSError:
@@ -852,13 +840,13 @@ if __name__ == '__main__':
                         sock.close()
                 except error:
                     pass
-                except Exception as e:
-                    log.error(e)
+                except Exception as ex:
+                    log.exception(ex)
                     raise e
         except requests.exceptions.ProxyError:
-            log.error("Unable to connect proxy: %s" % args.proxy)
+            log.error("[HTTP] Unable to connect proxy: %s" % args.proxy)
         except requests.exceptions.ConnectionError:
-            log.error("Can not connect to the server")
+            log.error("[HTTP] Can not connect to the web server")
         finally:
             if servSock_start:
                 servSock.close()
@@ -899,7 +887,7 @@ if __name__ == '__main__':
             filepath = os.path.join(script_dir, filename)
             if os.path.isfile(filepath) and filename.startswith('tunnel.'):
                 text = file_read(filepath)
-                text = text.replace(r"Georg says, 'All seems fine'", http_get_content)
+                text = text.replace(r"NeoGeorg says, 'All seems fine'", http_get_content)
                 text = re.sub(r"BASE64 CHARSLIST", M_BASE64CHARS, text)
 
                 # only jsp

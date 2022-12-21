@@ -152,7 +152,7 @@
                 }
             }
         } else {
-            Response.Write("Georg says, 'All seems fine'");
+            Response.Write("NeoGeorg says, 'All seems fine'");
         }
     } catch (Exception ex) {
         Response.AddHeader("X-STATUS", "FAIL");

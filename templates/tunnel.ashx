@@ -155,7 +155,7 @@ public class GenericHandler1 : IHttpHandler, System.Web.SessionState.IRequiresSe
                     }
                 }
             } else {
-                context.Response.Write("Georg says, 'All seems fine'");
+                context.Response.Write("NeoGeorg says, 'All seems fine'");
             }
         } catch (Exception ex) {
             context.Response.AddHeader("X-STATUS", "FAIL");

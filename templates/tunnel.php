@@ -159,6 +159,6 @@ switch($cmd){
     default: {
         @session_start();
         session_write_close();
-        exit("Georg says, 'All seems fine'");
+        exit("NeoGeorg says, 'All seems fine'");
     }
 }
