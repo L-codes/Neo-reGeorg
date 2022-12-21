@@ -879,7 +879,7 @@ if __name__ == '__main__':
     else:
         # neoreg server generate
         print(banner)
-        READBUF = args.read_buff - (args.read_buff % 3)
+        READBUF = args.read_buff
         MAXREADSIZE = args.max_read_size * 1024
         outdir = args.outdir
         if not os.path.isdir(outdir):
