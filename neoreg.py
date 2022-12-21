@@ -901,19 +901,23 @@ if __name__ == '__main__':
         print("    [+] Create neoreg server files:")
 
         if args.file:
-            http_get_content = repr(file_read(args.file)).replace("\\'", "'").replace('"', '\\"')[1:-1]
-            http_get_content, n = re.subn(r'\\[xX][a-fA-F0-9]{2}', '', http_get_content)
-            if n > 0:
-                print("    [*] %d invisible strings were deleted" % n)
+            http_get_content = file_read(args.file)
         else:
             http_get_content = BASICCHECKSTRING.decode()
+
+        if ispython3:
+            http_get_content = http_get_content.encode()
+        neoreg_hello = base64.b64encode(http_get_content)
+        if ispython3:
+            neoreg_hello = neoreg_hello.decode()
+        neoreg_hello = neoreg_hello.translate(EncodeMap)
 
         for filename in os.listdir(script_dir):
             outfile = os.path.join(outdir, filename)
             filepath = os.path.join(script_dir, filename)
             if os.path.isfile(filepath) and filename.startswith('tunnel.'):
                 text = file_read(filepath)
-                text = text.replace(r"NeoGeorg says, 'All seems fine'", http_get_content)
+                text = text.replace(r"NeoGeorg says, 'All seems fine'", neoreg_hello)
                 text = re.sub(r"BASE64 CHARSLIST", M_BASE64CHARS, text)
                 text = re.sub(r"\bHTTPCODE\b", str(args.httpcode), text)
 

