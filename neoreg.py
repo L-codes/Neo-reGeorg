@@ -423,7 +423,7 @@ class session(Thread):
 
         if '.php' in self.connectURLs[0]:
             try:
-                self.neoreg_request(info, timeout=PHPTIMEOUT)
+                rinfo = self.neoreg_request(info, timeout=PHPTIMEOUT)
             except:
                 log.info("[CONNECT] [%s:%d] Session mark: %s" % (self.target, self.port, self.mark))
                 return self.mark
@@ -566,6 +566,7 @@ def askNeoGeorg(conn, connectURLs, redirectURLs):
         if redirectURLs:
             info = {'REDIRECTURL': redirectURLs[0]}
             data = encode_body(info)
+            headers.update({'Content-type': 'application/octet-stream'})
             response = conn.post(connectURLs[0], headers=headers, timeout=10, data=data)
         else:
             response = conn.get(connectURLs[0], headers=headers, timeout=10)
@@ -724,7 +725,7 @@ if __name__ == '__main__':
         parser.add_argument("-H", "--header", metavar="LINE", help="Pass custom header LINE to server", action='append', default=[])
         parser.add_argument("-c", "--cookie", metavar="LINE", help="Custom init cookies")
         parser.add_argument("-x", "--proxy", metavar="LINE", help="Proto://host[:port]  Use proxy on given port", default=None)
-        parser.add_argument("--php-connect-timeout", metavar="S", help="PHP connect timeout.(default: 0.5)", type=float, default=PHPTIMEOUT)
+        parser.add_argument("--php-connect-timeout", metavar="S", help="PHP connect timeout.(default: {})".format(PHPTIMEOUT), type=float, default=PHPTIMEOUT)
         parser.add_argument("--local-dns", help="Use local resolution DNS", action='store_true')
         parser.add_argument("--read-buff", metavar="KB", help="Local read buffer, max data to be sent per POST.(default: {}, max: 50)".format(READBUFSIZE), type=int, default=READBUFSIZE)
         parser.add_argument("--read-interval", metavar="MS", help="Read data interval in milliseconds.(default: {})".format(READINTERVAL), type=int, default=READINTERVAL)
@@ -786,7 +787,7 @@ if __name__ == '__main__':
         urls = args.url
         redirect_urls = args.redirect_url
 
-        HEADERS = { 'Content-type': 'application/octet-stream' }
+        HEADERS = {}
         for header in args.header:
             if ':' in header:
                 key, value = header.split(':', 1)
@@ -829,6 +830,9 @@ if __name__ == '__main__':
 
             servSock_start = False
             askNeoGeorg(conn, urls, redirect_urls)
+
+            if 'Content-type' not in HEADERS:
+                HEADERS['Content-type'] = 'application/octet-stream'
 
             READBUFSIZE   = min(args.read_buff, 50) * 1024
             MAXTHERADS    = args.max_threads
@@ -911,9 +915,12 @@ if __name__ == '__main__':
                 text = file_read(filepath)
                 text = text.replace(r"NeoGeorg says, 'All seems fine'", http_get_content)
                 text = re.sub(r"BASE64 CHARSLIST", M_BASE64CHARS, text)
+                text = re.sub(r"\bHTTPCODE\b", str(args.httpcode), text)
+
+                # java/c#
                 text = re.sub(r"\bREADBUF\b", str(READBUF), text)
                 text = re.sub(r"\bMAXREADSIZE\b", str(MAXREADSIZE), text)
-                text = re.sub(r"\bHTTPCODE\b", str(args.httpcode), text)
+
                 # only jsp
                 text = re.sub(r"BASE64 ARRAYLIST", ','.join(map(str, M_BASE64ARRAY)), text)
 
