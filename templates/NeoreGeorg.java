@@ -195,7 +195,7 @@ public class NeoreGeorg implements HostnameVerifier,X509TrustManager {
                                 readData.write(block);
                                 ((java.nio.Buffer)buf).clear();
                                 readLen += bytesRead;
-                                if (bytesRead < 513 || readLen >= maxRead) {
+                                if (bytesRead < READBUF || readLen >= maxRead) {
                                     rinfo[DATA] = readData.toByteArray();
                                     break;
                                 }
