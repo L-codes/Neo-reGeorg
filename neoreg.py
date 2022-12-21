@@ -393,25 +393,25 @@ class session(Thread):
                 response = self.conn.post(self.url_sample(), headers=HEADERS, timeout=timeout, data=data)
                 log.debug("[HTTP] [%s:%d] %s Response (%s) => HttpCode: %d" % (self.target, self.port, info['CMD'], self.mark, response.status_code))
 
+                rinfo = decode_body(response.content)
+                if rinfo is None:
+                    raise NeoregReponseFormatError("[HTTP] Response Format Error: {}".format(response.content))
+                else:
+                    if rinfo['STATUS'] != 'OK' and info['CMD'] != 'DISCONNECT':
+                        log.warning('[%s] [%s:%d] %s' % (info['CMD'], self.target, self.port, rinfo['ERROR']))
+                    return rinfo
+
                 # 高并发下，csharp 容易出现 503, 重试即可
-                if response.status_code != 503:
-                    break
                 log.warning("[HTTP] [%s:%d] [ReTry %d] %s Request (%s) => HttpCode: %d" % (self.target, self.port, retry, info['CMD'], self.mark, response.status_code))
 
-                if retry >= MAXRETRY:
-                    break
             except requests.exceptions.ConnectionError as e:
-                log.warning('[{}] [requests.exceptions.ConnectionError] {}'.format(info['CMD'], e))
+                log.warning('[HTTP] [{}] [requests.exceptions.ConnectionError] {}'.format(info['CMD'], e))
             except requests.exceptions.ChunkedEncodingError as e: # python2 requests error
-                log.warning('[{}] [requests.exceptions.ChunkedEncodingError] {}'.format(info['CMD'], e))
-
-        rinfo = decode_body(response.content)
-        if rinfo is None:
-            raise NeoregReponseFormatError("[HTTP] Response Format Error: {}".format(response.content))
-        else:
-            if rinfo['STATUS'] != 'OK' and info['CMD'] != 'DISCONNECT':
-                log.warning('[%s] [%s:%d] %s' % (info['CMD'], self.target, self.port, rinfo['ERROR']))
-            return rinfo
+                log.warning('[HTTP] [{}] [requests.exceptions.ChunkedEncodingError] {}'.format(info['CMD'], e))
+            except NeoregReponseFormatError as e: # python2 requests error
+                log.warning("[%s] [%s:%d] NeoregReponseFormatError, Retry: No.%d" % (info['CMD'], self.target, self.port, retry))
+                if retry > MAXRETRY:
+                    raise e
 
 
     def setupRemoteSession(self, target, port):

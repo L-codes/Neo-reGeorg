@@ -11,6 +11,7 @@
     Client: 改用 `BLV (Byte-Length-Value)` 的数据结构进行传输
     Client: 添加了重试机制，在服务器不稳定时(如高并发)，增强稳定性
     Client: `reader` 和 `writer` 并发时，考虑主要是 HTTP 流量多，优先启动 `writer`
+    Client: 新增 `--max-retry` 参数，可控制 requests 的重试次数
 
 ### v3.8.1:
     Server: java 端，修复在 listener 下 neoreg 没有回显问题
