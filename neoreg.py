@@ -45,7 +45,8 @@ REFUSED           = b"\x05"
 
 # Globals
 READBUFSIZE   = 7
-MAXTHERADS    = 1000
+MAXTHERADS    = 400
+MAXRETRY      = 10
 READINTERVAL  = 300
 WRITEINTERVAL = 200
 PHPTIMEOUT    = 0.5
@@ -385,19 +386,25 @@ class session(Thread):
         data = encode_body(info)
         log.debug("[HTTP] [%s:%d] %s Request (%s)" % (self.target, self.port, info['CMD'], self.mark))
 
+        retry = -1
         while True:
+            retry += 1
             try:
                 response = self.conn.post(self.url_sample(), headers=HEADERS, timeout=timeout, data=data)
+                log.debug("[HTTP] [%s:%d] %s Response (%s) => HttpCode: %d" % (self.target, self.port, info['CMD'], self.mark, response.status_code))
+
                 # 高并发下，csharp 容易出现 503, 重试即可
                 if response.status_code != 503:
                     break
-                log.warning("[HTTP] [%s:%d] [ReTry] %s Request (%s) => HttpCode: %d" % (self.target, self.port, info['CMD'], self.mark, response.status_code))
+                log.warning("[HTTP] [%s:%d] [ReTry %d] %s Request (%s) => HttpCode: %d" % (self.target, self.port, retry, info['CMD'], self.mark, response.status_code))
+
+                if retry >= MAXRETRY:
+                    break
             except requests.exceptions.ConnectionError as e:
                 log.warning('[{}] [requests.exceptions.ConnectionError] {}'.format(info['CMD'], e))
             except requests.exceptions.ChunkedEncodingError as e: # python2 requests error
                 log.warning('[{}] [requests.exceptions.ChunkedEncodingError] {}'.format(info['CMD'], e))
 
-        log.debug("[HTTP] [%s:%d] %s Response (%s) => HttpCode: %d" % (self.target, self.port, info['CMD'], self.mark, response.status_code))
         rinfo = decode_body(response.content)
         if rinfo is None:
             raise NeoregReponseFormatError("[HTTP] Response Format Error: {}".format(response.content))
@@ -722,7 +729,8 @@ if __name__ == '__main__':
         parser.add_argument("--read-buff", metavar="KB", help="Local read buffer, max data to be sent per POST.(default: {}, max: 50)".format(READBUFSIZE), type=int, default=READBUFSIZE)
         parser.add_argument("--read-interval", metavar="MS", help="Read data interval in milliseconds.(default: {})".format(READINTERVAL), type=int, default=READINTERVAL)
         parser.add_argument("--write-interval", metavar="MS", help="Write data interval in milliseconds.(default: {})".format(WRITEINTERVAL), type=int, default=WRITEINTERVAL)
-        parser.add_argument("--max-threads", metavar="N", help="Proxy max threads.(default: 1000)", type=int, default=MAXTHERADS)
+        parser.add_argument("--max-threads", metavar="N", help="Proxy max threads.(default: {})".format(MAXTHERADS), type=int, default=MAXTHERADS)
+        parser.add_argument("--max-retry", metavar="N", help="Proxy max threads.(default: {})".format(MAXRETRY), type=int, default=MAXRETRY)
         parser.add_argument("--cut-left", metavar="N", help="Truncate the left side of the response body", type=int, default=0)
         parser.add_argument("--cut-right", metavar="N", help="Truncate the right side of the response body", type=int, default=0)
         parser.add_argument("--extract", metavar="EXPR", help="Manually extract BODY content. (eg: <html><p>REGBODY</p></html> )")
@@ -824,6 +832,7 @@ if __name__ == '__main__':
 
             READBUFSIZE   = min(args.read_buff, 50) * 1024
             MAXTHERADS    = args.max_threads
+            MAXRETRY      = args.max_retry
             READINTERVAL  = args.read_interval  /   1000.0
             WRITEINTERVAL = args.write_interval /   1000.0
 
