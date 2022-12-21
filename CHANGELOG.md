@@ -5,9 +5,12 @@
     Server: `tunnel.jsp(x)` 已实现最佳兼容性，移除 `tunnel_compatibility.jsp(x)`
     Server: java 改用 Gzip 压缩，对 jsp(x) 进行压缩体积，缩小了40%
     Server: php 修改了 `set_time_limit(0)` 的位置，使得 CONNECT 以外的请求时间更加稳定可靠
-    Server: java/csharp/php 等都设置了 connect timeout 为 3 秒，保证稳定性的同时，在极端网络下提升并发速度 (特别感谢 @c0ny1 的解决方案)
+    Server: java 设置了 connect timeout 为 3 秒，保证稳定性的同时，在极端网络下提升并发速度 (特别感谢 @c0ny1 的解决方案)
+    Server: csharp 设置了 connect timeout 为 2 秒，保证稳定性的同时，在极端网络下提升并发速度
     Client: 重新设计和优化日志输出
     Client: 改用 `BLV (Byte-Length-Value)` 的数据结构进行传输
+    Client: 添加了重试机制，在服务器不稳定时(如高并发)，增强稳定性
+    Client: `reader` 和 `writer` 并发时，考虑主要是 HTTP 流量多，优先启动 `writer`
 
 ### v3.8.1:
     Server: java 端，修复在 listener 下 neoreg 没有回显问题

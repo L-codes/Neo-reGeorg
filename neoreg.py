@@ -136,7 +136,17 @@ def blv_decode(data):
         if b >= 1 and b <= 8:
             name = BLVHEAD[b]
             if name != 'DATA':
-                v = v.decode()
+                if name != 'ERROR':
+                    v = v.decode()
+                else:
+                    try:
+                        v = v.decode()
+                    except UnicodeDecodeError:
+                        v = v.decode('gbk')
+                    except Exception as ex:
+                        log.error("[BLV Decode] [%s] => %s" % (name, repr(v)))
+                        raise ex
+
             info[name] = v
 
     return info
@@ -378,7 +388,10 @@ class session(Thread):
         while True:
             try:
                 response = self.conn.post(self.url_sample(), headers=HEADERS, timeout=timeout, data=data)
-                break
+                # 高并发下，csharp 容易出现 503, 重试即可
+                if response.status_code != 503:
+                    break
+                log.warning("[HTTP] [%s:%d] [ReTry] %s Request (%s) => HttpCode: %d" % (self.target, self.port, info['CMD'], self.mark, response.status_code))
             except requests.exceptions.ConnectionError as e:
                 log.warning('[{}] [requests.exceptions.ConnectionError] {}'.format(info['CMD'], e))
             except requests.exceptions.ChunkedEncodingError as e: # python2 requests error
@@ -513,9 +526,9 @@ class session(Thread):
 
             if self.session_connected:
                 r = Thread(target=self.reader)
-                r.start()
                 w = Thread(target=self.writer)
-                w.start()
+                w.start()  # HTTP 协议偏多，先启动 writer
+                r.start()
                 r.join()
                 w.join()
         except NeoregReponseFormatError as ex:
@@ -889,13 +902,11 @@ if __name__ == '__main__':
                 text = file_read(filepath)
                 text = text.replace(r"NeoGeorg says, 'All seems fine'", http_get_content)
                 text = re.sub(r"BASE64 CHARSLIST", M_BASE64CHARS, text)
-
-                # only jsp
-                text = re.sub(r"BASE64 ARRAYLIST", ','.join(map(str, M_BASE64ARRAY)), text)
-
                 text = re.sub(r"\bREADBUF\b", str(READBUF), text)
                 text = re.sub(r"\bMAXREADSIZE\b", str(MAXREADSIZE), text)
                 text = re.sub(r"\bHTTPCODE\b", str(args.httpcode), text)
+                # only jsp
+                text = re.sub(r"BASE64 ARRAYLIST", ','.join(map(str, M_BASE64ARRAY)), text)
 
                 file_write(outfile, text)
                 print("       => %s/%s" % (outdir, os.path.basename(outfile)))
