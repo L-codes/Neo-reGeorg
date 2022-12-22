@@ -258,7 +258,7 @@ class Rand:
         rand = base64.b64encode(int_to_bytes((random.getrandbits(int(random.random() * 300) + 30) << 280)+self.v_clen))
         if ispython3:
             rand = rand.decode()
-        return rand
+        return rand.rstrip('=')
 
     def base64_chars(self, charslist):
         if sys.version_info >= (3, 2):
