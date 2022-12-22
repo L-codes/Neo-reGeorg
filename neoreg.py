@@ -153,6 +153,12 @@ def blv_decode(data):
     return info
 
 
+def int_to_bytes(n):
+    h = '%x' % n
+    if len(h) % 2 != 0:
+        h = '0' + h
+    return codecs.decode(h, 'hex')
+
 def encode_body(info):
     data = blv_encode(info)
     data = base64.b64encode(data)
@@ -237,14 +243,22 @@ class NeoregReponseFormatError(Exception):
 
 class Rand:
     def __init__(self, key):
-        n = int(hashlib.sha512(key.encode()).hexdigest(), 16)
-        self.v_clist = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_"
-        self.v_clen = len(self.v_clist)
+        salt = b'11f271c6lm0e9ypkptad1uv6e1ut1fu0pt4xillz1w9bbs2gegbv89z9gca9d6tbk025uvgjfr331o0szln'
+        key_min_len = 28
+        # 密码强度不足时，使用加盐hash
+        if len(key) < key_min_len:
+            key_hash = hashlib.md5(salt[:key_min_len] + key.encode() + salt[key_min_len:]).hexdigest()
+        else:
+            key_hash = key
+        n = int(codecs.encode(key_hash[:key_min_len].encode(), 'hex'), 16)
+        self.v_clen = pow(n, int(salt[:key_min_len],36), int(salt[key_min_len:],36))
         random.seed(n)
 
     def rand_value(self):
-        str_len = random.getrandbits(6) + 2 # len 2 to 65
-        return ''.join([ self.v_clist[random.getrandbits(10) % self.v_clen] for _ in range(str_len) ])
+        rand = base64.b64encode(int_to_bytes((random.getrandbits(int(random.random() * 300) + 30) << 280)+self.v_clen))
+        if ispython3:
+            rand = rand.decode()
+        return rand
 
     def base64_chars(self, charslist):
         if sys.version_info >= (3, 2):
