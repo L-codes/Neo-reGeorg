@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 __author__  = 'L'
-__version__ = '3.8.1'
+__version__ = '5.0.0'
 
 import sys
 import os
@@ -408,15 +408,16 @@ class session(Thread):
             retry += 1
             try:
                 response = self.conn.post(self.url_sample(), headers=HEADERS, timeout=timeout, data=data)
-                log.debug("[HTTP] [%s:%d] %s Response (%s) => HttpCode: %d" % (self.target, self.port, info['CMD'], self.mark, response.status_code))
+                second = response.elapsed.total_seconds()
+                log.debug("[HTTP] [%s:%d] %s Response (%s) => HttpCode: %d, Time: %.2fs" % (self.target, self.port, info['CMD'], self.mark, response.status_code, second))
 
-                data = extract_body(response.content)
-                rinfo = decode_body(data)
+                rdata = extract_body(response.content)
+                rinfo = decode_body(rdata)
                 if rinfo is None:
                     raise NeoregReponseFormatError("[HTTP] Response Format Error: {}".format(response.content))
                 else:
                     if rinfo['STATUS'] != 'OK' and info['CMD'] != 'DISCONNECT':
-                        log.warning('[%s] [%s:%d] %s' % (info['CMD'], self.target, self.port, rinfo['ERROR']))
+                        log.warning('[%s] [%s:%d] Error: %s' % (info['CMD'], self.target, self.port, rinfo['ERROR']))
                     return rinfo
 
                 # 高并发下，csharp 容易出现 503, 重试即可
@@ -606,6 +607,12 @@ def askNeoGeorg(conn, connectURLs, redirectURLs):
                             need_exit = True
                 except ValueError:
                     log.warning('[Ask NeoGeorg] Expires wrong format: {}'.format(expires))
+    except requests.exceptions.ConnectionError:
+        log.error("[Ask NeoGeorg] NeoGeorg server connection errer")
+        exit
+    except requests.exceptions.ConnectTimeout:
+        log.error("[Ask NeoGeorg] NeoGeorg server connection timeout")
+        exit
     except Exception as ex:
         log.error("[Ask NeoGeorg] NeoGeorg is not ready, please check URL")
         log.exception(ex)
@@ -751,16 +758,16 @@ if __name__ == '__main__':
         parser.add_argument("--max-retry", metavar="N", help="Proxy max threads (default: {})".format(MAXRETRY), type=int, default=MAXRETRY)
         parser.add_argument("--cut-left", metavar="N", help="Truncate the left side of the response body", type=int, default=0)
         parser.add_argument("--cut-right", metavar="N", help="Truncate the right side of the response body", type=int, default=0)
-        parser.add_argument("--extract", metavar="EXPR", help="Manually extract BODY content (eg: <html><p>REGBODY</p></html> )")
+        parser.add_argument("--extract", metavar="EXPR", help="Manually extract BODY content (eg: <html><p>NEOREGBODY</p></html> )")
         parser.add_argument("-v", help="Increase verbosity level (use -vv or more for greater effect)", action='count', default=0)
         args = parser.parse_args()
 
         if args.extract:
-            if 'REGBODY' not in args.extract:
-                print('[!] Error extracting expression, REGBODY not found')
+            if 'NEOREGBODY' not in args.extract:
+                print('[!] Error extracting expression, `NEOREGBODY` not found')
                 exit()
             else:
-                expr = re.sub('REGBODY', r'\\s*([A-Za-z0-9+/]*(?:=|==)?|<!-- [a-zA-Z0-9]+ -->)\\s*', re.escape(args.extract))
+                expr = re.sub('NEOREGBODY', r'\\s*([A-Za-z0-9+/]*(?:=|==)?|<!-- [a-zA-Z0-9+/]+ -->)\\s*', re.escape(args.extract))
                 EXTRACT_EXPR = re.compile(expr, re.S)
 
     rand = Rand(args.key)

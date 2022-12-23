@@ -194,4 +194,3 @@ if ( $sayhello ) {
 } else {
     echo strtr(base64_encode(blv_encode($rinfo)), $en, $de);
 }
-?>
