@@ -1,21 +1,28 @@
 # Change Log
 
-### :
-    Server: java/chsarp/php 都改用 `BLV (Byte-Length-Value)` 数据结构进行传输
-    Server: `tunnel.jsp(x)` 已实现最佳兼容性，移除 `tunnel_compatibility.jsp(x)`
-    Server: java 改用 Gzip 压缩，对 jsp(x) 进行压缩体积，缩小了40%
-    Server: php 修改了 `set_time_limit(0)` 的位置，使得 CONNECT 以外的请求时间更加稳定可靠
-    Server: java 设置了 connect timeout 为 3 秒，保证稳定性的同时，在极端网络下提升并发速度 (特别感谢 @c0ny1 的解决方案)
-    Server: csharp 设置了 connect timeout 为 2 秒，保证稳定性的同时，在极端网络下提升并发速度
-    Server: banner 改用 base64，使得 `-f FILE` 可用性更高
-    Server: 修复 php 下行流量过大时，无法正常运作的问题
-    Server: 修复 php 因 `exit` 导致无法正常输出后续的其它内容
-    Server: java 解决 `islocal()` 检测，导致无法转发到本机的服务，添加了强制转发参数 `-R/--force-redirect`
-    Client: 重新设计和优化日志输出
-    Client: 改用 `BLV (Byte-Length-Value)` 的数据结构进行传输
-    Client: 添加了重试机制，在服务器不稳定时(如高并发)，增强稳定性
-    Client: 新增 `--max-retry` 参数，可控制 requests 的重试次数
-    Client: 修复 `-k KEY` 特殊 Key 无法正常使用的情况
+### v5.0.0:
+##### 新特征
+    1. java/chsarp/php 都改用 `BLV (Byte-LengthOffset-Value)` 数据结构进行传输，正式移除三年前发布第一版沿用至今的随机 Header 技术
+    2. 在 `BLV` 数据结构下，实现请求重试机制，可克服恶劣环境 (如服务器不稳定、负载均衡下只在部分机器上部署了服务端等特殊情况)
+    3. 新增了 golang 的服务端，支持另起进程提供服务，为解决更加恶劣的特殊环境 :)  (特别感谢 @M09Ic 解决io阻塞等问题)
+    4. 新增 `-R/--force-redirect` 参数选项，为 java 解决 `islocal()` 检测，导致无法转发到本机的服务，添加了强制转发功能
+    5. 新增 `--max-retry` 参数选项，可控制 Neoreg 的重试次数
+##### 增强
+    1. 简化使用，`tunnel.jsp(x)` 已实现最佳兼容性，此版本开始移除 `tunnel_compatibility.jsp(x)`
+    2. java 改用 Gzip 压缩，对 jsp(x) 进行压缩，文件体积缩小了 30%
+    3. php 修改了 `set_time_limit(0)` 的位置，使得 CONNECT 以外的请求时间更加稳定可靠
+    4. java 设置了 connect timeout 为 3 秒，保证稳定性的同时，在极端网络下提升并发速度 (特别感谢 @c0ny1 的解决方案)
+    5. csharp 设置了 connect timeout 为 2 秒，保证稳定性的同时，在极端网络下提升并发速度
+    6. 客户端日志输出重新设计与优化
+##### 修复
+    1. banner 改用 base64，使得 `-f FILE` 可用性更高
+    2. 修复 php 下行流量过大时，无法正常运作的问题
+    3. 修复 php 因 `exit` 导致无法正常输出后续的其它内容
+    4. 修复 `-k KEY` 特殊 Key 无法正常使用的情况
+
+### v4.0.0:
+    感谢 @BeichenDream 对项目的贡献，提供了 `KTLV (Key-Type-Length-Value)` 隐去随机 Header 设计，并在实现阶段中 (参考 PR#60)。
+    后来设计出更适合 Neoreg 的新传输方案 `BLV`，并先于 v4 版本完成实现发布
 
 ### v3.8.1:
     Server: java 端，修复在 listener 下 neoreg 没有回显问题

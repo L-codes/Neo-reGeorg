@@ -1,5 +1,28 @@
 # Change Log
 
+### v5.0.0:
+##### New Features
+    1. Both java/chsarp/php use the `BLV (Byte-Length-Value)` data structure for transmission, officially removing the random header technology that has been used since the first version was released three years ago
+    2. Under the `BLV` data structure, implement a request retry mechanism, which can overcome harsh environments (such as server instability, load balancing, and only some servers are deployed on some machines, etc.)
+    3. A new golang server is added, which supports starting a new process to provide services, in order to solve the more severe special environment :) (Special thanks to @M09Ic for solving io blocking and other problems)
+    4. Add `-R/--force-redirect` parameter option to solve the `islocal()` detection for java, resulting in the service that cannot be forwarded to the local machine, and added the force forwarding function
+    5. Add `--max-retry` parameter option, which can control the number of retries of Neoreg
+##### Enhancement
+    1. Simplify the use, `tunnel.jsp(x)` has achieved the best compatibility, and this version starts to remove `tunnel_compatibility.jsp(x)` 2. Java uses Gzip compression instead, and jsp(x) is compressed, and the file 30% smaller in size
+    3. PHP modified the position of `set_time_limit(0)` to make the request time other than CONNECT more stable and reliable
+    4. Java has set the connect timeout to 3 seconds to ensure stability and improve concurrent speed under extreme network conditions (special thanks to @c0ny1 for his solution)
+    5. csharp set the connect timeout to 2 seconds to ensure stability and improve concurrent speed under extreme network conditions
+    6. Client log output redesign and optimization
+##### fix
+    1. The banner is changed to base64, which makes `-f FILE` more usable
+    2. Fix the problem that php cannot work normally when the downstream traffic is too large
+    3. Fix the failure of php to output other subsequent content normally due to `exit`
+    4. Fix `-k KEY` special key can not be used normally
+
+### v4.0.0:
+    Thanks to @BeichenDream for his contribution to the project, `KTLV (Key-Type-Length-Value)` is provided to hide the random Header design, and in the implementation stage (refer to PR#60)
+    Later, a new transmission scheme `BLV` more suitable for Neoreg was designed, and it was released before the v4 version
+
 ### v3.8.1:
     Server: java side, fix the problem that neoreg has no echo under listener
     Server: java side, intranet forwarding supports https (ignoring certificate security @BeichenDream PR)
