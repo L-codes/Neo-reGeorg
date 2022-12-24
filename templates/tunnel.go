@@ -88,7 +88,7 @@ func blv_decode(data []byte) map[int][]byte {
         }
         binary.Read(in, binary.BigEndian, &l_int32)
         b := int(b_byte)
-        l := int(l_int32)
+        l := int(l_int32) - BLV_L_OFFSET
 
         v := make([]byte, l)
         in.Read(v)
@@ -114,7 +114,7 @@ func blv_encode(info map[int][]byte) []byte {
     for b, v := range info {
         l := len(v)
         binary.Write(data, binary.BigEndian, byte(b))
-        binary.Write(data, binary.BigEndian, int32(l))
+        binary.Write(data, binary.BigEndian, int32(l) + BLV_L_OFFSET)
         binary.Write(data, binary.BigEndian, v)
     }
     return data.Bytes()

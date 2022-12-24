@@ -30,7 +30,7 @@
         while ( i < data_len ) {
             b = dataInput.ReadByte();
             dataInput.Read(length, 0, length.Length);
-            int l = bytesToInt(length);
+            int l = bytesToInt(length) - BLV_L_OFFSET;
             byte[] v = new byte[l];
             dataInput.Read(v, 0, v.Length);
             i += ( 5 + l );
@@ -60,7 +60,7 @@
                 }
                 buf.WriteByte((byte) b);
                 try {
-                    byte[] l = intToBytes(v.Length);
+                    byte[] l = intToBytes(v.Length + BLV_L_OFFSET);
                     buf.Write(l, 0, l.Length);
                     buf.Write(v, 0, v.Length);
                 }catch(Exception e) {

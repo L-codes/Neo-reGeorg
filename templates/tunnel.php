@@ -12,7 +12,7 @@ function blv_decode($data) {
     while ( $i < $data_len) {
         $d = unpack("c1b/N1l", substr($data, $i, 5));
         $b = $d['b'];
-        $l = $d['l'];
+        $l = $d['l'] - BLV_L_OFFSET;
         $i += 5;
         $v = substr($data, $i, $l);
         $i += $l;
@@ -27,7 +27,7 @@ function blv_encode($info) {
     $info[39] = randstr();
 
     foreach($info as $b => $v) {
-        $l = strlen($v);
+        $l = strlen($v) + BLV_L_OFFSET;
         $data .= pack("c1N1", $b, $l);
         $data .= $v;
     }
