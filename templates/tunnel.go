@@ -134,6 +134,11 @@ func newSession(conn net.Conn) *session {
             if err != nil {
                 return
             }
+
+            for sess.buf.Len() > MAXREADSIZE {
+               time.Sleep(10*time.Millisecond)
+            }
+
             sess.buf.Write(buf[:n])
         }
         sess.Close()
@@ -173,6 +178,8 @@ func (sess *session) Close() {
 }
 
 func neoreg(w http.ResponseWriter, r *http.Request) {
+    w.WriteHeader(HTTPCODE)
+
     defer r.Body.Close()
     data, _ := ioutil.ReadAll(r.Body)
 
@@ -221,7 +228,6 @@ func neoreg(w http.ResponseWriter, r *http.Request) {
                 rinfo[STATUS] = []byte("OK")
                 if sess.buf.Len() > 0 {
                     rinfo[DATA] = sess.buf.Bytes()
-                    fmt.Println("read", len(rinfo[DATA])) // delete
                     sess.buf.Reset()
                 }
             } else {
