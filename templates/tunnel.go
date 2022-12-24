@@ -1,29 +1,31 @@
 package main
 
 import (
-    "fmt"
-    "io/ioutil"
     "bytes"
     "encoding/base64"
     "encoding/binary"
-    "net/http"
-    "net"
+    "fmt"
+    "io/ioutil"
     "math/rand"
+    "net"
+    "net/http"
     "os"
     "strings"
-    "time"
     "sync"
+    "time"
 )
 
 var (
-    CMD         = 1
-    MARK        = 2
-    STATUS      = 3
-    ERROR       = 4
-    IP          = 5
-    PORT        = 6
-    REDIRECTURL = 7
-    DATA        = 8
+    DATA          = 1
+    CMD           = 2
+    MARK          = 3
+    STATUS        = 4
+    ERROR         = 5
+    IP            = 6
+    PORT          = 7
+    REDIRECTURL   = 8
+    FORCEREDIRECT = 9
+
 
     en     = []byte("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/")
     de     = []byte("BASE64 CHARSLIST")
@@ -32,7 +34,7 @@ var (
 
     neoreg_hello = []byte("NeoGeorg says, 'All seems fine'")
 
-    sessions = make(map[string] net.Conn)
+    sessions = make(map[string]*session)
 
     lock sync.Mutex
 )
@@ -98,7 +100,7 @@ func blv_decode(data []byte) map[int][]byte {
 func randbyte() []byte {
     min := 5
     max := 20
-    length := rand.Intn(max - min - 1) + 1
+    length := rand.Intn(max-min-1) + 1
     data := make([]byte, length)
     rand.Read(data)
     return data
@@ -106,16 +108,68 @@ func randbyte() []byte {
 
 func blv_encode(info map[int][]byte) []byte {
     info[0] = randbyte()
-    info[9] = randbyte()
+    info[39] = randbyte()
 
     data := bytes.NewBuffer([]byte{})
-    for b, v := range(info) {
+    for b, v := range info {
         l := len(v)
         binary.Write(data, binary.BigEndian, byte(b))
         binary.Write(data, binary.BigEndian, int32(l))
         binary.Write(data, binary.BigEndian, v)
     }
     return data.Bytes()
+}
+
+func newSession(conn net.Conn) *session {
+    sess := &session{
+        conn:  conn,
+        buf:   new(bytes.Buffer),
+        input: make(chan []byte, 100),
+    }
+
+    go func() {
+        for {
+            buf := make([]byte, READBUF)
+            n, err := sess.conn.Read(buf)
+            if err != nil {
+                return
+            }
+            sess.buf.Write(buf[:n])
+        }
+        sess.Close()
+    }()
+
+    go func() {
+        for !sess.closed {
+            _, err := sess.conn.Write(<-sess.input)
+            if err != nil {
+                return
+            }
+        }
+        sess.Close()
+    }()
+    return sess
+}
+
+type session struct {
+    conn   net.Conn
+    buf    *bytes.Buffer
+    input  chan []byte
+    closed bool
+}
+
+func (sess *session) Write(buf []byte) error {
+    if sess.closed {
+        return fmt.Errorf("conn closed")
+    }
+    sess.input <- buf
+    return nil
+}
+
+func (sess *session) Close() {
+    sess.conn.Close()
+    close(sess.input)
+    sess.closed = true
 }
 
 func neoreg(w http.ResponseWriter, r *http.Request) {
@@ -127,69 +181,67 @@ func neoreg(w http.ResponseWriter, r *http.Request) {
         info := blv_decode(out)
         rinfo := make(map[int][]byte)
 
-        cmd  := string(info[CMD])
+        cmd := string(info[CMD])
         mark := string(info[MARK])
         switch cmd {
-            case "CONNECT":
-                ip := string(info[IP])
-                port_str := string(info[PORT])
-                targetAddr := ip + ":" + port_str
-                conn, err := net.DialTimeout("tcp", targetAddr, time.Millisecond*time.Duration(3000))
+        case "CONNECT":
+            ip := string(info[IP])
+            port_str := string(info[PORT])
+            targetAddr := ip + ":" + port_str
+            conn, err := net.DialTimeout("tcp", targetAddr, time.Millisecond*3000)
+            if err == nil {
+                lock.Lock()
+                sessions[mark] = newSession(conn)
+                lock.Unlock()
+                rinfo[STATUS] = []byte("OK")
+            } else {
+                rinfo[STATUS] = []byte("FAIL")
+                rinfo[ERROR] = []byte(err.Error())
+            }
+
+        case "FORWARD":
+            sess := sessions[mark]
+            if sess != nil {
+                data := info[DATA]
+                err := sess.Write(data)
                 if err == nil {
-                    lock.Lock()
-                    sessions[mark] = conn
-                    lock.Unlock()
                     rinfo[STATUS] = []byte("OK")
                 } else {
                     rinfo[STATUS] = []byte("FAIL")
-                    rinfo[ERROR]  = []byte(err.Error())
+                    rinfo[ERROR] = []byte(err.Error())
                 }
+            } else {
+                rinfo[STATUS] = []byte("FAIL")
+                rinfo[ERROR] = []byte("session is closed")
+            }
 
-            case "FORWARD":
-                conn := sessions[mark]
-                if conn != nil {
-                    data := info[DATA]
-                    _, err := conn.Write(data)
-                    if err == nil {
-                        rinfo[STATUS] = []byte("OK")
-                    } else {
-                        rinfo[STATUS] = []byte("FAIL")
-                        rinfo[ERROR] = []byte(err.Error())
-                    }
-                } else {
-                    rinfo[STATUS] = []byte("FAIL")
-                    rinfo[ERROR]  = []byte("session is closed")
+        case "READ":
+            sess := sessions[mark]
+            if sess != nil {
+                rinfo[STATUS] = []byte("OK")
+                if sess.buf.Len() > 0 {
+                    rinfo[DATA] = sess.buf.Bytes()
+                    fmt.Println("read", len(rinfo[DATA])) // delete
+                    sess.buf.Reset()
                 }
+            } else {
+                rinfo[STATUS] = []byte("FAIL")
+                rinfo[ERROR] = []byte("session is closed")
+            }
 
-            case "READ":
-                conn := sessions[mark]
-                if conn != nil {
-                    data := make([]byte, MAXREADSIZE)
-                    n, err := conn.Read(data)
-                    if err == nil {
-                        rinfo[DATA]   = data[:n]
-                        rinfo[STATUS] = []byte("OK")
-                    } else {
-                        rinfo[STATUS] = []byte("FAIL")
-                        rinfo[ERROR] = []byte(err.Error())
-                    }
-                } else {
-                    rinfo[STATUS] = []byte("FAIL")
-                    rinfo[ERROR]  = []byte("session is closed")
-                }
-
-            case "DISCONNECT":
-                conn := sessions[mark]
+        case "DISCONNECT":
+            sess := sessions[mark]
+            if sess != nil {
                 lock.Lock()
                 delete(sessions, mark)
-                if conn != nil {
-                    conn.Close()
-                }
                 lock.Unlock()
-            default:
-                hello, _ := base64decode(neoreg_hello)
-                fmt.Fprintf(w, "%s", hello)
-                return
+                sess.Close()
+            }
+
+        default:
+            hello, _ := base64decode(neoreg_hello)
+            fmt.Fprintf(w, "%s", hello)
+            return
         }
 
         data := blv_encode(rinfo)
@@ -198,7 +250,6 @@ func neoreg(w http.ResponseWriter, r *http.Request) {
         hello, _ := base64decode(neoreg_hello)
         fmt.Fprintf(w, "%s", hello)
     }
-
 
 }
 
@@ -210,7 +261,7 @@ func main() {
     zip(de_map, de, en)
 
     listen_addr := os.Args[1]
-    if ! strings.ContainsAny(listen_addr, ":") {
+    if !strings.ContainsAny(listen_addr, ":") {
         listen_addr = ":" + listen_addr
     }
     http.HandleFunc("/", neoreg)

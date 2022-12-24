@@ -81,17 +81,21 @@ COLORS = {
     'WHITE':    WHITE,
 }
 
-BLVHEAD = [
-    None,
-    'CMD',
-    'MARK',
-    'STATUS',
-    'ERROR',
-    'IP',
-    'PORT',
-    'REDIRECTURL',
-    'DATA',
-]
+BLVHEAD = {
+    'DATA':          1,
+    'CMD':           2,
+    'MARK':          3,
+    'STATUS':        4,
+    'ERROR':         5,
+    'IP':            6,
+    'PORT':          7,
+    'REDIRECTURL':   8,
+    'FORCEREDIRECT': 9,
+}
+BLVHEAD_REVERSE = {}
+for k, v in BLVHEAD.items():
+    BLVHEAD_REVERSE[v] = k
+BLVHEAD_LEN = len(BLVHEAD)
 
 
 def blv_encode(info):
@@ -104,14 +108,14 @@ def blv_encode(info):
 
     for k, v in info.items():
         if v:
-            b = BLVHEAD.index(k)
+            b = BLVHEAD[k]
             if ispython3 and type(v) == str:
                 v = v.encode()
             l = len(v)
             data += struct.pack('>bi{len}s'.format(len=l), b, l, v)
 
 
-    data += struct.pack('>bi{len}s'.format(len=tail_len), 9, tail_len, tail_rand)  # 尾部填充
+    data += struct.pack('>bi{len}s'.format(len=tail_len), 39, tail_len, tail_rand)  # 尾部填充
     return data
 
 
@@ -134,8 +138,8 @@ def blv_decode(data):
         if i > data_len:
             return None
 
-        if b >= 1 and b <= 8:
-            name = BLVHEAD[b]
+        if b > 0 and b < BLVHEAD_LEN:
+            name = BLVHEAD_REVERSE[b]
             if name != 'DATA':
                 if name != 'ERROR':
                     v = v.decode()
@@ -147,7 +151,6 @@ def blv_decode(data):
                     except Exception as ex:
                         log.error("[BLV Decode] [%s] => %s" % (name, repr(v)))
                         raise ex
-
             info[name] = v
 
     return info
@@ -170,11 +173,11 @@ def encode_body(info):
 def decode_body(data):
     if ispython3:
         data = data.decode()
-        try:
-            data = base64.b64decode(data.translate(DecodeMap))
-        except:
-            raise NeoregReponseFormatError("Base64 decode error")
-        return blv_decode(data)
+    try:
+        data = base64.b64decode(data.translate(DecodeMap))
+    except:
+        raise NeoregReponseFormatError("Base64 decode error")
+    return blv_decode(data)
 
 
 def file_read(filename):
@@ -288,7 +291,7 @@ class Rand:
 
 
 class session(Thread):
-    def __init__(self, conn, pSocket, connectURLs, redirectURLs, FwdTarget):
+    def __init__(self, conn, pSocket, connectURLs, redirectURLs, FwdTarget, force_redirect):
         Thread.__init__(self)
         self.pSocket = pSocket
         self.connectURLs = connectURLs
@@ -297,6 +300,7 @@ class session(Thread):
         self.session_connected = False
         self.fwd_target = FwdTarget
         self.redirectURL = None
+        self.force_redirect = force_redirect
         if redirectURLs:
             self.redirectURL = random.choice(redirectURLs)
 
@@ -400,10 +404,15 @@ class session(Thread):
     def neoreg_request(self, info, timeout=None):
         if self.redirectURL:
             info['REDIRECTURL'] = self.redirectURL
+            if self.force_redirect:
+                info['FORCEREDIRECT'] = 'TRUE'
+            else:
+                info['FORCEREDIRECT'] = 'FALSE'
+
         data = encode_body(info)
         log.debug("[HTTP] [%s:%d] %s Request (%s)" % (self.target, self.port, info['CMD'], self.mark))
 
-        retry = -1
+        retry = 0
         while True:
             retry += 1
             try:
@@ -569,7 +578,7 @@ class session(Thread):
                 self.closeRemoteSession()
 
 
-def askNeoGeorg(conn, connectURLs, redirectURLs):
+def askNeoGeorg(conn, connectURLs, redirectURLs, force_redirect):
     # only check first
     log.info("[Ask NeoGeorg] Checking if NeoGeorg is ready")
     headers = {}
@@ -583,6 +592,10 @@ def askNeoGeorg(conn, connectURLs, redirectURLs):
         log.debug("[HTTP] Ask NeoGeorg Request".format())
         if redirectURLs:
             info = {'REDIRECTURL': redirectURLs[0]}
+            if force_redirect:
+                info['FORCEREDIRECT'] = 'TRUE'
+            else:
+                info['FORCEREDIRECT'] = 'FALSE'
             data = encode_body(info)
             headers.update({'Content-type': 'application/octet-stream'})
             response = conn.post(connectURLs[0], headers=headers, timeout=10, data=data)
@@ -741,6 +754,7 @@ if __name__ == '__main__':
         parser = argparse.ArgumentParser(description="Socks server for Neoreg HTTP(s) tunneller (DEBUG MODE: -k debug)")
         parser.add_argument("-u", "--url", metavar="URI", required=True, help="The url containing the tunnel script", action='append')
         parser.add_argument("-r", "--redirect-url", metavar="URL", help="Intranet forwarding the designated server (only jsp(x))", action='append')
+        parser.add_argument("-R", "--force-redirect", help="Forced forwarding (only jsp -r)", action='store_true')
         parser.add_argument("-t", "--target", metavar="IP:PORT", help="Network forwarding Target, After setting this parameter, port forwarding will be enabled")
         parser.add_argument("-k", "--key", metavar="KEY", required=True, help="Specify connection key")
         parser.add_argument("-l", "--listen-on", metavar="IP", help="The default listening address (default: 127.0.0.1)", default="127.0.0.1")
@@ -853,7 +867,7 @@ if __name__ == '__main__':
             conn.headers['User-Agent'] = USERAGENT
 
             servSock_start = False
-            askNeoGeorg(conn, urls, redirect_urls)
+            askNeoGeorg(conn, urls, redirect_urls, args.force_redirect)
 
             if 'Content-type' not in HEADERS:
                 HEADERS['Content-type'] = 'application/octet-stream'
@@ -878,7 +892,7 @@ if __name__ == '__main__':
                 try:
                     sock, addr_info = servSock.accept()
                     sock.settimeout(SOCKTIMEOUT)
-                    session(conn, sock, urls, redirect_urls, args.target).start()
+                    session(conn, sock, urls, redirect_urls, args.target, args.force_redirect).start()
                 except KeyboardInterrupt as ex:
                     break
                 except timeout:
@@ -946,6 +960,9 @@ if __name__ == '__main__':
                 text = re.sub(r"\bHTTPCODE\b", str(args.httpcode), text)
                 text = re.sub(r"\bREADBUF\b", str(READBUF), text)
                 text = re.sub(r"\bMAXREADSIZE\b", str(MAXREADSIZE), text)
+
+                # only jsp/csharp
+                text = re.sub(r"\bBLVHEAD_LEN\b", str(BLVHEAD_LEN), text)
 
                 # only jsp
                 text = re.sub(r"BASE64 ARRAYLIST", ','.join(map(str, M_BASE64ARRAY)), text)
