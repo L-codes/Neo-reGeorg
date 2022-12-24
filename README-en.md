@@ -4,8 +4,8 @@
 
 **Neo-reGeorg** is a project designed to actively restructure [reGeorg](https://github.com/sensepost/reGeorg) with the aim of:
 
-* Improve tunnel connection security
 * Improve usability and avoid feature detection
+* Improve tunnel connection security
 * Improve the confidentiality of transmission content
 * Solve the existing problems of reGeorg and fix some small bugs
 
@@ -13,30 +13,24 @@
 
 ## Version
 
-3.8.1 - [Change Log](CHANGELOG-en.md)
+5.0.0 - [Change Log](CHANGELOG-en.md)
 
 
 ## Features
 
-* Transfer content through out-of-order base64 encryption
-* GET request response can be customized (such as masquerading 404 pages)
-* HTTP Headers instructions are randomly generated to avoid feature detection
+* The transmission content is encrypted by deformed base64 and disguised as base64 encoding
+* Use BLV (Byte-LengthOffset-Value) data format to transmit data
+* Direct request response can be customized (such as a disguised 404 page)
 * HTTP Headers can be customized
 * Custom HTTP response code
-* Multiple URLs random requests
-* Server-node DNS resolution
+* Multiple URL random requests
+* Server-side DNS resolution
 * Compatible with python2 / python3
-* High compatibility of the server environment
-* (only php) Refer to [pivotnacci](https://github.com/blackarrowsec/pivotnacci) to implement a single `SESSION` to create multiple TCP connections to deal with some load balancing scenarios
-* aspx/ashx/jsp/jspx no longer relies on Session, and can run normally in harsh environments such as cookie-free
-* (non-php) Support HTTP forwarding, coping with load balancing environment
-
-
-## Dependencies
-
-* [**requests**] - https://github.com/kennethreitz/requests
-
-
+* High compatibility of the server environment, such as the server is unstable, the server is only deployed on some machines under load balancing and other special circumstances
+* (php only) Refer to [pivotnacci](https://github.com/blackarrowsec/pivotnacci) to create multiple TCP connections for a single session, to deal with some load balancing scenarios
+* aspx/ashx/jsp/jspx no longer depends on Session, and can run normally in harsh environments such as no cookies
+* (non-php) supports intranet forwarding to deal with load balancing environment
+* Support process to start the server to deal with more scenarios
 
 
 ## Basic Usage
@@ -47,14 +41,12 @@ Set the password to generate tunnel server.(aspx|ashx|jsp|jspx|php) and upload i
 $ python neoreg.py generate -k password
 
     [+] Create neoreg server files:
+       => neoreg_servers/tunnel.jsp
        => neoreg_servers/tunnel.jspx
-       => neoreg_servers/tunnel_compatibility.jspx
-       => neoreg_servers/tunnel.php
        => neoreg_servers/tunnel.ashx
        => neoreg_servers/tunnel.aspx
-       => neoreg_servers/tunnel.jsp
-       => neoreg_servers/tunnel_compatibility.jsp
-
+       => neoreg_servers/tunnel.php
+       => neoreg_servers/tunnel.go
 ```
 
 * **Step 2.**
@@ -68,10 +60,6 @@ $ python3 neoreg.py -k password -u http://xx/tunnel.php
     http://xx/tunnel.php
 +------------------------------------------------------------------------+
 ```
-
-   Note that if your tool, such as `nmap` does not support socks5 proxy, please use [proxychains](https://github.com/rofl0r/proxychains-ng) 
-
-
 
 
 ## Advanced Usage
@@ -107,6 +95,12 @@ $ python neoreg.py -k <you_password> -u <url> -r <redirect_url>
 $ python neoreg.py -k <you_password> -u <url> -t <ip:port>
 ```
 
+7. Support the creation process to start a new Neoreg server-side, which can deal with harsh special environments
+```ruby
+$ go run neoreg_servers/tunnel.go 8000
+$ python3 neoreg.py -k password -u http://127.0.0.1:8000/anysting
+```
+
 * For more information on performance and stability parameters, refer to -h help information
 ```ruby
 # Generate server-side scripts
@@ -123,20 +117,19 @@ $ python neoreg.py generate -h
       -f FILE, --file FILE  Camouflage html page file
       -c CODE, --httpcode CODE
                             Specify HTTP response code. When using -r, it is
-                            recommended to <400. (default: 200)
-      --read-buff Bytes     Remote read buffer. (default: 513)
-      --max-read-size KB    Remote max read size. (default: 512)
+                            recommended to <400 (default: 200)
+      --read-buff Bytes     Remote read buffer (default: 513)
+      --max-read-size KB    Remote max read size (default: 512)
 
 # Connection server
-$ python neoreg.py -h
-    usage: neoreg.py [-h] -u URI [-r URL] [-t IP:PORT] -k KEY [-l IP] [-p PORT]
-                     [-s] [-H LINE] [-c LINE] [-x LINE] [--php-connect-timeout S]
-                     [--local-dns] [--read-buff KB] [--read-interval MS]
-                     [--write-interval MS] [--max-threads N] [--cut-left N]
-                     [--cut-right N] [-v]
+    usage: neoreg.py [-h] -u URI [-r URL] [-R] [-t IP:PORT] -k KEY [-l IP]
+                     [-p PORT] [-s] [-H LINE] [-c LINE] [-x LINE]
+                     [--php-connect-timeout S] [--local-dns] [--read-buff KB]
+                     [--read-interval MS] [--write-interval MS] [--max-threads N]
+                     [--max-retry N] [--cut-left N] [--cut-right N]
+                     [--extract EXPR] [-v]
 
-    Socks server for Neoreg HTTP(s) tunneller. DEBUG MODE: -k
-    (debug_all|debug_base64|debug_headers_key|debug_headers_values)
+    Socks server for Neoreg HTTP(s) tunneller (DEBUG MODE: -k debug)
 
     optional arguments:
       -h, --help            show this help message and exit
@@ -144,14 +137,15 @@ $ python neoreg.py -h
       -r URL, --redirect-url URL
                             Intranet forwarding the designated server (only
                             jsp(x))
+      -R, --force-redirect  Forced forwarding (only jsp -r)
       -t IP:PORT, --target IP:PORT
                             Network forwarding Target, After setting this
                             parameter, port forwarding will be enabled
       -k KEY, --key KEY     Specify connection key
       -l IP, --listen-on IP
-                            The default listening address.(default: 127.0.0.1)
+                            The default listening address (default: 127.0.0.1)
       -p PORT, --listen-port PORT
-                            The default listening port.(default: 1080)
+                            The default listening port (default: 1080)
       -s, --skip            Skip usability testing
       -H LINE, --header LINE
                             Pass custom header LINE to server
@@ -160,16 +154,18 @@ $ python neoreg.py -h
       -x LINE, --proxy LINE
                             Proto://host[:port] Use proxy on given port
       --php-connect-timeout S
-                            PHP connect timeout.(default: 0.5)
+                            PHP connect timeout (default: 0.5)
       --local-dns           Use local resolution DNS
-      --read-buff KB        Local read buffer, max data to be sent per
-                            POST.(default: 7, max: 50)
-      --read-interval MS    Read data interval in milliseconds.(default: 300)
-      --write-interval MS   Write data interval in milliseconds.(default: 200)
-      --max-threads N       Proxy max threads.(default: 1000)
+      --read-buff KB        Local read buffer, max data to be sent per POST
+                            (default: 7, max: 50)
+      --read-interval MS    Read data interval in milliseconds (default: 300)
+      --write-interval MS   Write data interval in milliseconds (default: 200)
+      --max-threads N       Proxy max threads (default: 400)
+      --max-retry N         Proxy max threads (default: 10)
       --cut-left N          Truncate the left side of the response body
       --cut-right N         Truncate the right side of the response body
-      --extract EXPR        Manually extract BODY content. (eg: <html><p>REGBODY</p></html> )
+      --extract EXPR        Manually extract BODY content (eg:
+                            <html><p>NEOREGBODY</p></html> )
       -v                    Increase verbosity level (use -vv or more for greater
                             effect)
 ```
@@ -178,19 +174,6 @@ $ python neoreg.py -h
 ## Remind
 
 * When running `neoreg.py` with high concurrency on Mac OSX, a large number of network requests will be lost. You can use `ulimit -n 2560` to modify the "maximum number of open files" of the current shell.
-
-* For Tomcat5 and other low jdk versions, use `tunnel_compatibility.jsp(x)`
-
-
-
-## TODO
-
-* HTTP body steganography
-
-* Transfer Target field steganography
-
-* Problem of ignoring the verification of https in the intranet forwarding
-
 
 
 ## License
