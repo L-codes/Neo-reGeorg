@@ -10,6 +10,7 @@
     Server: banner 改用 base64，使得 `-f FILE` 可用性更高
     Server: 修复 php 下行流量过大时，无法正常运作的问题
     Server: 修复 php 因 `exit` 导致无法正常输出后续的其它内容
+    Server: java 解决 `islocal()` 检测，导致无法转发到本机的服务，添加了强制转发参数 `-R/--force-redirect`
     Client: 重新设计和优化日志输出
     Client: 改用 `BLV (Byte-Length-Value)` 的数据结构进行传输
     Client: 添加了重试机制，在服务器不稳定时(如高并发)，增强稳定性
