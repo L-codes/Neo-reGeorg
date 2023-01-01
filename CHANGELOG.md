@@ -1,5 +1,9 @@
 # Change Log
 
+### v5.0.1:
+##### 修复
+    1. java 通过反射的方式，提高兼容性, 如tomcat10无法使用 (特别感谢 @BeichenDream 的PR)
+
 ### v5.0.0:
 ##### 新特征
     1. java/chsarp/php 都改用 `BLV (Byte-LengthOffset-Value)` 数据结构进行传输，正式移除三年前发布第一版沿用至今的随机 Header 技术

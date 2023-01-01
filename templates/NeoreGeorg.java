@@ -22,16 +22,16 @@ public class NeoreGeorg implements HostnameVerifier,X509TrustManager {
     @Override
     public boolean equals(Object obj) {
         try {
-            Object[] args                = (Object[]) obj;
-            Object request   = args[0];
-            Object response = args[1];
-            en                           = (char[])  args[2];
-            de                           = (byte[])  args[3];
-            int HTTPCODE                 = (Integer) args[4];
-            int READBUF                  = (Integer) args[5];
-            int MAXREADSIZE              = (Integer) args[6];
-            String GeorgHello            = (String)  args[7];
-            int BLV_L_OFFSET             = (Integer) args[8];
+            Object[] args     = (Object[]) obj;
+            Object request    = args[0];
+            Object response   = args[1];
+            en                = (char[])  args[2];
+            de                = (byte[])  args[3];
+            int HTTPCODE      = (Integer) args[4];
+            int READBUF       = (Integer) args[5];
+            int MAXREADSIZE   = (Integer) args[6];
+            String GeorgHello = (String)  args[7];
+            int BLV_L_OFFSET  = (Integer) args[8];
 
             int DATA          = 1;
             int CMD           = 2;
@@ -440,9 +440,9 @@ public class NeoreGeorg implements HostnameVerifier,X509TrustManager {
     public static int bytesToInt(byte[] bytes) {
         int i;
         i =   (  bytes[3] & 0xff )
-                | (( bytes[2] & 0xff ) << 8 )
-                | (( bytes[1] & 0xff ) << 16)
-                | (( bytes[0] & 0xff ) << 24);
+            | (( bytes[2] & 0xff ) << 8 )
+            | (( bytes[1] & 0xff ) << 16)
+            | (( bytes[0] & 0xff ) << 24);
         return i;
     }
 
