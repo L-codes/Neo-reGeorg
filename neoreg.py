@@ -623,10 +623,10 @@ def askNeoGeorg(conn, connectURLs, redirectURLs, force_redirect):
                     log.warning('[Ask NeoGeorg] Expires wrong format: {}'.format(expires))
     except requests.exceptions.ConnectionError:
         log.error("[Ask NeoGeorg] NeoGeorg server connection errer")
-        exit
+        exit()
     except requests.exceptions.ConnectTimeout:
         log.error("[Ask NeoGeorg] NeoGeorg server connection timeout")
-        exit
+        exit()
     except Exception as ex:
         log.error("[Ask NeoGeorg] NeoGeorg is not ready, please check URL")
         log.exception(ex)
