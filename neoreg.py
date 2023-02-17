@@ -146,9 +146,13 @@ def blv_decode(data):
                     v = v.decode()
                 else:
                     try:
-                        v = v.decode()
-                    except UnicodeDecodeError:
-                        v = v.decode('gbk')
+                        try:
+                            v = v.decode()
+                        except UnicodeDecodeError:
+                            try:
+                                v = v.decode('gbk')
+                            except:
+                                pass
                     except Exception as ex:
                         log.error("[BLV Decode] [%s] => %s" % (name, repr(v)))
                         raise ex
