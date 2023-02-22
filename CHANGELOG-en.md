@@ -1,5 +1,13 @@
 # Change Log
 
+### v5.0.1:
+##### Enhancement
+    1. Java improves compatibility through reflection, such as tomcat10 cannot be used (special thanks to @BeichenDream for PR)
+    2. Use class static variables instead of `application` global variables to improve compatibility (special thanks to @c0ny1 for his suggestion)
+##### Fix
+    1. When repairing the abnormal connection, it failed to exit normally
+    2. Fix exception handling logic of `blv_decode` (issue #73)
+
 ### v5.0.0:
 ##### New Features
     1. Both java/chsarp/php use the `BLV (Byte-Length-Value)` data structure for transmission, officially removing the random header technology that has been used since the first version was released three years ago
