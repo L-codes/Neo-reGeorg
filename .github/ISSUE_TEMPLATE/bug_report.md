@@ -1,18 +1,27 @@
-## **错误详细描述**
-详细描述错误信息
+---
+name: Bug report
+about: Create a report to help us improve
+title: ''
+labels: ''
+assignees: ''
 
-## **运行环境**
-#### 客户端:
-- 系统: (如 win7/win10/linux/Mac)
-- python版本: (如 3.7.1)
-#### 服务端:
-- 系统:  (如 win7/win10/linux/Mac)
-- web端文件: (如 aspx/ashx/php/jsp/jspx)
-- web中间件: (如 tomcat/weblogic/apache/IIS)
-- 语言平台版本: (如 jdk1.8/php7.0)
+---
 
-## **neoreg.py 的运行输出(请带上 -vvv 参数，输出详细信息提高修复效率)**
-> 粘贴文本或图片，url等敏感信息可删除(文本可用***代替)或打码处理
+## **Detailed error description**
+Describe the error message in detail
+
+## **Operating environment**
+#### Client:
+- System: (such as win7/win10/linux/Mac)
+- python version: (eg 3.7.1)
+#### Server:
+- System: (such as win7/win10/linux/Mac)
+- Web file: (such as aspx/ashx/php/jsp/jspx)
+- web middleware: (such as tomcat/weblogic/apache/IIS)
+- Language platform version: (eg jdk1.8/php7.0)
+
+## **neoreg.py running output (please bring -vvv parameter, output detailed information to improve repair efficiency)**
+> Paste text or pictures, sensitive information such as url can be deleted (text can be replaced by ***) or coded
 ```ruby
-粘贴处
+Paste
 ```
