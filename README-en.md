@@ -181,8 +181,8 @@ $ python neoreg.py generate -h
 GPL 3.0
 
 
-## Stargazers over time
+## Star History Chart
 
-[![Stargazers over time](https://starchart.cc/L-codes/Neo-reGeorg.svg)](https://starchart.cc/L-codes/Neo-reGeorg)
+[![Star History Chart](https://api.star-history.com/svg?repos=L-codes/Neo-reGeorg&type=Date)](https://star-history.com/#L-codes/Neo-reGeorg&Date)
 
 <img align='right' src="https://profile-counter.glitch.me/neo-regeorg/count.svg" width="200">
