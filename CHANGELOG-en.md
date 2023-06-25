@@ -1,5 +1,11 @@
 # Change Log
 
+### v5.0.2:
+##### Enhancement
+    1. Support for php < 5.4 (special thanks to @me1ons for issue #82)
+#####  Fix
+    1. Fix the situation where php does not support `php://input` in some environments and cannot be used normally
+
 ### v5.0.1:
 ##### Enhancement
     1. Java improves compatibility through reflection, such as tomcat10 cannot be used (special thanks to @BeichenDream for PR)
