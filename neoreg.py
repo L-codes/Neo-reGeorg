@@ -982,11 +982,11 @@ if __name__ == '__main__':
         request_template_start_index = 0
         request_template_end_index = 0
         if request_template:
-            use_request_template = 'true'
+            use_request_template = 1
             request_template_start_index = len(request_template[0])
-            request_template_end_index = - len(request_template[1])
+            request_template_end_index = len(request_template[1])
         else:
-            use_request_template = 'false'
+            use_request_template = 0
 
         for filename in os.listdir(script_dir):
             outfile = os.path.join(outdir, filename)
@@ -998,6 +998,8 @@ if __name__ == '__main__':
                 text = re.sub(r"\bHTTPCODE\b", str(args.httpcode), text)
                 text = re.sub(r"\bREADBUF\b", str(READBUF), text)
                 text = re.sub(r"\bMAXREADSIZE\b", str(MAXREADSIZE), text)
+
+                # request template
                 text = re.sub(r"USE_REQUEST_TEMPLATE", str(use_request_template), text)
                 text = re.sub(r"START_INDEX", str(request_template_start_index), text)
                 text = re.sub(r"END_INDEX", str(request_template_end_index), text)

