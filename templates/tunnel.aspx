@@ -121,7 +121,6 @@
         byte[] buff = new byte[Request.ContentLength];
         Request.InputStream.Read(buff, 0, buff.Length);
         String inputData = Encoding.Default.GetString(buff);
-
         if (USE_REQUEST_TEMPLATE == 1 && inputData.Length > 0) {
             requestDataHead = inputData.Substring(0, START_INDEX);
             requestDataTail = inputData.Substring(inputData.Length - END_INDEX, END_INDEX);
