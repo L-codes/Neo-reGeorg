@@ -183,6 +183,11 @@ func neoreg(w http.ResponseWriter, r *http.Request) {
     defer r.Body.Close()
     data, _ := ioutil.ReadAll(r.Body)
 
+    if USE_REQUEST_TEMPLATE == 1 && len(data) > 0 {
+        data = data[START_INDEX:]
+        data = data[:len(data)-END_INDEX]
+    }
+
     out, err := base64decode(data)
     if err == nil && len(out) != 0 {
         info := blv_decode(out)
