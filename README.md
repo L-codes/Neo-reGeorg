@@ -14,7 +14,7 @@
 
 ## Version
 
-5.0.2 - [版本修改日志](CHANGELOG.md)
+5.1.0 - [版本修改日志](CHANGELOG.md)
 
 
 ## Features
@@ -22,6 +22,7 @@
 * 传输内容经过变形 base64 加密，伪装成 base64 编码
 * 采用 BLV (Byte-LengthOffset-Value) 数据格式传输数据
 * 直接请求响应可定制化 (如伪装的404页面)
+* 支持 Request 模板
 * HTTP Headers 可定制化
 * 自定义 HTTP 响应码
 * 多 URL 随机请求
@@ -96,7 +97,16 @@ $ python neoreg.py -k <you_password> -u <url> -r <redirect_url>
 $ python neoreg.py -k <you_password> -u <url> -t <ip:port>
 ```
 
-7. 支持创建进程另起 Neoreg 服务端，可应对恶劣的特殊环境 (自行脑补) :)
+7. 设置请求内容模板 ( generate 的时候需要指定上)
+```ruby
+# 请求内容会替换到 NEOREGBODY 中
+$ python3 neoreg.py -k password -T 'img=data:image/png;base64,NEOREGBODY&save=ok'
+$ python3 neoreg.py -k password -T 'img=data:image/png;base64,NEOREGBODY&save=ok' -u http://127.0.0.1:8000/anysting
+
+# NOTE 允许将模板内容写入文件中 -T file 即可
+```
+
+8. 支持创建进程另起 Neoreg 服务端，可应对恶劣的特殊环境 (自行脑补) :)
 ```ruby
 $ go run neoreg_servers/tunnel.go 8000
 $ python3 neoreg.py -k password -u http://127.0.0.1:8000/anysting
@@ -119,6 +129,9 @@ $ python neoreg.py generate -h
       -c CODE, --httpcode CODE
                             Specify HTTP response code. When using -r, it is
                             recommended to <400 (default: 200)
+      -T STR/FILE, --request-template STR/FILE
+                            HTTP request template (eg:
+                            'img=data:image/png;base64,NEOREGBODY&save=ok')
       --read-buff Bytes     Remote read buffer (default: 513)
       --max-read-size KB    Remote max read size (default: 512)
 
@@ -138,8 +151,8 @@ $ python neoreg.py -h
       -u URI, --url URI     The url containing the tunnel script
       -r URL, --redirect-url URL
                             Intranet forwarding the designated server (only
-                            jsp(x))
-      -R, --force-redirect  Forced forwarding (only jsp -r)
+                            java/.net)
+      -R, --force-redirect  Forced forwarding (only -r)
       -t IP:PORT, --target IP:PORT
                             Network forwarding Target, After setting this
                             parameter, port forwarding will be enabled
@@ -155,6 +168,9 @@ $ python neoreg.py -h
                             Custom init cookies
       -x LINE, --proxy LINE
                             Proto://host[:port] Use proxy on given port
+      -T STR/FILE, --request-template STR/FILE
+                            HTTP request template (eg:
+                            'img=data:image/png;base64,NEOREGBODY&save=ok')
       --php-connect-timeout S
                             PHP connect timeout (default: 0.5)
       --local-dns           Use local resolution DNS

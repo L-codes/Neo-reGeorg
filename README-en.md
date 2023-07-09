@@ -13,7 +13,7 @@
 
 ## Version
 
-5.0.2 - [Change Log](CHANGELOG-en.md)
+5.1.0 - [Change Log](CHANGELOG-en.md)
 
 
 ## Features
@@ -22,6 +22,7 @@
 * Use BLV (Byte-LengthOffset-Value) data format to transmit data
 * Direct request response can be customized (such as a disguised 404 page)
 * HTTP Headers can be customized
+* Support request template
 * Custom HTTP response code
 * Multiple URL random requests
 * Server-side DNS resolution
@@ -95,7 +96,16 @@ $ python neoreg.py -k <you_password> -u <url> -r <redirect_url>
 $ python neoreg.py -k <you_password> -u <url> -t <ip:port>
 ```
 
-7. Support the creation process to start a new Neoreg server-side, which can deal with harsh special environments
+7. Set the request content template (you need to specify it when generating)
+```ruby
+# The request content will be replaced with NEOREGBODY
+$ python3 neoreg.py -k password -T 'img=data:image/png;base64,NEOREGBODY&save=ok'
+$ python3 neoreg.py -k password -T 'img=data:image/png;base64,NEOREGBODY&save=ok' -u http://127.0.0.1:8000/anysting
+
+# NOTE Allows template content to be written to a file -T file
+```
+
+8. Support the creation process to start a new Neoreg server-side, which can deal with harsh special environments
 ```ruby
 $ go run neoreg_servers/tunnel.go 8000
 $ python3 neoreg.py -k password -u http://127.0.0.1:8000/anysting
@@ -118,6 +128,9 @@ $ python neoreg.py generate -h
       -c CODE, --httpcode CODE
                             Specify HTTP response code. When using -r, it is
                             recommended to <400 (default: 200)
+      -T STR/FILE, --request-template STR/FILE
+                            HTTP request template (eg:
+                            'img=data:image/png;base64,NEOREGBODY&save=ok')
       --read-buff Bytes     Remote read buffer (default: 513)
       --max-read-size KB    Remote max read size (default: 512)
 
@@ -136,8 +149,8 @@ $ python neoreg.py generate -h
       -u URI, --url URI     The url containing the tunnel script
       -r URL, --redirect-url URL
                             Intranet forwarding the designated server (only
-                            jsp(x))
-      -R, --force-redirect  Forced forwarding (only jsp -r)
+                            java/.net)
+      -R, --force-redirect  Forced forwarding (only -r)
       -t IP:PORT, --target IP:PORT
                             Network forwarding Target, After setting this
                             parameter, port forwarding will be enabled
@@ -153,6 +166,9 @@ $ python neoreg.py generate -h
                             Custom init cookies
       -x LINE, --proxy LINE
                             Proto://host[:port] Use proxy on given port
+      -T STR/FILE, --request-template STR/FILE
+                            HTTP request template (eg:
+                            'img=data:image/png;base64,NEOREGBODY&save=ok')
       --php-connect-timeout S
                             PHP connect timeout (default: 0.5)
       --local-dns           Use local resolution DNS

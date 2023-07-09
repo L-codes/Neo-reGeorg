@@ -1,5 +1,11 @@
 # Change Log
 
+### v5.1.0:
+##### New Features
+    1. Add `--request-template` parameter to set request template to avoid traffic detection
+##### Fix
+    1. Updated documentation for `-r` parameter
+
 ### v5.0.2:
 ##### Enhancement
     1. Support for php < 5.4 (special thanks to @me1ons for issue #82)

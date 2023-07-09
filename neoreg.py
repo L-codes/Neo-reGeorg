@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 __author__  = 'L'
-__version__ = '5.0.2'
+__version__ = '5.1.0'
 
 import sys
 import os
@@ -757,7 +757,7 @@ if __name__ == '__main__':
         parser.add_argument("-o", "--outdir", metavar="DIR", help="Output directory.", default='neoreg_servers')
         parser.add_argument("-f", "--file", metavar="FILE", help="Camouflage html page file")
         parser.add_argument("-c", "--httpcode", metavar="CODE", help="Specify HTTP response code. When using -r, it is recommended to <400 (default: 200)", type=int, default=200)
-        parser.add_argument("-T", "--request-template", metavar="STR/FILE", help="HTTP request template (eg: 'img=data:image/png;base64,NEOREGBODY&time=1188271471')", type=str)
+        parser.add_argument("-T", "--request-template", metavar="STR/FILE", help="HTTP request template (eg: 'img=data:image/png;base64,NEOREGBODY&save=ok')", type=str)
         parser.add_argument("--read-buff", metavar="Bytes", help="Remote read buffer (default: 513)", type=int, default=513)
         parser.add_argument("--max-read-size", metavar="KB", help="Remote max read size (default: 512)", type=int, default=512)
         args = parser.parse_args()
@@ -774,7 +774,7 @@ if __name__ == '__main__':
         parser.add_argument("-H", "--header", metavar="LINE", help="Pass custom header LINE to server", action='append', default=[])
         parser.add_argument("-c", "--cookie", metavar="LINE", help="Custom init cookies")
         parser.add_argument("-x", "--proxy", metavar="LINE", help="Proto://host[:port]  Use proxy on given port", default=None)
-        parser.add_argument("-T", "--request-template", metavar="STR/FILE", help="HTTP request template (eg: 'img=data:image/png;base64,NEOREGBODY&time=1188271471')", type=str)
+        parser.add_argument("-T", "--request-template", metavar="STR/FILE", help="HTTP request template (eg: 'img=data:image/png;base64,NEOREGBODY&save=ok')", type=str)
         parser.add_argument("--php-connect-timeout", metavar="S", help="PHP connect timeout (default: {})".format(PHPTIMEOUT), type=float, default=PHPTIMEOUT)
         parser.add_argument("--local-dns", help="Use local resolution DNS", action='store_true')
         parser.add_argument("--read-buff", metavar="KB", help="Local read buffer, max data to be sent per POST (default: {}, max: 50)".format(READBUFSIZE), type=int, default=READBUFSIZE)
