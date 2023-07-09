@@ -764,7 +764,7 @@ if __name__ == '__main__':
     else:
         parser = argparse.ArgumentParser(description="Socks server for Neoreg HTTP(s) tunneller (DEBUG MODE: -k debug)")
         parser.add_argument("-u", "--url", metavar="URI", required=True, help="The url containing the tunnel script", action='append')
-        parser.add_argument("-r", "--redirect-url", metavar="URL", help="Intranet forwarding the designated server (only jsp(x))", action='append')
+        parser.add_argument("-r", "--redirect-url", metavar="URL", help="Intranet forwarding the designated server (only java/.net)", action='append')
         parser.add_argument("-R", "--force-redirect", help="Forced forwarding (only jsp -r)", action='store_true')
         parser.add_argument("-t", "--target", metavar="IP:PORT", help="Network forwarding Target, After setting this parameter, port forwarding will be enabled")
         parser.add_argument("-k", "--key", metavar="KEY", required=True, help="Specify connection key")
