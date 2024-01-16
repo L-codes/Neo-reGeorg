@@ -1,5 +1,9 @@
 # Change Log
 
+### v5.2.0:
+##### New Features
+    1. Added `--php` parameter. By default, it is judged based on the URL set by --url whether the .php suffix uses the PHP connection method. In special cases, you can manually use --php to specify the PHP connection method.
+
 ### v5.1.0:
 ##### New Features
     1. Add `--request-template` parameter to set request template to avoid traffic detection

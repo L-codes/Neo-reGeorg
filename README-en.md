@@ -137,7 +137,7 @@ $ python neoreg.py generate -h
 # Connection server
     usage: neoreg.py [-h] -u URI [-r URL] [-R] [-t IP:PORT] -k KEY [-l IP]
                      [-p PORT] [-s] [-H LINE] [-c LINE] [-x LINE]
-                     [--php-connect-timeout S] [--local-dns] [--read-buff KB]
+                     [--php] [--php-connect-timeout S] [--local-dns] [--read-buff KB]
                      [--read-interval MS] [--write-interval MS] [--max-threads N]
                      [--max-retry N] [--cut-left N] [--cut-right N]
                      [--extract EXPR] [-v]
@@ -169,6 +169,7 @@ $ python neoreg.py generate -h
       -T STR/FILE, --request-template STR/FILE
                             HTTP request template (eg:
                             'img=data:image/png;base64,NEOREGBODY&save=ok')
+      --php                 Use php connection method
       --php-connect-timeout S
                             PHP connect timeout (default: 0.5)
       --local-dns           Use local resolution DNS

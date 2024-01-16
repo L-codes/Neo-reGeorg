@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 __author__  = 'L'
-__version__ = '5.1.0'
+__version__ = '5.2.0'
 
 import sys
 import os
@@ -49,6 +49,7 @@ MAXTHERADS    = 400
 MAXRETRY      = 10
 READINTERVAL  = 300
 WRITEINTERVAL = 200
+PHPSERVER     = False
 PHPTIMEOUT    = 0.5
 
 # Logging
@@ -459,7 +460,7 @@ class session(Thread):
 
         info = {'CMD': 'CONNECT', 'MARK': self.mark, 'IP': self.target, 'PORT': str(self.port)}
 
-        if '.php' in self.connectURLs[0]:
+        if '.php' in self.connectURLs[0] or PHPSERVER:
             try:
                 rinfo = self.neoreg_request(info, timeout=PHPTIMEOUT)
             except:
@@ -612,7 +613,7 @@ def askNeoGeorg(conn, connectURLs, redirectURLs, force_redirect):
         else:
             response = conn.get(connectURLs[0], headers=headers, timeout=10)
         log.debug("[HTTP] Ask NeoGeorg Response => HttpCode: {}".format(response.status_code))
-        if '.php' in connectURLs[0]:
+        if '.php' in connectURLs[0] or PHPSERVER:
             if 'Expires' in response.headers:
                 expires = response.headers['Expires']
                 try:
@@ -775,6 +776,7 @@ if __name__ == '__main__':
         parser.add_argument("-c", "--cookie", metavar="LINE", help="Custom init cookies")
         parser.add_argument("-x", "--proxy", metavar="LINE", help="Proto://host[:port]  Use proxy on given port", default=None)
         parser.add_argument("-T", "--request-template", metavar="STR/FILE", help="HTTP request template (eg: 'img=data:image/png;base64,NEOREGBODY&save=ok')", type=str)
+        parser.add_argument("--php", help="Use php connection method", action='store_true')
         parser.add_argument("--php-connect-timeout", metavar="S", help="PHP connect timeout (default: {})".format(PHPTIMEOUT), type=float, default=PHPTIMEOUT)
         parser.add_argument("--local-dns", help="Use local resolution DNS", action='store_true')
         parser.add_argument("--read-buff", metavar="KB", help="Local read buffer, max data to be sent per POST (default: {}, max: 50)".format(READBUFSIZE), type=int, default=READBUFSIZE)
@@ -848,7 +850,8 @@ if __name__ == '__main__':
         print(separation)
         print("  Log Level set to [%s]" % LEVELNAME)
 
-        USERAGENT = choice_useragent()
+        USERAGENT  = choice_useragent()
+        PHPSERVER  = args.php
         PHPTIMEOUT = args.php_connect_timeout
 
         urls = args.url
