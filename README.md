@@ -35,6 +35,11 @@
 * 支持进程形式启动服务端，应对更多场景
 
 
+## python 依赖
+```ruby
+python -m pip install requests requests[socks]
+```
+
 ## Basic Usage
 
 * **Step 1.**

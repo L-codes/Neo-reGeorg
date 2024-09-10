@@ -13,8 +13,13 @@
 
 ## Version
 
-5.1.0 - [Change Log](CHANGELOG-en.md)
+5.2.0 - [Change Log](CHANGELOG-en.md)
 
+
+## python dependencies
+```ruby
+python -m pip install requests requests[socks]
+```
 
 ## Features
 
