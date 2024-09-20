@@ -598,6 +598,7 @@ def askNeoGeorg(conn, connectURLs, redirectURLs, force_redirect):
 
     if INIT_COOKIE:
         headers['Cookie'] = INIT_COOKIE
+        HEADERS.update({'Cookie': INIT_COOKIE})
 
     need_exit = False
     try:
@@ -627,6 +628,8 @@ def askNeoGeorg(conn, connectURLs, redirectURLs, force_redirect):
                                 cookie += '{}={};'.format(k, v)
                             HEADERS.update({'Cookie' : cookie})
                             log.warning("[Ask NeoGeorg] Automatically append Cookies: {}".format(cookie))
+                        elif INIT_COOKIE:
+                            pass
                         else:
                             log.error('[Ask NeoGeorg] There is no valid cookie return')
                             need_exit = True
