@@ -50,6 +50,7 @@ MAXRETRY      = 10
 READINTERVAL  = 300
 WRITEINTERVAL = 200
 PHPSERVER     = False
+PHPSKIPCOOKIE = False
 GOSERVER      = False
 PHPTIMEOUT    = 0.5
 
@@ -614,7 +615,7 @@ def askNeoGeorg(conn, connectURLs, redirectURLs, force_redirect):
         else:
             response = conn.get(connectURLs[0], headers=headers, timeout=10)
         log.debug("[HTTP] Ask NeoGeorg Response => HttpCode: {}".format(response.status_code))
-        if '.php' in connectURLs[0] or PHPSERVER:
+        if not PHPSKIPCOOKIE and ( '.php' in connectURLs[0] or PHPSERVER ):
             if 'Expires' in response.headers:
                 expires = response.headers['Expires']
                 try:
@@ -778,6 +779,7 @@ if __name__ == '__main__':
         parser.add_argument("-x", "--proxy", metavar="LINE", help="Proto://host[:port]  Use proxy on given port", default=None)
         parser.add_argument("-T", "--request-template", metavar="STR/FILE", help="HTTP request template (eg: 'img=data:image/png;base64,NEOREGBODY&save=ok')", type=str)
         parser.add_argument("--php", help="Use php connection method", action='store_true')
+        parser.add_argument("--php-skip-cookie", help="Skip cookie availability check in php", action='store_true')
         parser.add_argument("--go", help="Use go connection method", action='store_true')
         parser.add_argument("--php-connect-timeout", metavar="S", help="PHP connect timeout (default: {})".format(PHPTIMEOUT), type=float, default=PHPTIMEOUT)
         parser.add_argument("--local-dns", help="Use local resolution DNS", action='store_true')
@@ -852,10 +854,11 @@ if __name__ == '__main__':
         print(separation)
         print("  Log Level set to [%s]" % LEVELNAME)
 
-        USERAGENT  = choice_useragent()
-        PHPSERVER  = args.php
-        GOSERVER   = args.go
-        PHPTIMEOUT = args.php_connect_timeout
+        USERAGENT     = choice_useragent()
+        PHPSERVER     = args.php
+        GOSERVER      = args.go
+        PHPTIMEOUT    = args.php_connect_timeout
+        PHPSKIPCOOKIE = args.php_skip_cookie
 
         urls = args.url
         redirect_urls = args.redirect_url
