@@ -634,7 +634,7 @@ def askNeoGeorg(conn, connectURLs, redirectURLs, force_redirect):
                 except ValueError:
                     log.warning('[Ask NeoGeorg] Expires wrong format: {}'.format(expires))
     except requests.exceptions.ConnectionError:
-        log.error("[Ask NeoGeorg] NeoGeorg server connection errer")
+        log.error("[Ask NeoGeorg] NeoGeorg server connection error")
         exit()
     except requests.exceptions.ConnectTimeout:
         log.error("[Ask NeoGeorg] NeoGeorg server connection timeout")
