@@ -43,6 +43,9 @@ REFUSED           = b"\x05"
 #ADDRTYPEUNSPPORT = b"\x08"
 #UNASSIGNED       = b"\x09"
 
+global HEADERS, BLV_L_OFFSET, EncodeMap, DecodeMap, LOCALDNS, BASICCHECKSTRING, INIT_COOKIE, args, EXTRACT_EXPR
+global READBUFSIZE, MAXTHERADS, MAXRETRY, READINTERVAL, WRITEINTERVAL, PHPSERVER, PHPSKIPCOOKIE, GOSERVER, PHPTIMEOUT
+
 # Globals
 READBUFSIZE   = 7
 MAXTHERADS    = 400
@@ -748,7 +751,9 @@ use_examples = r"""
 
 """
 
-if __name__ == '__main__':
+def main():
+    global HEADERS, BLV_L_OFFSET, EncodeMap, DecodeMap, LOCALDNS, BASICCHECKSTRING, INIT_COOKIE, args, EXTRACT_EXPR
+    global READBUFSIZE, MAXTHERADS, MAXRETRY, READINTERVAL, WRITEINTERVAL, PHPSERVER, PHPSKIPCOOKIE, GOSERVER, PHPTIMEOUT
     if len(sys.argv) == 1:
         print(banner)
         print(use_examples)
@@ -1027,3 +1032,6 @@ if __name__ == '__main__':
                 print("       => %s/%s" % (outdir, os.path.basename(outfile)))
 
         print('')
+
+if __name__ == "__main__":
+    main()
