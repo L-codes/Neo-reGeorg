@@ -19,8 +19,5 @@ neoreg = "neoreg:main"
 requires = ["setuptools>=64", "setuptools_scm>=8"]
 build-backend = "setuptools.build_meta"
 
-[tool.setuptools]
-package-dir = {"" = "."}
-
 [tool.setuptools_scm]
 local_scheme = "no-local-version"
