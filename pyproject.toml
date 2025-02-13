@@ -1,0 +1,26 @@
+[project]
+name = "neo-regeorg"
+authors = [
+    {name = "L-codes"}
+]
+description = "Neo-reGeorg is a project that seeks to aggressively refactor reGeorg"
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = [
+    "requests[socks]>=2.32.3",
+]
+
+dynamic = ["version"]
+
+[project.scripts]
+neoreg = "neoreg:main"
+
+[build-system]
+requires = ["setuptools>=64", "setuptools_scm>=8"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+package-dir = {"" = "."}
+
+[tool.setuptools_scm]
+local_scheme = "no-local-version"
