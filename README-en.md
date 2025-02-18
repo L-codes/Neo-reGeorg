@@ -13,7 +13,7 @@
 
 ## Version
 
-5.2.0 - [Change Log](CHANGELOG-en.md)
+5.2.1 - [Change Log](CHANGELOG-en.md)
 
 
 ## python dependencies

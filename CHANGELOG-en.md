@@ -1,5 +1,10 @@
 # Change Log
 
+### v5.2.1:
+##### Fix
+    1. Solve the problem that Windows cannot terminate the process by Ctrl+C
+    2. Print information error
+
 ### v5.2.0:
 ##### New Features
     1. Added `--php` parameter. By default, it is judged based on the URL set by --url whether the .php suffix uses the PHP connection method. In special cases, you can manually use --php to specify the PHP connection method.
