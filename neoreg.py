@@ -16,6 +16,7 @@ import argparse
 import requests
 import uuid
 import codecs
+import select
 from collections import defaultdict
 from time import sleep, time, mktime
 from datetime import datetime
@@ -928,9 +929,11 @@ if __name__ == '__main__':
 
             while True:
                 try:
-                    sock, addr_info = servSock.accept()
-                    sock.settimeout(SOCKTIMEOUT)
-                    session(conn, sock, urls, redirect_urls, args.target, args.force_redirect).start()
+                    readable = select.select([servSock], [], [], 1)[0]
+                    if len(readable) > 0:
+                        sock, addr_info = servSock.accept()
+                        sock.settimeout(SOCKTIMEOUT)
+                        session(conn, sock, urls, redirect_urls, args.target, args.force_redirect).start()
                 except KeyboardInterrupt as ex:
                     break
                 except timeout:
