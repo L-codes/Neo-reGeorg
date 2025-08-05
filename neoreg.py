@@ -13,7 +13,6 @@ import random
 import hashlib
 import logging
 import argparse
-import requests
 import uuid
 import codecs
 import select
@@ -24,7 +23,16 @@ from socket import *
 from itertools import chain
 from threading import Thread
 
-requests.packages.urllib3.disable_warnings()
+try:
+    from curl_cffi import requests
+    using_curl_cffi = True
+except ImportError:
+    import requests
+    using_curl_cffi = False
+
+if not using_curl_cffi:
+    requests.packages.urllib3.disable_warnings()
+
 
 ROOT = os.path.dirname(os.path.realpath(__file__))
 
@@ -431,7 +439,12 @@ class session(Thread):
             retry += 1
             try:
                 response = self.conn.post(self.url_sample(), headers=HEADERS, timeout=timeout, data=data)
-                second = response.elapsed.total_seconds()
+
+                if using_curl_cffi:
+                    second = response.elapsed
+                else:
+                    second = response.elapsed.total_seconds()
+
                 log.debug("[HTTP] [%s:%d] %s Response (%s) => HttpCode: %d, Time: %.2fs" % (self.target, self.port, info['CMD'], self.mark, response.status_code, second))
 
                 rdata = extract_body(response.content)
@@ -896,6 +909,9 @@ if __name__ == '__main__':
             print("  Redirect to:")
             for url in args.redirect_url:
                 print("    "+url)
+
+        if not using_curl_cffi:
+            log.warning("[!] curl_cffi is not available. Falling back to the standard 'requests' module.")
 
         print(separation)
         try:
