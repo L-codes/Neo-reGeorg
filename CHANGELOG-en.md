@@ -1,5 +1,8 @@
 # Change Log
 
+### v5.2.2:
+    1. Add curl-cffi compatability
+
 ### v5.2.1:
 ##### Fix
     1. Solve the problem that Windows cannot terminate the process by Ctrl+C

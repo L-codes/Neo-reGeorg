@@ -1,5 +1,8 @@
 # Change Log
 
+### v5.2.2:
+    1. 兼容 curl-cffi 库，以提高请求性能与 http2 支持
+
 ### v5.2.1:
 ##### 修复
     1. 解决 Windows 无法通过 Ctrl+C 终止进程的问题
