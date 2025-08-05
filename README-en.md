@@ -18,6 +18,9 @@
 
 ## python dependencies
 ```ruby
+python -m pip install curl-cffi
+
+# For older python
 python -m pip install requests requests[socks]
 ```
 

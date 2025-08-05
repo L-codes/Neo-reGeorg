@@ -37,6 +37,8 @@
 
 ## python 依赖
 ```ruby
+python -m pip install curl-cffi
+
 python -m pip install requests requests[socks]
 ```
 
