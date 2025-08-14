@@ -23,12 +23,22 @@ from socket import *
 from itertools import chain
 from threading import Thread
 
+
 try:
     from curl_cffi import requests
     using_curl_cffi = True
 except ImportError:
     import requests
     using_curl_cffi = False
+
+# Optional NTLM support
+NTLM_USER = os.environ.get('NTLM_USER')
+NTLM_PASS = os.environ.get('NTLM_PASS')
+try:
+    from requests_ntlm import HttpNtlmAuth
+    has_ntlm = True
+except ImportError:
+    has_ntlm = False
 
 if not using_curl_cffi:
     requests.packages.urllib3.disable_warnings()
@@ -806,6 +816,7 @@ if __name__ == '__main__':
         parser.add_argument("--cut-right", metavar="N", help="Truncate the right side of the response body", type=int, default=0)
         parser.add_argument("--extract", metavar="EXPR", help="Manually extract BODY content (eg: <html><p>NEOREGBODY</p></html> )")
         parser.add_argument("-v", help="Increase verbosity level (use -vv or more for greater effect)", action='count', default=0)
+        parser.add_argument("--ntlm-auth", metavar="USER:PASS", help="Enable NTLM authentication for web requests (format: DOMAIN\\USER:PASSWORD or USER:PASSWORD)")
         args = parser.parse_args()
 
         if args.extract:
@@ -914,12 +925,40 @@ if __name__ == '__main__':
             log.warning("[!] curl_cffi is not available. Falling back to the standard 'requests' module.")
 
         print(separation)
+
+
         try:
             conn = requests.Session()
             conn.proxies = PROXY
             conn.verify = False
             conn.headers['Accept-Encoding'] = 'gzip, deflate'
             conn.headers['User-Agent'] = USERAGENT
+
+            # NTLM authentication support via environment variables or --ntlm-auth
+            ntlm_user = NTLM_USER
+            ntlm_pass = NTLM_PASS
+            if hasattr(args, 'ntlm_auth') and args.ntlm_auth:
+                # Support --ntlm-auth USER:PASS or DOMAIN\USER:PASS
+                if ':' in args.ntlm_auth:
+                    ntlm_user, ntlm_pass = args.ntlm_auth.split(':', 1)
+            if ntlm_user and ntlm_pass:
+                if not has_ntlm:
+                    log.error("[NTLM] requests_ntlm is not installed. NTLM authentication will not work.")
+                    exit()
+                # If DOMAIN\USER, split domain
+                if '\\' in ntlm_user:
+                    domain, user = ntlm_user.split('\\', 1)
+                    ntlm_user_full = f"{domain}\\{user}"
+                else:
+                    ntlm_user_full = ntlm_user
+                conn.auth = HttpNtlmAuth(ntlm_user_full, ntlm_pass)
+                log.info(f"[NTLM] Using NTLM authentication for user: {ntlm_user_full}")
+
+            # Ensure HTTPS proxy is set if proxying HTTPS
+            if PROXY and 'https' not in PROXY:
+                # If only http is set, duplicate for https
+                if 'http' in PROXY:
+                    conn.proxies['https'] = PROXY['http']
 
             servSock_start = False
             askNeoGeorg(conn, urls, redirect_urls, args.force_redirect)
@@ -1046,3 +1085,5 @@ if __name__ == '__main__':
                 print("       => %s/%s" % (outdir, os.path.basename(outfile)))
 
         print('')
+
+
