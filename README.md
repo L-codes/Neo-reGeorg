@@ -14,7 +14,7 @@
 
 ## Version
 
-5.2.1 - [版本修改日志](CHANGELOG.md)
+5.2.2 - [版本修改日志](CHANGELOG.md)
 
 
 ## Features
@@ -37,9 +37,12 @@
 
 ## python 依赖
 ```ruby
-python -m pip install curl-cffi
+python -m pip install requests
 
-python -m pip install requests requests[socks]
+# 可选
+python -m pip install requests[socks] # socks5 代理支持
+python -m pip install curl-cffi       # 改用 curl-cffi 库，提升性能和稳定性
+python -m pip install requests_ntlm   # NTLM 认证支持
 ```
 
 ## Basic Usage
@@ -192,6 +195,8 @@ $ python neoreg.py -h
       --cut-right N         Truncate the right side of the response body
       --extract EXPR        Manually extract BODY content (eg:
                             <html><p>NEOREGBODY</p></html> )
+      --ntlm-auth USER:PASS Enable NTLM authentication for web requests
+                            (format: DOMAIN\USER:PASSWORD or USER:PASSWORD)
       -v                    Increase verbosity level (use -vv or more for greater
                             effect)
 ```

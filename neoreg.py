@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 __author__  = 'L'
-__version__ = '5.2.1'
+__version__ = '5.2.2'
 
 import sys
 import os
@@ -815,8 +815,8 @@ if __name__ == '__main__':
         parser.add_argument("--cut-left", metavar="N", help="Truncate the left side of the response body", type=int, default=0)
         parser.add_argument("--cut-right", metavar="N", help="Truncate the right side of the response body", type=int, default=0)
         parser.add_argument("--extract", metavar="EXPR", help="Manually extract BODY content (eg: <html><p>NEOREGBODY</p></html> )")
-        parser.add_argument("-v", help="Increase verbosity level (use -vv or more for greater effect)", action='count', default=0)
         parser.add_argument("--ntlm-auth", metavar="USER:PASS", help="Enable NTLM authentication for web requests (format: DOMAIN\\USER:PASSWORD or USER:PASSWORD)")
+        parser.add_argument("-v", help="Increase verbosity level (use -vv or more for greater effect)", action='count', default=0)
         args = parser.parse_args()
 
         if args.extract:
