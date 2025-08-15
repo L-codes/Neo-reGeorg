@@ -2,6 +2,7 @@
 
 ### v5.2.2:
     1. 兼容 curl-cffi 库，以提高请求性能与 http2 支持
+    2. 新增 `--ntlm-auth USER:PASS` 参数，支持 NTLM 认证
 
 ### v5.2.1:
 ##### 修复

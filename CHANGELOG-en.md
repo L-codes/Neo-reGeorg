@@ -2,6 +2,7 @@
 
 ### v5.2.2:
     1. Add curl-cffi compatability
+    2. Add `--ntlm-auth USER:PASS` parameter to support NTLM authentication
 
 ### v5.2.1:
 ##### Fix
