@@ -212,6 +212,6 @@ GPL 3.0
 
 ## Star History Chart
 
-[![Star History Chart](https://api.star-history.com/svg?repos=L-codes/Neo-reGeorg&type=Date)](https://star-history.com/#L-codes/Neo-reGeorg&Date)
+[![Star History Chart](https://app.repohistory.com/api/svg?repo=l-codes/Neo-reGeorg&type=Date&background=0D1117&color=f86262)](https://app.repohistory.com/star-history)
 
 <img align='right' src="https://profile-counter.glitch.me/neo-regeorg/count.svg" width="200">
