@@ -389,8 +389,27 @@ class session(Thread):
         if cmd == b"\x02":   # BIND
             raise SocksCmdNotImplemented("Socks5 - BIND not implemented")
         elif cmd == b"\x03": # UDP
-            raise SocksCmdNotImplemented("Socks5 - UDP not implemented")
+            self.cmd = "UDP"
+            try:
+                serverIp = inet_aton(target)
+            except:
+                # Forged temporary address 0.0.0.0
+                serverIp = inet_aton('0.0.0.0')
+            mark = self.setupUDPRelay(target, targetPortNum)
+            if mark:
+                self.udpSocket = socket(AF_INET, SOCK_DGRAM)
+                self.udpSocket.bind(('', 0)) # !
+                self.udpClientAddr = self.pSocket.getpeername()[0]
+                self.udpClientPort = None
+
+                sock.sendall(VER + SUCCESS + b"\x00" + b"\x01" + inet_aton(self.udpSocket.getsockname()[0]) + self.udpSocket.getsockname()[1].to_bytes(2, 'big'))
+                return True
+            else:
+                sock.sendall(VER + REFUSED + b"\x00" + b"\x01" + serverIp + targetPort)
+                return False
+            
         elif cmd == b"\x01": # CONNECT
+            self.cmd = "CONNECT"
             try:
                 serverIp = inet_aton(target)
             except:
@@ -502,6 +521,32 @@ class session(Thread):
         else:
             return False
 
+    def setupUDPRelay(self, target, port):
+        self.mark = self.session_mark()
+        self.target = target.encode()
+        self.port = port
+
+        info = {'CMD': 'UDP', 'MARK': self.mark, 'IP': self.target, 'PORT': str(self.port)}
+
+        if ( '.php' in self.connectURLs[0] or PHPSERVER ) and not GOSERVER:
+            try:
+                rinfo = self.neoreg_request(info, timeout=PHPTIMEOUT)
+            except:
+                log.info("[UDP] [%s:%d] Session mark (%s)" % (self.target, self.port, self.mark))
+                return self.mark
+        else:
+            log.debug("[DEBUG] setupUDPRelay, info: " + str(info))
+            rinfo = self.neoreg_request(info)
+            log.debug("[DEBUG] setupUDPRelay, rinfo: " + str(rinfo))
+
+        status = rinfo["STATUS"]
+        log.debug("[DEBUG] setupUDPRelay, status: " + str(status))
+        log.debug("[DEBUG] setupUDPRelay, data: " + str(rinfo["DATA"]))
+        if status == "OK":
+            log.info("[UDP] [%s:%d] Session mark: %s" % (self.target, self.port, self.mark))
+            return self.mark
+        else:
+            return False
 
     def closeRemoteSession(self):
         if not self.connect_closed:
@@ -524,69 +569,143 @@ class session(Thread):
 
 
     def reader(self):
-        try:
-            info = {'CMD': 'READ', 'MARK': self.mark}
-            n = 0
-            while True:
-                try:
-                    if self.connect_closed or self.pSocket.fileno() == -1:
-                        break
-                    rinfo = self.neoreg_request(info)
-                    if rinfo['STATUS'] == 'OK':
-                        data = rinfo['DATA']
-                        data_len = len(data)
+        if self.cmd == "CONNECT":
+            try:
+                info = {'CMD': 'READ', 'MARK': self.mark}
+                n = 0
+                while True:
+                    try:
+                        if self.connect_closed or self.pSocket.fileno() == -1:
+                            break
+                        rinfo = self.neoreg_request(info)
+                        if rinfo['STATUS'] == 'OK':
+                            data = rinfo['DATA']
+                            data_len = len(data)
 
-                        if data_len == 0:
-                            sleep(READINTERVAL)
-                        elif data_len > 0:
-                            n += 1
-                            transferLog.info("[%s:%d] [%s] No.%d <<<< [%d byte]" % (self.target, self.port, self.mark, n, data_len))
-                            while data:
-                                writed_size = self.pSocket.send(data)
-                                data = data[writed_size:]
-                            if data_len < 500:
+                            if data_len == 0:
                                 sleep(READINTERVAL)
-                    else:
+                            elif data_len > 0:
+                                n += 1
+                                transferLog.info("[%s:%d] [%s] No.%d <<<< [%d byte]" % (self.target, self.port, self.mark, n, data_len))
+                                while data:
+                                    writed_size = self.pSocket.send(data)
+                                    data = data[writed_size:]
+                                if data_len < 500:
+                                    sleep(READINTERVAL)
+                        else:
+                            break
+
+                    except error: # python2 socket.send error
+                        pass
+                    except Exception as ex:
+                        log.exception(ex)
                         break
+            finally:
+                self.closeRemoteSession()
+        elif self.cmd == "UDP":
+            try:
+                info = {'CMD': 'READ', 'MARK': self.mark}
+                n = 0
+                while True:
+                    try:
+                        if self.udpClientPort == None:
+                            continue
+                        if self.connect_closed or self.pSocket.fileno() == -1:
+                            break
+                        rinfo = self.neoreg_request(info)
+                        if rinfo['STATUS'] == 'OK':
+                            data = rinfo['DATA']
+                            data_len = len(data)
 
-                except error: # python2 socket.send error
-                    pass
-                except Exception as ex:
-                    log.exception(ex)
-                    break
-        finally:
-            self.closeRemoteSession()
+                            if data_len == 0:
+                                sleep(READINTERVAL)
+                            elif data_len > 0:
+                                n += 1
+                                transferLog.info("[%s:%d] [%s] No.%d <<<< [%d byte]" % (self.target, self.port, self.mark, n, data_len))
+                                header = b"\x00\x00" + b"\x00" + b"\x01" + inet_aton(str(rinfo['IP'])) + int(str(rinfo['PORT'])).to_bytes(2, 'big')
+                                while data:
+                                    writed_size = self.udpSocket.sendto(header + data, (self.udpClientAddr, self.udpClientPort))
+                                    data = data[writed_size:]
+                                if data_len < 500:
+                                    sleep(READINTERVAL)
+                        else:
+                            break
 
+                    except error: # python2 socket.send error
+                        pass
+                    except Exception as ex:
+                        log.exception(ex)
+                        break
+            finally:
+                self.closeRemoteSession()
 
     def writer(self):
-        try:
-            info = {'CMD': 'FORWARD', 'MARK': self.mark}
-            n = 0
-            while True:
-                try:
-                    raw_data = self.pSocket.recv(READBUFSIZE)
-                    if not raw_data:
+        if self.cmd == "CONNECT":
+            try:
+                info = {'CMD': 'FORWARD', 'MARK': self.mark}
+                n = 0
+                while True:
+                    try:
+                        raw_data = self.pSocket.recv(READBUFSIZE)
+                        if not raw_data:
+                            break
+                        info['DATA'] = raw_data
+                        rinfo = self.neoreg_request(info)
+                        if rinfo['STATUS'] != "OK":
+                            break
+                        n += 1
+                        transferLog.info("[%s:%d] [%s] No.%d >>>> [%d byte]" % (self.target, self.port, self.mark, n, len(raw_data)))
+                        if len(raw_data) < READBUFSIZE:
+                            sleep(WRITEINTERVAL)
+                    except timeout:
+                        continue
+                    except error:
                         break
-                    info['DATA'] = raw_data
-                    rinfo = self.neoreg_request(info)
-                    if rinfo['STATUS'] != "OK":
+                    except OSError:
                         break
-                    n += 1
-                    transferLog.info("[%s:%d] [%s] No.%d >>>> [%d byte]" % (self.target, self.port, self.mark, n, len(raw_data)))
-                    if len(raw_data) < READBUFSIZE:
-                        sleep(WRITEINTERVAL)
-                except timeout:
-                    continue
-                except error:
-                    break
-                except OSError:
-                    break
-                except Exception as ex:
-                    log.exception(ex)
-                    break
-        finally:
-            self.closeRemoteSession()
-
+                    except Exception as ex:
+                        log.exception(ex)
+                        break
+            finally:
+                self.closeRemoteSession()
+        elif self.cmd == "UDP":
+            try:
+                info = {'CMD': 'FORWARD', 'MARK': self.mark}
+                n = 0
+                while True:
+                    try:
+                        raw_data, address = self.udpSocket.recvfrom(READBUFSIZE)
+                        if address[0] != self.udpClientAddr:
+                            log.error("[UDP Relay] packet from non client")
+                            continue
+                        
+                        if self.udpClientPort == None:
+                            self.udpClientPort = address[1]
+                        
+                        if not raw_data:
+                            break
+                        info['IP'] = str(int(raw_data[4])) + "." + str(int(raw_data[5])) + "." + str(int(raw_data[6])) + "." + str(int(raw_data[7]))
+                        info['PORT'] = str(int.from_bytes(raw_data[8:10]))
+                        info['DATA'] = raw_data[10:]
+                        data_len = len(info['DATA'])
+                        rinfo = self.neoreg_request(info)
+                        if rinfo['STATUS'] != "OK":
+                            break
+                        n += 1
+                        transferLog.info("[%s:%d] [%s] No.%d >>>> [%d byte]" % (self.target, self.port, self.mark, n, data_len))
+                        if data_len < READBUFSIZE:
+                            sleep(WRITEINTERVAL)
+                    except timeout:
+                        continue
+                    except error:
+                        break
+                    except OSError:
+                        break
+                    except Exception as ex:
+                        log.exception(ex)
+                        break
+            finally:
+                self.closeRemoteSession()
 
     def run(self):
         try:
