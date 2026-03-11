@@ -450,10 +450,7 @@ class session(Thread):
             try:
                 response = self.conn.post(self.url_sample(), headers=HEADERS, timeout=timeout, data=data)
 
-                if using_curl_cffi:
-                    second = response.elapsed
-                else:
-                    second = response.elapsed.total_seconds()
+                second = response.elapsed.total_seconds()
 
                 log.debug("[HTTP] [%s:%d] %s Response (%s) => HttpCode: %d, Time: %.2fs" % (self.target, self.port, info['CMD'], self.mark, response.status_code, second))
 
